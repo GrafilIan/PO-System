@@ -1,23 +1,214 @@
+{% load static %}
+
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>{% block title %}My Site{% endblock %}</title>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no" name="viewport">
+
+    <title>{% block title %}FBBD PO System{% endblock %}</title>
+    <link rel="website icon" type="png" href="{% static 'assets/img/FBBDLogo.png' %}">
+    <!-- General CSS Files -->
+    <link rel="stylesheet" href="{% static 'assets/modules/bootstrap/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/modules/fontawesome/css/all.min.css' %}">
+
+    <!-- CSS Libraries -->
+    <link rel="stylesheet" href="{% static 'assets/modules/jqvmap/dist/jqvmap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/modules/summernote/summernote-bs4.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/modules/owlcarousel2/dist/assets/owl.carousel.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/modules/owlcarousel2/dist/assets/owl.theme.default.min.css' %}">
+
+    <!-- Template CSS -->
+    <link rel="stylesheet" href="{% static 'assets/css/preloader.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/POadminstyle.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/components.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/modules/ionicons/css/ionicons.min.css' %}">
+
+    <link rel="stylesheet" href="{% static 'assets/modules/prism/prism.css' %}">
+
+    <!-- Start GA -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-94034622-3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+        gtag('config', 'UA-94034622-3');
+    </script>
+
+    {% block head %}
+    {% endblock %}
+
+    {% block style %}
+    {% endblock %}
+
 </head>
-<body>
-    <header>
-        <h1>My Site</h1>
-    </header>
-    <nav>
-        <ul>
-            <li><a href="/">Home</a></li>
+
+<body style="background-color: #e7e7e7;">
+
+<div class="wrapper" id="loader">
+    <div class="box-wrap">
+        <div class="box one"></div>
+        <div class="box two"></div>
+        <div class="box three"></div>
+        <div class="box four"></div>
+        <div class="box five"></div>
+        <div class="box six"></div>
+    </div>
+</div>
+
+
+<div class="navbar-bg"></div>
+<nav class="navbar navbar-expand-lg main-navbar">
+    <form class="form-inline mr-auto">
+        <ul class="navbar-nav mr-3">
+            <li><a href="#" data-toggle="sidebar" class="nav-link nav-link-lg"><i class="fas fa-bars"></i></a></li>
+            <li><a href="#" data-toggle="search" class="nav-link nav-link-lg d-sm-none"><i
+                    class="fas fa-search"></i></a></li>
         </ul>
-    </nav>
-    <main>
-        {% block content %}
-        {% endblock %}
-    </main>
-    <footer>
-        <p>My Site © 2024</p>
-    </footer>
+        <h4 style="color: white; margin-top: 6px;">#</h4>
+    </form>
+
+</nav>
+<div class="main-sidebar sidebar-style-2" tabindex="1" style="overflow: hidden; outline: none;">
+    <aside id="sidebar-wrapper">
+        <div class="sidebar-brand">
+            <img src="{% static 'assets/img/FBBDLogo.png' %}" alt="logo" width="120" style="margin-bottom: -30px;">
+        </div>
+
+        <div class="sidebar-brand sidebar-brand-sm">
+            <img src="{% static 'assets/img/FBBDLogo.png' %}" alt="logo" width="40" style="margin-bottom: 30px;">
+        </div>
+
+        <div class="sidebar-brand">
+            <h6 style="color: white; padding-left: 15px; padding-right: 15px;">FBBD Purchase Order System
+            </h6>
+        </div>
+
+        <div class="sidebar-brand sidebar-brand-sm">
+            <h6 style="color: white; top: 30px;">FBBD POS</h6>
+        </div>
+
+
+        <ul class="sidebar-menu">
+
+            <li class="menu-header">FBBD</li>
+
+            <li><a class="nav-link" href="#"><i class="fa fa-cube" aria-hidden="true"></i><span>Dashboard</span></a>
+            </li>
+
+            <li><a class="nav-link" href="#"><i class="fa fa-map"
+                                                aria-hidden="true"></i><span>Purchase Order</span></a>
+            </li>
+
+            <li><a class="nav-link" href="#"><i class="fa fa-desktop" aria-hidden="true"></i><span>Accounting</span></a>
+            </li>
+
+            <li class="menu-header">Accounts</li>
+
+            <li><a class="nav-link" href="#"><i class="fa fa-building" aria-hidden="true"></i><span>FBBD Site</span></a>
+            </li>
+
+            <li><a class="nav-link" href="#"><i class="fa fa-users" aria-hidden="true"></i><span>Clients</span></a>
+            </li>
+
+            <li class="menu-header">Inventory</li>
+
+            <li><a class="nav-link" href="#"><i class="fa fa-sitemap" aria-hidden="true"></i><span>Suppliers</span></a>
+            </li>
+
+            <li><a class="nav-link" href="#"><i class="fa fa-server" aria-hidden="true"></i><span>BTCS Inventory</span></a>
+            </li>
+
+
+
+            </li>
+
+
+        </ul>
+
+        <div class="mt-4 mb-4 p-3 hide-sidebar-mini">
+            <a href="#" class="btn btn-primary btn-lg btn-block btn-icon-split" onclick="confirmLogout()">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+    </aside>
+</div>
+</div>
+{% block content %}
+{% endblock %}
+
+<script>
+    function confirmLogout() {
+        Swal.fire({
+            title: "Logout Confirmation",
+            text: "Are you sure you want to log out?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: '#00039f',
+            cancelButtonColor: '#242426',
+            confirmButtonText: "Yes, logout",
+            cancelButtonText: "No, cancel",
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // The user clicked the "Yes" button, so you can log them out here.
+                window.location.href = "#";
+            } else {
+                // The user clicked the "No" button or closed the dialog, no action needed.
+            }
+        });
+    }
+</script>
+
+<script>
+    window.addEventListener('load', function () {
+        const loader = document.getElementById('loader');
+
+        setTimeout(function () {
+            loader.style.opacity = '0'; // Start fading out
+            setTimeout(function () {
+                loader.style.display = 'none';
+            }, 300); // Hide the loader 1 second after fading out
+        }, 1500); // Start fading out after 1.5 seconds
+    });
+</script>
+
+
+<script src="{% static 'assets/modules/jquery.min.js' %}"></script>
+<script src="{% static 'assets/modules/popper.js' %}"></script>
+<script src="{% static 'assets/modules/tooltip.js' %}"></script>
+<script src="{% static 'assets/modules/bootstrap/js/bootstrap.min.js' %}"></script>
+<script src="{% static 'assets/modules/nicescroll/jquery.nicescroll.min.js' %}"></script>
+<script src="{% static 'assets/modules/moment.min.js' %}"></script>
+<script src="{% static 'assets/js/stisla.js' %}"></script>
+
+
+<!-- JS Libraries -->
+<script src="{% static 'assets/modules/jquery.sparkline.min.js' %}"></script>
+<script src="{% static 'assets/modules/chart.min.js' %}"></script>
+<script src="{% static 'assets/modules/owlcarousel2/dist/owl.carousel.min.js' %}"></script>
+<script src="{% static 'assets/modules/summernote/summernote-bs4.js' %}"></script>
+<script src="{% static 'assets/modules/chocolat/dist/js/jquery.chocolat.min.js' %}"></script>
+
+<!-- Page Specific JS File -->
+<script src="{% static 'assets/js/page/index.js' %}"></script>
+
+<!-- Template JS File -->
+<script src="{% static 'assets/js/scripts.js' %}"></script>
+<script src="{% static 'assets/js/custom.js' %}"></script>
+<script src="{% static 'assets/js/page_reload_script.js' %}"></script>
+
+<!-- JS Libraies -->
+<script src="{% static 'assets/modules/prism/prism.js' %}"></script>
+
+<!-- Page Specific JS File -->
+<script src="{% static 'assets/js/page/bootstrap-modal.js' %}"></script>
+
+{% block scripts %}
+{% endblock %}
 </body>
 </html>
