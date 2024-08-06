@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% load static %}
+
+{% block head %}
+    <link rel="stylesheet" href="{% static 'assets/modules/bootstrap-social/bootstrap-social.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/create_announcement.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/modules/datatables/datatables.min.css' %}">
+    <link rel="stylesheet"
+          href="{% static 'assets/modules/datatables/DataTables-1.10.16/css/dataTables.bootstrap4.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/modules/datatables/Select-1.2.4/css/select.bootstrap4.min.css' %}">
+
+{% endblock %}
+
+{% block content %}
+    <div class="main-content" style="min-height: 569px;">
+
+        <section class="section" style="margin-top: 12px;">
+            <div class="section-header">
+
+                <h1>Announcement</h1>
+
+                <div class="section-header-breadcrumb">
+                    <div class="breadcrumb-item active">Dashboard</div>
+                    <div class="breadcrumb-item">Announcement</div>
+
+                </div>
+
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4>Sortable Table</h4>
+                            <div class="card-header-action">
+                                <form>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" placeholder="Search">
+                                        <div class="input-group-btn">
+                                            <button class="btn btn-primary"><i class="fas fa-search"></i></button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-striped" id="sortable-table">
+                                    <thead>
+                                    <tr>
+                                        <th>DATE</th>
+                                        <th>PO#</th>
+                                        <th>PURCHASER</th>
+                                        <th>ITEM CODE</th>
+                                        <th>PARTICULAR</th>
+                                        <th>QTY</th>
+                                        <th>UNIT</th>
+                                        <th>PRICE</th>
+                                        <th>TOTAL AMOUNT</th>
+                                        <th>SITE DELIVERED</th>
+                                        <th>FBBD DR#</th>
+                                        <th>REMARKS</th>
+                                        <th>SUPPLIER</th>
+                                        <th>REMARKS</th>
+                                        <th>DELIVERY REF#</th>
+                                        <th>INVOICE#</th>
+                                        <th>PAYMENT DETAILS</th>
+                                        <th>PAYMENT REQ.#</th>
+                                        <th>REMARKS</th>
+
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr>
+                                        <td>Create a mobile app</td>
+                                        <td class="align-middle">
+                                            <div class="progress" data-height="4" data-toggle="tooltip" title="100%">
+                                                <div class="progress-bar bg-success" data-width="100"></div>
+                                            </div>
+                                        </td>
+
+                                        <td>2018-01-20</td>
+                                        <td>
+                                            <div class="badge badge-success">Completed</div>
+                                        </td>
+                                        <td><a href="#" class="btn btn-secondary">Detail</a></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Redesign homepage</td>
+                                        <td class="align-middle">
+                                            <div class="progress" data-height="4" data-toggle="tooltip" title="0%">
+                                                <div class="progress-bar" data-width="0"></div>
+                                            </div>
+                                        </td>
+                                        <td>2018-04-10</td>
+                                        <td>
+                                            <div class="badge badge-info">Todo</div>
+                                        </td>
+                                        <td><a href="#" class="btn btn-secondary">Detail</a></td>
+                                    </tr>
+                                    <tr>
+
+                                        <td>Backup database</td>
+                                        <td class="align-middle">
+                                            <div class="progress" data-height="4" data-toggle="tooltip" title="70%">
+                                                <div class="progress-bar bg-warning" data-width="70"></div>
+                                            </div>
+                                        </td>
+
+                                        <td>2018-01-29</td>
+                                        <td>2018-01-29</td>
+                                        <td style="white-space: nowrap;">2018-01-292018-01-292018-01-292018-01-29</td>
+                                        <td>2018-01-29</td>
+                                        <td>2018-01-292018-01-292018-01-292018-01-29</td>
+                                        <td>2018-01-292018-01-292018-01-292018-01-29</td>
+                                        <td>2018-01-292018-01-292018-01-292018-01-29</td>
+                                        <td>2018-01-292018-01-292018-01-292018-01-29</td>
+
+                                        <td>
+                                            <div class="badge badge-warning">In Progress</div>
+                                        </td>
+                                        <td><a href="#" class="btn btn-secondary">Detail</a></td>
+                                    </tr>
+                                    <tr>
+
+                                        <td>Input data</td>
+                                        <td class="align-middle">
+                                            <div class="progress" data-height="4" data-toggle="tooltip" title="100%">
+                                                <div class="progress-bar bg-success" data-width="100"></div>
+                                            </div>
+                                        </td>
+                                        <td>2018-01-16</td>
+                                        <td>
+                                            <div class="badge badge-success">Completed</div>
+                                        </td>
+                                        <td><a href="#" class="btn btn-secondary">Detail</a></td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+{% endblock %}
+
+    <a href="{% url 'logout' %}">Logout</a>
