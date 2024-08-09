@@ -1528,6 +1528,16 @@ h6 .badge {
   background-color: #8e0000;
   z-index: -1; }
 
+.navbar-desk {
+  content: ' ';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 75px;
+  background-color: darkgreen;
+  z-index: -1; }
+
 .navbar {
   align-items: center; }
   .navbar .navbar-brand {
@@ -2869,4 +2879,18 @@ body:not(.sidebar-mini) .sidebar-style-2 .sidebar-menu li.active ul.dropdown-men
     width: 100%;
     height: 100%;
     background: linear-gradient(to top, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0) 50%);
+}
+
+.blue-background {
+    background-color: #000054;
+    color: white !important;
+}
+
+.green-background {
+    background-color: darkgreen;
+    color: white !important;
+}
+
+.no-wrap {
+    white-space: nowrap;
 }

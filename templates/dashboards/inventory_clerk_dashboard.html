@@ -1,11 +1,470 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Inventory Clerk Dashboard</title>
-</head>
-<body>
-    <h2>Welcome, Inventory Clerk!</h2>
-    <p>This is your dashboard where you can manage inventory, track stock levels, and process orders.</p>
-    <a href="{% url 'logout' %}">Logout</a>
-</body>
-</html>
+{% extends 'inventorybase.html' %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% load static %}
+
+{% block head %}
+    <link rel="stylesheet" href="{% static 'assets/modules/bootstrap-social/bootstrap-social.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/modules/datatables/datatables.min.css' %}">
+    <link rel="stylesheet"
+          href="{% static 'assets/modules/datatables/DataTables-1.10.16/css/dataTables.bootstrap4.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/modules/datatables/Select-1.2.4/css/select.bootstrap4.min.css' %}">
+
+{% endblock %}
+
+{% block content %}
+    <!-- Main Content -->
+    <div id="app">
+        <div class="main-wrapper container">
+            <div class="main-content">
+                <section class="section">
+                    <div class="section-header">
+                        <h1>Top Navigation</h1>
+                        <div class="section-header-breadcrumb">
+                            <div class="breadcrumb-item active"><a href="#">Add</a></div>
+                            <div class="breadcrumb-item"><a href="#">Edit</a></div>
+                            <div class="breadcrumb-item">Delete</div>
+                        </div>
+                    </div>
+
+                    <div class="section-body">
+                        <div class="card">
+                            <div class="card-header">
+                                <h4>INVENTORY DATA TABLE</h4>
+                            </div>
+                            <div class="card-body">
+                                <div class="col-12">
+                                    <div class="card">
+                                        <div class="card-header" style="background-color: #000054; color: white;">
+                                            <h4>Sortable Table</h4>
+                                            <div class="card-header-action">
+                                                <form>
+                                                    <div class="input-group">
+                                                        <input type="text" class="form-control" placeholder="Search">
+                                                        <div class="input-group-btn">
+                                                            <button class="btn btn-primary"><i
+                                                                    class="fas fa-search"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                        <div class="card-body p-0">
+                                            <div class="table-responsive">
+                                                <table class="table table-striped" id="sortable-table">
+                                                    <thead>
+                                                    <tr class="blue-background">
+                                                        <th style="background-color: #000054; color: white;">DATE</th>
+                                                        <th style="background-color: #000054; color: white;">PO#</th>
+                                                        <th style="color: white;">PURCHASER</th>
+                                                        <th style="color: white;">ITEM CODE</th>
+                                                        <th style="color: white;">PARTICULAR</th>
+                                                        <th style="color: white;">QTY</th>
+                                                        <th style="color: white;">UNIT</th>
+                                                        <th style="color: white;">PRICE</th>
+                                                        <th style="white-space: nowrap; color: white;">TOTAL AMOUNT</th>
+                                                        <th style="color: white;">SITE DELIVERED</th>
+                                                        <th style="color: white;">FBBD DR#</th>
+                                                        <th style="color: white;">REMARKS</th>
+                                                        <th style="color: white;">SUPPLIER</th>
+                                                        <th style="color: white;">REMARKS</th>
+                                                        <th style="color: white;">DELIVERY REF#</th>
+                                                        <th style="color: white;">INVOICE#</th>
+                                                        <th style="color: white;">PAYMENT DETAILS</th>
+                                                        <th style="color: white;">PAYMENT REQ.#</th>
+                                                        <th style="color: white;">REMARKS</th>
+
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    <tr>
+                                                        <td style="white-space: nowrap;">08-09-2024</td>
+                                                        <td>PO# 0001</td>
+                                                        <td>CATHERINE</td>
+                                                        <td>
+                                                            <a href="#">2MMTHHNPDBLUE</a>
+                                                        </td>
+                                                        <td style="white-space: nowrap;">2.0MM THHN PD</td>
+                                                        <td>12</td>
+                                                        <td>BOX</td>
+                                                        <td>1,000.00</td>
+                                                        <td>12,000.00</td>
+                                                        <td>SORSU DORM</td>
+                                                        <td>FBBD-0001</td>
+                                                        <td>GOOD</td>
+                                                        <td>WIREMASTER</td>
+                                                        <td>GOOD</td>
+                                                        <td>DEL-0001</td>
+                                                        <td>INV-0001</td>
+                                                        <td>PAID</td>
+                                                        <td>REQ-0001</td>
+                                                        <td>GOOD</td>
+
+
+                                                    </tr>
+                                                     <tr>
+                                                        <td style="white-space: nowrap;">08-09-2024</td>
+                                                        <td>PO# 0001</td>
+                                                        <td>CATHERINE</td>
+                                                        <td>
+                                                            <a href="#">2MMTHHNPDBLUE</a>
+                                                        </td>
+                                                        <td style="white-space: nowrap;">2.0MM THHN PD</td>
+                                                        <td>12</td>
+                                                        <td>ROLL</td>
+                                                        <td>1,000.00</td>
+                                                        <td>12,000.00</td>
+                                                        <td>SORSU DORM</td>
+                                                        <td>FBBD-0001</td>
+                                                        <td>GOOD</td>
+                                                        <td>WIREMASTER</td>
+                                                        <td>GOOD</td>
+                                                        <td>DEL-0001</td>
+                                                        <td>INV-0001</td>
+                                                        <td>PAID</td>
+                                                        <td>REQ-0001</td>
+                                                        <td>GOOD</td>
+
+
+                                                    </tr>
+                                                     <tr>
+                                                        <td style="white-space: nowrap;">08-09-2024</td>
+                                                        <td>PO# 0001</td>
+                                                        <td>CATHERINE</td>
+                                                        <td>
+                                                            <a href="#">2MMTHHNPDBLUE</a>
+                                                        </td>
+                                                        <td style="white-space: nowrap;">2.0MM THHN PD</td>
+                                                        <td>12</td>
+                                                        <td>ROLL</td>
+                                                        <td>1,000.00</td>
+                                                        <td>12,000.00</td>
+                                                        <td>SORSU DORM</td>
+                                                        <td>FBBD-0001</td>
+                                                        <td>GOOD</td>
+                                                        <td>WIREMASTER</td>
+                                                        <td>GOOD</td>
+                                                        <td>DEL-0001</td>
+                                                        <td>INV-0001</td>
+                                                        <td>PAID</td>
+                                                        <td>REQ-0001</td>
+                                                        <td>GOOD</td>
+
+
+                                                    </tr>
+                                                     <tr>
+                                                        <td style="white-space: nowrap;">08-09-2024</td>
+                                                        <td>PO# 0001</td>
+                                                        <td>CATHERINE</td>
+                                                        <td>
+                                                            <a href="#">2MMTHHNPDBLUE</a>
+                                                        </td>
+                                                        <td style="white-space: nowrap;">2.0MM THHN PD</td>
+                                                        <td>12</td>
+                                                        <td>ROLL</td>
+                                                        <td>1,000.00</td>
+                                                        <td>12,000.00</td>
+                                                        <td>SORSU DORM</td>
+                                                        <td>FBBD-0001</td>
+                                                        <td>GOOD</td>
+                                                        <td>WIREMASTER</td>
+                                                        <td>GOOD</td>
+                                                        <td>DEL-0001</td>
+                                                        <td>INV-0001</td>
+                                                        <td>PAID</td>
+                                                        <td>REQ-0001</td>
+                                                        <td>GOOD</td>
+
+
+                                                    </tr>
+                                                     <tr>
+                                                        <td style="white-space: nowrap;">08-09-2024</td>
+                                                        <td>PO# 0001</td>
+                                                        <td>CATHERINE</td>
+                                                        <td>
+                                                            <a href="#">2MMTHHNPDBLUE</a>
+                                                        </td>
+                                                        <td style="white-space: nowrap;">2.0MM THHN PD</td>
+                                                        <td>12</td>
+                                                        <td>ROLL</td>
+                                                        <td>1,000.00</td>
+                                                        <td>12,000.00</td>
+                                                        <td>SORSU DORM</td>
+                                                        <td>FBBD-0001</td>
+                                                        <td>GOOD</td>
+                                                        <td>WIREMASTER</td>
+                                                        <td>GOOD</td>
+                                                        <td>DEL-0001</td>
+                                                        <td>INV-0001</td>
+                                                        <td>PAID</td>
+                                                        <td>REQ-0001</td>
+                                                        <td>GOOD</td>
+
+
+                                                    </tr> <tr>
+                                                        <td style="white-space: nowrap;">08-09-2024</td>
+                                                        <td>PO# 0001</td>
+                                                        <td>CATHERINE</td>
+                                                        <td>
+                                                            <a href="#">2MMTHHNPDBLUE</a>
+                                                        </td>
+                                                        <td style="white-space: nowrap;">2.0MM THHN PD</td>
+                                                        <td>12</td>
+                                                        <td>ROLL</td>
+                                                        <td>1,000.00</td>
+                                                        <td>12,000.00</td>
+                                                        <td>SORSU DORM</td>
+                                                        <td>FBBD-0001</td>
+                                                        <td>GOOD</td>
+                                                        <td>WIREMASTER</td>
+                                                        <td>GOOD</td>
+                                                        <td>DEL-0001</td>
+                                                        <td>INV-0001</td>
+                                                        <td>PAID</td>
+                                                        <td>REQ-0001</td>
+                                                        <td>GOOD</td>
+
+
+                                                    </tr>
+                                                     <tr>
+                                                        <td style="white-space: nowrap;">08-09-2024</td>
+                                                        <td>PO# 0001</td>
+                                                        <td>CATHERINE</td>
+                                                        <td>
+                                                            <a href="#">2MMTHHNPDBLUE</a>
+                                                        </td>
+                                                        <td style="white-space: nowrap;">2.0MM THHN PD</td>
+                                                        <td>12</td>
+                                                        <td>ROLL</td>
+                                                        <td>1,000.00</td>
+                                                        <td>12,000.00</td>
+                                                        <td>SORSU DORM</td>
+                                                        <td>FBBD-0001</td>
+                                                        <td>GOOD</td>
+                                                        <td>WIREMASTER</td>
+                                                        <td>GOOD</td>
+                                                        <td>DEL-0001</td>
+                                                        <td>INV-0001</td>
+                                                        <td>PAID</td>
+                                                        <td>REQ-0001</td>
+                                                        <td>GOOD</td>
+
+
+                                                    </tr>
+                                                     <tr>
+                                                        <td style="white-space: nowrap;">08-09-2024</td>
+                                                        <td>PO# 0001</td>
+                                                        <td>CATHERINE</td>
+                                                        <td>
+                                                            <a href="#">2MMTHHNPDBLUE</a>
+                                                        </td>
+                                                        <td style="white-space: nowrap;">2.0MM THHN PD</td>
+                                                        <td>12</td>
+                                                        <td>ROLL</td>
+                                                        <td>1,000.00</td>
+                                                        <td>12,000.00</td>
+                                                        <td>SORSU DORM</td>
+                                                        <td>FBBD-0001</td>
+                                                        <td>GOOD</td>
+                                                        <td>WIREMASTER</td>
+                                                        <td>GOOD</td>
+                                                        <td>DEL-0001</td>
+                                                        <td>INV-0001</td>
+                                                        <td>PAID</td>
+                                                        <td>REQ-0001</td>
+                                                        <td>GOOD</td>
+
+
+                                                    </tr>
+                                                     <tr>
+                                                        <td style="white-space: nowrap;">08-09-2024</td>
+                                                        <td>PO# 0001</td>
+                                                        <td>CATHERINE</td>
+                                                        <td>
+                                                            <a href="#">2MMTHHNPDBLUE</a>
+                                                        </td>
+                                                        <td style="white-space: nowrap;">2.0MM THHN PD</td>
+                                                        <td>12</td>
+                                                        <td>ROLL</td>
+                                                        <td>1,000.00</td>
+                                                        <td>12,000.00</td>
+                                                        <td>SORSU DORM</td>
+                                                        <td>FBBD-0001</td>
+                                                        <td>GOOD</td>
+                                                        <td>WIREMASTER</td>
+                                                        <td>GOOD</td>
+                                                        <td>DEL-0001</td>
+                                                        <td>INV-0001</td>
+                                                        <td>PAID</td>
+                                                        <td>REQ-0001</td>
+                                                        <td>GOOD</td>
+
+
+                                                    </tr>
+                                                     <tr>
+                                                        <td style="white-space: nowrap;">08-09-2024</td>
+                                                        <td>PO# 0001</td>
+                                                        <td>CATHERINE</td>
+                                                        <td>
+                                                            <a href="#">2MMTHHNPDBLUE</a>
+                                                        </td>
+                                                        <td style="white-space: nowrap;">2.0MM THHN PD</td>
+                                                        <td>12</td>
+                                                        <td>ROLL</td>
+                                                        <td>1,000.00</td>
+                                                        <td>12,000.00</td>
+                                                        <td>SORSU DORM</td>
+                                                        <td>FBBD-0001</td>
+                                                        <td>GOOD</td>
+                                                        <td>WIREMASTER</td>
+                                                        <td>GOOD</td>
+                                                        <td>DEL-0001</td>
+                                                        <td>INV-0001</td>
+                                                        <td>PAID</td>
+                                                        <td>REQ-0001</td>
+                                                        <td>GOOD</td>
+
+
+                                                    </tr> <tr>
+                                                        <td style="white-space: nowrap;">08-09-2024</td>
+                                                        <td>PO# 0001</td>
+                                                        <td>CATHERINE</td>
+                                                        <td>
+                                                            <a href="#">2MMTHHNPDBLUE</a>
+                                                        </td>
+                                                        <td style="white-space: nowrap;">2.0MM THHN PD</td>
+                                                        <td>12</td>
+                                                        <td>ROLL</td>
+                                                        <td>1,000.00</td>
+                                                        <td>12,000.00</td>
+                                                        <td>SORSU DORM</td>
+                                                        <td>FBBD-0001</td>
+                                                        <td>GOOD</td>
+                                                        <td>WIREMASTER</td>
+                                                        <td>GOOD</td>
+                                                        <td>DEL-0001</td>
+                                                        <td>INV-0001</td>
+                                                        <td>PAID</td>
+                                                        <td>REQ-0001</td>
+                                                        <td>GOOD</td>
+
+
+                                                    </tr>
+                                                     <tr>
+                                                        <td style="white-space: nowrap;">08-09-2024</td>
+                                                        <td>PO# 0001</td>
+                                                        <td>CATHERINE</td>
+                                                        <td>
+                                                            <a href="#">2MMTHHNPDBLUE</a>
+                                                        </td>
+                                                        <td style="white-space: nowrap;">2.0MM THHN PD</td>
+                                                        <td>12</td>
+                                                        <td>ROLL</td>
+                                                        <td>1,000.00</td>
+                                                        <td>12,000.00</td>
+                                                        <td>SORSU DORM</td>
+                                                        <td>FBBD-0001</td>
+                                                        <td>GOOD</td>
+                                                        <td>WIREMASTER</td>
+                                                        <td>GOOD</td>
+                                                        <td>DEL-0001</td>
+                                                        <td>INV-0001</td>
+                                                        <td>PAID</td>
+                                                        <td>REQ-0001</td>
+                                                        <td>GOOD</td>
+
+
+                                                    </tr>
+                                                     <tr>
+                                                        <td style="white-space: nowrap;">08-09-2024</td>
+                                                        <td>PO# 0001</td>
+                                                        <td>CATHERINE</td>
+                                                        <td>
+                                                            <a href="#">2MMTHHNPDBLUE</a>
+                                                        </td>
+                                                        <td style="white-space: nowrap;">2.0MM THHN PD</td>
+                                                        <td>12</td>
+                                                        <td>ROLL</td>
+                                                        <td>1,000.00</td>
+                                                        <td>12,000.00</td>
+                                                        <td>SORSU DORM</td>
+                                                        <td>FBBD-0001</td>
+                                                        <td>GOOD</td>
+                                                        <td>WIREMASTER</td>
+                                                        <td>GOOD</td>
+                                                        <td>DEL-0001</td>
+                                                        <td>INV-0001</td>
+                                                        <td>PAID</td>
+                                                        <td>REQ-0001</td>
+                                                        <td>GOOD</td>
+
+
+                                                    </tr>
+                                                     <tr>
+                                                        <td style="white-space: nowrap;">08-09-2024</td>
+                                                        <td>PO# 0001</td>
+                                                        <td>CATHERINE</td>
+                                                        <td>
+                                                            <a href="#">2MMTHHNPDBLUE</a>
+                                                        </td>
+                                                        <td style="white-space: nowrap;">2.0MM THHN PD</td>
+                                                        <td>12</td>
+                                                        <td>ROLL</td>
+                                                        <td>1,000.00</td>
+                                                        <td>12,000.00</td>
+                                                        <td>SORSU DORM</td>
+                                                        <td>FBBD-0001</td>
+                                                        <td>GOOD</td>
+                                                        <td>WIREMASTER</td>
+                                                        <td>GOOD</td>
+                                                        <td>DEL-0001</td>
+                                                        <td>INV-0001</td>
+                                                        <td>PAID</td>
+                                                        <td>REQ-0001</td>
+                                                        <td>GOOD</td>
+
+
+                                                    </tr>
+                                                     <tr>
+                                                        <td style="white-space: nowrap;">08-09-2024</td>
+                                                        <td>PO# 0001</td>
+                                                        <td>CATHERINE</td>
+                                                        <td>
+                                                            <a href="#">2MMTHHNPDBLUE</a>
+                                                        </td>
+                                                        <td style="white-space: nowrap;">2.0MM THHN PD</td>
+                                                        <td>12</td>
+                                                        <td>ROLL</td>
+                                                        <td>1,000.00</td>
+                                                        <td>12,000.00</td>
+                                                        <td>SORSU DORM</td>
+                                                        <td>FBBD-0001</td>
+                                                        <td>GOOD</td>
+                                                        <td>WIREMASTER</td>
+                                                        <td>GOOD</td>
+                                                        <td>DEL-0001</td>
+                                                        <td>INV-0001</td>
+                                                        <td>PAID</td>
+                                                        <td>REQ-0001</td>
+                                                        <td>GOOD</td>
+
+
+                                                    </tr>
+
+
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+{% endblock %}
