@@ -39,46 +39,64 @@
                                         <div class="card-header" style="background-color: darkgreen; color: white;">
                                             <h4>Purchase Order Data Table</h4>
                                             <div class="card-header-action">
-                                                <form>
+                                                <form method="get" action=""
+                                                      class="form-inline justify-content-center col-12">
                                                     <div class="input-group">
-                                                        <input type="text" class="form-control" placeholder="Search">
+                                                        <input type="text" name="q" class="form-control"
+                                                               placeholder="Search" value="{{ request.GET.q }}">
                                                         <div class="input-group-btn">
-                                                            <button class="btn btn-primary"><i
+                                                            <button class="btn btn-primary" type="submit"><i
                                                                     class="fas fa-search"></i></button>
                                                         </div>
+                                                        {% if request.GET.q %}
+                                                            <a href="{% url 'purchase_order_list' %}"
+                                                               class="btn btn-secondary ml-2">Clear Filter</a>
+                                                        {% endif %}
                                                     </div>
                                                 </form>
                                             </div>
+                                            <form action="{% url 'export_orders_to_excel' %}" method="get">
+                                                <input type="hidden" name="q" value="{{ request.GET.q }}">
+                                                <input type="hidden" name="date" value="{{ request.GET.date }}">
+                                                <button type="submit" class="btn btn-primary">Export to Excel</button>
+                                            </form>
                                         </div>
                                         <div class="card-body p-0">
                                             <div class="table-responsive">
-                                                <table class="table table-striped" id="sortable-table">
+                                                <table class="table table-hover table-striped" id="sortable-table">
                                                     <thead>
                                                     <tr class="green-background">
+                                                        <th style="color: white;">ACTIONS</th>
                                                         <th style="white-space: nowrap; color: white;">DATE</th>
                                                         <th style="color: white;">PO#</th>
                                                         <th style="color: white;">PURCHASER</th>
-                                                        <th style="color: white;">ITEM CODE</th>
+                                                        <th class="no-wrap" style="color: white;">ITEM CODE</th>
                                                         <th style="color: white;">PARTICULAR</th>
                                                         <th style="color: white;">QTY</th>
                                                         <th style="color: white;">UNIT</th>
                                                         <th style="color: white;">PRICE</th>
-                                                        <th style="color: white;">TOTAL AMOUNT</th>
-                                                        <th style="color: white;">SITE DELIVERED</th>
-                                                        <th style="color: white;">FBBD DR#</th>
+                                                        <th class="no-wrap" style="color: white;">TOTAL AMOUNT</th>
+                                                        <th class="no-wrap" style="color: white;">SITE DELIVERED</th>
+                                                        <th class="no-wrap" style="color: white;">FBBD DR#</th>
                                                         <th style="color: white;">REMARKS</th>
                                                         <th style="color: white;">SUPPLIER</th>
-                                                        <th style="color: white;">REMARKS</th>
-                                                        <th style="color: white;">DELIVERY REF#</th>
+                                                        <th class="no-wrap" style="color: white;">DELIVERY REF#</th>
                                                         <th style="color: white;">INVOICE#</th>
-                                                        <th style="color: white;">PAYMENT DETAILS</th>
-                                                        <th style="color: white;">PAYMENT REQ.#</th>
+                                                        <th class="no-wrap" style="color: white;">PAYMENT DETAILS</th>
+                                                        <th class="no-wrap" style="color: white;">PAYMENT REQ.#</th>
                                                         <th style="color: white;">REMARKS</th>
                                                     </tr>
                                                     </thead>
                                                     <tbody>
                                                     {% for order in orders %}
                                                         <tr role="row" class="odd">
+                                                            <td>
+                                                                <!-- Edit button -->
+                                                                <a href="{% url 'purchase_order_edit' order.id %}"
+                                                                   class="btn btn-warning btn-sm">
+                                                                    Edit
+                                                                </a>
+                                                            </td>
                                                             <td class="no-wrap">{{ order.date }}</td>
                                                             <td>{{ order.po_number }}</td>
                                                             <td class="no-wrap">{{ order.purchaser }}</td>
@@ -96,8 +114,15 @@
                                                             <td>{{ order.invoice_no }}</td>
                                                             <td>{{ order.payment_details }}</td>
                                                             <td>{{ order.payment_req_ref }}</td>
-                                                            <td style="background-color: {{ order.remarks2_badge }};">
-                                                                {{ order.remarks2 }}
+                                                            <td>
+                                                                <span style="background-color: {{ order.remarks2_badge }};
+                                                                        color: white;
+                                                                        padding: 5px 10px;
+                                                                        border-radius: 20px;
+                                                                        display: inline-block;
+                                                                        white-space: nowrap;">
+                                                                    {{ order.remarks2 }}
+                                                                </span>
                                                             </td>
                                                         </tr>
                                                     {% endfor %}
@@ -106,16 +131,63 @@
                                                     </div>
                                                 </table>
                                             </div>
+
+                                            <!-- Pagination Controls -->
+                                            <div class="pagination-wrapper">
+                                                <nav aria-label="Page navigation">
+                                                    <ul class="pagination justify-content-center">
+                                                        {% if orders.has_previous %}
+                                                            <li class="page-item">
+                                                                <a class="page-link"
+                                                                   href="?page={{ orders.previous_page_number }}"
+                                                                   aria-label="Previous">
+                                                                    <span aria-hidden="true">&laquo;</span>
+                                                                </a>
+                                                            </li>
+                                                        {% endif %}
+                                                        {% for num in orders.paginator.page_range %}
+                                                            <li class="page-item {% if orders.number == num %}active{% endif %}">
+                                                                <a class="page-link"
+                                                                   href="?page={{ num }}">{{ num }}</a>
+                                                            </li>
+                                                        {% endfor %}
+                                                        {% if orders.has_next %}
+                                                            <li class="page-item">
+                                                                <a class="page-link"
+                                                                   href="?page={{ orders.next_page_number }}"
+                                                                   aria-label="Next">
+                                                                    <span aria-hidden="true">&raquo;</span>
+                                                                </a>
+                                                            </li>
+                                                        {% endif %}
+                                                    </ul>
+                                                </nav>
+                                            </div>
+                                            <form method="get" action="" class="form-inline justify-content-center">
+                                                <div class="form-group mb-2">
+                                                    <label for="page-number" class="sr-only">Page</label>
+                                                    <input type="number" class="form-control" id="page-number"
+                                                           name="page" min="1"
+                                                           max="{{ orders.paginator.num_pages }}"
+                                                           placeholder="Page No." required style="width: 120px;">
+                                                </div>
+                                                <button type="submit" class="btn btn-primary mb-2" style="width: 70px;">
+                                                    Go
+                                                </button>
+                                            </form>
+                                            <p>Page {{ orders.number }} of {{ orders.paginator.num_pages }}</p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
+
                         </div>
                     </div>
-
-                </section>
             </div>
+
+            </section>
         </div>
+    </div>
     </div>
 
 {% endblock %}
