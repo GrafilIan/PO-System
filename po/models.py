@@ -1,4 +1,13 @@
 from django.db import models
+from django.utils import timezone
+
+class ArchiveFolder(models.Model):
+    name = models.CharField(max_length=100)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return self.name
+
 
 class PurchaseOrder(models.Model):
     DELIVERY_REF_CHOICES = [
@@ -42,6 +51,7 @@ class PurchaseOrder(models.Model):
     payment_req_ref = models.CharField(max_length=255, verbose_name='Payment Req Ref#',null=True, blank=True)
     payment_details = models.TextField(blank=True, null=True, verbose_name='Payment Details')
     remarks2 = models.CharField(max_length=20, choices=REMARKS2_CHOICES, verbose_name='Remarks2',null=True)
+    folder = models.ForeignKey(ArchiveFolder, on_delete=models.SET_NULL, null=True, blank=True)
 
     @property
     def remarks2_badge(self):
@@ -57,3 +67,5 @@ class PurchaseOrder(models.Model):
 
     def __str__(self):
         return self.po_number
+
+

@@ -740,6 +740,9 @@ select.form-control:not([size]):not([multiple]) {
     border-top: 2px solid #3abaf4; }
   .card.card-dark {
     border-top: 2px solid #191d21; }
+  .card.card-desk {
+    border-top: 3px solid #007211; }
+
   .card.card-hero .card-header {
     padding: 40px;
     background-image: linear-gradient(to bottom, #6777ef, #95a0f4);
@@ -1310,9 +1313,9 @@ h6 .badge {
   color: #fff !important; }
 
 .btn-primary, .btn-primary.disabled {
-  box-shadow: 0 2px 6px #1e1f22;
-  background-color: #00199a;
-  border-color: #001a98; }
+  box-shadow: 0 2px 6px #37393f;
+  background-color: #1734c7;
+  border-color: #1a3098; }
   .btn-primary:focus, .btn-primary.disabled:focus {
     background-color: #0b0072 !important; }
     .btn-primary:focus:active, .btn-primary.disabled:focus:active {

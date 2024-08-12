@@ -18,18 +18,9 @@
         <div class="main-wrapper container-fluid">
             <div class="main-content">
                 <section class="section container-fluid">
-                    <div class="section-header">
-                        <h1>Top Navigation</h1>
-                        <div class="section-header-breadcrumb">
-                            <div class="breadcrumb-item active"><a href="{% url 'purchase_order_create' %}">Add</a>
-                            </div>
-                            <div class="breadcrumb-item"><a href="#">Edit</a></div>
-                            <div class="breadcrumb-item">Delete</div>
-                        </div>
-                    </div>
 
                     <div class="section-body">
-                        <div class="card">
+                        <div class="card card-desk">
                             <div class="card-header">
                                 <h4>PURCHASE ORDER TABLE</h4>
                             </div>
@@ -50,16 +41,28 @@
                                                         </div>
                                                         {% if request.GET.q %}
                                                             <a href="{% url 'purchase_order_list' %}"
-                                                               class="btn btn-secondary ml-2">Clear Filter</a>
+                                                               class="btn btn-secondary">Clear Filter</a>
                                                         {% endif %}
                                                     </div>
                                                 </form>
                                             </div>
-                                            <form action="{% url 'export_orders_to_excel' %}" method="get">
-                                                <input type="hidden" name="q" value="{{ request.GET.q }}">
-                                                <input type="hidden" name="date" value="{{ request.GET.date }}">
-                                                <button type="submit" class="btn btn-primary">Export to Excel</button>
-                                            </form>
+
+                                            <div class="row">
+                                                <div class="col-auto">
+                                                    <button class="btn btn-primary"
+                                                            href="{% url 'purchase_order_create' %}">Add
+                                                    </button>
+                                                </div>
+
+                                                <div class="col-auto">
+                                                    <form action="{% url 'export_orders_to_excel' %}" method="get">
+                                                        <input type="hidden" name="q" value="{{ request.GET.q }}">
+                                                        <input type="hidden" name="date" value="{{ request.GET.date }}">
+                                                        <button type="submit" class="btn btn-primary">Export to Excel
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </div>
                                         </div>
                                         <div class="card-body p-0">
                                             <div class="table-responsive">

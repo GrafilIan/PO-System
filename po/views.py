@@ -6,9 +6,10 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
 from .forms import PurchaseOrderForm
-from .models import PurchaseOrder
+from .models import PurchaseOrder, ArchiveFolder
 from datetime import datetime
 import openpyxl
+from openpyxl.styles import NamedStyle, Font, PatternFill
 from io import BytesIO
 
 # Create your views here.
@@ -222,6 +223,10 @@ def export_orders_to_excel(request):
     sheet = workbook.active
     sheet.title = 'Purchase Orders'
 
+    header_font = Font(bold=True)
+    blue_fill = PatternFill(start_color='00B0F0', end_color='00B0F0', fill_type='solid')
+    currency_format = '#,##0.00'
+
     # Define the headers
     headers = [
         'Date', 'PO Number', 'Purchaser', 'Brand', 'Item Code', 'Particulars',
@@ -232,7 +237,10 @@ def export_orders_to_excel(request):
     ]
     sheet.append(headers)
 
-    currency_format = '#,##0.00'
+    for cell in sheet[1]:
+        cell.font = header_font
+        cell.fill = blue_fill
+
 
     # Populate the sheet with data
     for order in orders_list:
@@ -275,6 +283,31 @@ def export_orders_to_excel(request):
     )
     response['Content-Disposition'] = 'attachment; filename=PurchaseOrders.xlsx'
     return response
+
+
+# For Archiving Methods
+
+def create_folder(request):
+    if request.method == 'POST':
+        folder_name = request.POST.get('folder_name')
+        if folder_name:
+            ArchiveFolder.objects.create(name=folder_name)
+            return redirect('list_folders')
+    return render(request, 'archive/create_folder.html')
+
+def list_folders(request):
+    folders = ArchiveFolder.objects.all()
+    return render(request, 'archive/list_folders.html', {'folders': folders})
+
+def delete_folder(request, folder_id):
+    folder = ArchiveFolder.objects.get(id=folder_id)
+    folder.delete()
+    return redirect('list_folders')
+
+def archive_orders(request, folder_id):
+    folder = ArchiveFolder.objects.get(id=folder_id)
+    orders = PurchaseOrder.objects.filter(folder=folder)
+    return render(request, 'archive_orders.html', {'folder': folder, 'orders': orders})
 
 
 
