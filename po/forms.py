@@ -74,3 +74,7 @@ class PurchaseOrderForm(forms.ModelForm):
         self.fields['payment_details'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Payment Details'})
         self.fields['remarks2'].widget.attrs.update({'class': 'form-control'})
 
+
+class UploadFileForm(forms.Form):
+    file = forms.FileField()
+

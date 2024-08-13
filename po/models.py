@@ -31,7 +31,7 @@ class PurchaseOrder(models.Model):
 
     id = models.AutoField(primary_key=True)
     date = models.DateField(verbose_name='Date')
-    po_number = models.CharField(max_length=255, verbose_name='PO#')
+    po_number = models.CharField(max_length=255, verbose_name='PO#', null=True)
     purchaser = models.CharField(max_length=255, verbose_name='Purchaser')
     brand = models.CharField(max_length=255, verbose_name='Brand', null=True, blank=True)
     item_code = models.CharField(max_length=255, blank=True, null=True, verbose_name='Item Code')

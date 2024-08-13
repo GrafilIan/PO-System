@@ -1,0 +1,26 @@
+{% extends 'frontdeskbase.html' %}
+
+{% block content %}
+    <div id="app">
+        <div class="main-wrapper container-fluid">
+            <div class="main-content">
+                <section class="section container-fluid">
+
+                    <div class="section-body">
+                        <div class="card card-desk">
+                            <div class="card-header">
+                                <h2>Upload Purchase Orders</h2>
+                                <form method="post" enctype="multipart/form-data">
+                                    {% csrf_token %}
+                                    {{ form.as_p }}
+                                    <button type="submit" class="btn btn-primary">Upload</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

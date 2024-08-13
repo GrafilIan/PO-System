@@ -13,4 +13,11 @@ urlpatterns = [
     path('purchase_order/edit/<int:id>/', views.purchase_order_edit, name='purchase_order_edit'),
     path('export-orders/', export_orders_to_excel, name='export_orders_to_excel'),
 
+    path('folders/', views.list_folders, name='list_folders'),
+    path('folders/create/', views.create_folder, name='create_folder'),
+    path('folders/<int:folder_id>/delete/', views.delete_folder, name='delete_folder'),
+    path('folders/<int:folder_id>/archive/', views.archive_orders, name='archive_orders'),
+    path('move-orders/', views.move_orders_to_folder, name='move_orders_to_folder'),
+    path('upload/', views.upload_file, name='upload_file'),
+
 ]

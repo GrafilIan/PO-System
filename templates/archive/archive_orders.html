@@ -14,6 +14,7 @@
 {% endblock %}
 
 {% block content %}
+    <!-- Data Table for Orders -->
     <div id="app">
         <div class="main-wrapper container-fluid">
             <div class="main-content">
@@ -22,29 +23,9 @@
                     <div class="section-body">
                         <div class="card card-desk">
                             <div class="card-header">
-                                <h4>PURCHASE ORDER TABLE</h4>
-                                <div class="card-header-action d-flex align-items-center justify-content-between">
-                                    <h4 class="mr-3 mb-0">Move Selected Orders</h4>
-                                    <form id="move-orders-form" method="post" action="{% url 'move_orders_to_folder' %}"
-                                          class="card-header-form">
-                                        {% csrf_token %}
-                                        <div class="btn-group">
-                                            <select id="folder-select" name="folder" class="form-control" required>
-                                                <option value="">-- Select a Folder --</option>
-                                                {% for folder in folders %}
-                                                    <option value="{{ folder.id }}">{{ folder.name }}</option>
-                                                {% endfor %}
-                                            </select>
-                                            <button type="submit" class="btn btn-secondary btn-move-icon ml-2">Move <i
-                                                    class="fas fa-folder"></i></button>
-                                        </div>
-                                        <div id="selected-orders"></div>
-                                    </form>
-                                </div>
+                                <h4>Orders in Folder: {{ folder.name }}</h4>
                             </div>
-
                             <div class="card-body">
-
                                 <div class="col-12">
                                     <div class="card">
                                         <div class="card-header" style="background-color: darkgreen; color: white;">
@@ -59,22 +40,21 @@
                                                             <button class="btn btn-primary" type="submit"><i
                                                                     class="fas fa-search"></i></button>
                                                         </div>
-
-                                                    </div>
-
-                                                    <div class="col-auto">
                                                         {% if request.GET.q %}
                                                             <a href="{% url 'purchase_order_list' %}"
-                                                               class="btn btn-outline-primary">Clear Filter</a>
+                                                               class="btn btn-secondary">Clear Filter</a>
                                                         {% endif %}
                                                     </div>
+                                                    <div class="col-auto">
+                                                        <a href="{% url 'purchase_order_create' %}" class="btn btn-primary">Add</a>
 
-                                                    <a href="{% url 'purchase_order_create' %}"
-                                                       class="btn btn-primary">Add</a>
+                                                    </div>
                                                 </form>
                                             </div>
 
                                             <div class="row">
+
+
                                                 <div class="col-auto">
                                                     <form action="{% url 'export_orders_to_excel' %}" method="get">
                                                         <input type="hidden" name="q" value="{{ request.GET.q }}">
@@ -84,13 +64,14 @@
                                                     </form>
                                                 </div>
 
+
                                             </div>
                                         </div>
                                         <div class="card-body p-0">
                                             <div class="table-responsive">
-
                                                 <table class="table table-hover table-striped" id="sortable-table">
                                                     <thead>
+                                                    <tr class="green-background">
                                                     <tr class="green-background">
                                                         <th style="color: white;">
                                                             <input type="checkbox" id="select-all">
@@ -105,15 +86,13 @@
                                                         <th style="color: white;">UNIT</th>
                                                         <th style="color: white;">PRICE</th>
                                                         <th class="no-wrap" style="color: white;">TOTAL AMOUNT</th>
-                                                        <th class="no-wrap" style="color: white;">SITE DELIVERED
-                                                        </th>
+                                                        <th class="no-wrap" style="color: white;">SITE DELIVERED</th>
                                                         <th class="no-wrap" style="color: white;">FBBD DR#</th>
                                                         <th style="color: white;">REMARKS</th>
                                                         <th style="color: white;">SUPPLIER</th>
                                                         <th class="no-wrap" style="color: white;">DELIVERY REF#</th>
                                                         <th style="color: white;">INVOICE#</th>
-                                                        <th class="no-wrap" style="color: white;">PAYMENT DETAILS
-                                                        </th>
+                                                        <th class="no-wrap" style="color: white;">PAYMENT DETAILS</th>
                                                         <th class="no-wrap" style="color: white;">PAYMENT REQ.#</th>
                                                         <th style="color: white;">REMARKS</th>
                                                     </tr>
@@ -214,62 +193,14 @@
                                             <p>Page {{ orders.number }} of {{ orders.paginator.num_pages }}</p>
                                         </div>
                                     </div>
-
                                 </div>
                             </div>
+
                         </div>
                     </div>
-                </section>
             </div>
+            </section>
         </div>
     </div>
-
+    </div>
 {% endblock %}
-
-{% block scripts %}
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const selectAllCheckbox = document.getElementById('select-all');
-            const rowCheckboxes = document.querySelectorAll('.select-row');
-            const selectedOrdersDiv = document.getElementById('selected-orders');
-
-            function updateSelectedOrders() {
-                selectedOrdersDiv.innerHTML = ''; // Clear existing hidden inputs
-                rowCheckboxes.forEach(function (checkbox) {
-                    if (checkbox.checked) {
-                        const hiddenInput = document.createElement('input');
-                        hiddenInput.type = 'hidden';
-                        hiddenInput.name = 'orders'; // Ensure this matches your view
-                        hiddenInput.value = checkbox.dataset.id;
-                        selectedOrdersDiv.appendChild(hiddenInput);
-                    }
-                });
-            }
-
-            selectAllCheckbox.addEventListener('change', function () {
-                const isChecked = selectAllCheckbox.checked;
-                rowCheckboxes.forEach(function (checkbox) {
-                    checkbox.checked = isChecked;
-                });
-                updateSelectedOrders();
-            });
-
-            rowCheckboxes.forEach(function (checkbox) {
-                checkbox.addEventListener('change', function () {
-                    if (!this.checked) {
-                        selectAllCheckbox.checked = false;
-                    }
-                    if (document.querySelectorAll('.select-row:checked').length === rowCheckboxes.length) {
-                        selectAllCheckbox.checked = true;
-                    }
-                    updateSelectedOrders();
-                });
-            });
-        });
-
-
-    </script>
-
-{% endblock %}
-

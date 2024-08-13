@@ -1223,7 +1223,7 @@ h6 .badge {
   min-height: 35px; }
 
 .btn-secondary, .btn-secondary.disabled {
-  box-shadow: 0 2px 6px #242426;
+  box-shadow: 0 2px 6px #a2a2a9;
   background-color: #cdd3d8;
   border-color: #b7b7b7;
   color: #242426; }
@@ -2896,4 +2896,33 @@ body:not(.sidebar-mini) .sidebar-style-2 .sidebar-menu li.active ul.dropdown-men
 
 .no-wrap {
     white-space: nowrap;
+}
+
+.dropdown-container {
+    position: relative;
+}
+
+.btn-move-icon {
+  border-radius: 4px 1px 4px 4px;
+  white-space: nowrap; /* Prevents text from wrapping */
+}
+
+#folder-select,
+.btn-icon {
+    height: 38px; /* Adjust this value to match the height of your button */
+    line-height: 1.5; /* Adjust the line height to vertically align the text */
+}
+
+/* Ensure the select input has no rounded corners on the right side */
+#folder-select {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-top-left-radius: 30px;
+    border-bottom-left-radius: 30px;
+    flex: 1;
+}
+
+/* Optional: Add some space between the select input and the button */
+.ml-2 {
+    margin-left: 8px; /* Adjust the space as needed */
 }

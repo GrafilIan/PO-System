@@ -19,7 +19,7 @@
     <link rel="stylesheet" href="{% static 'assets/modules/owlcarousel2/dist/assets/owl.theme.default.min.css' %}">
 
     <!-- Template CSS -->
-    <link rel="stylesheet" href="{% static 'assets/css/preloader.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/newloader.css' %}">
     <link rel="stylesheet" href="{% static 'assets/css/style.css' %}">
     <link rel="stylesheet" href="{% static 'assets/css/components.css' %}">
     <link rel="stylesheet" href="{% static 'assets/modules/ionicons/css/ionicons.min.css' %}">
@@ -43,6 +43,15 @@
     {% block head %}
     {% endblock %}
 <body class="layout-3">
+
+<div class="wrapper" id="loader">
+        <div class="three-body">
+            <div class="three-body__dot"></div>
+            <div class="three-body__dot"></div>
+            <div class="three-body__dot"></div>
+        </div>
+    </div>
+
 <div id="app">
     <div class="main-wrapper container">
         <div class="navbar-desk"></div>
@@ -100,7 +109,7 @@
                                     class="fas fa-truck"></i><span>PO Supplier</span></a>
                         </li>
                         <li class="nav-item">
-                            <a href="archive.html" class="nav-link"><i
+                            <a href="{% url 'list_folders' %}" class="nav-link"><i
                                     class="fas fa-archive"></i><span>Archive</span></a>
                         </li>
                     </ul>
@@ -162,18 +171,18 @@
     }
 </script>
 
-<script>
-    window.addEventListener('load', function () {
-        const loader = document.getElementById('loader');
+   <script>
+        window.addEventListener('load', function () {
+            const loader = document.getElementById('loader');
 
-        setTimeout(function () {
-            loader.style.opacity = '0'; // Start fading out
             setTimeout(function () {
-                loader.style.display = 'none';
-            }, 300); // Hide the loader 1 second after fading out
-        }, 1500); // Start fading out after 1.5 seconds
-    });
-</script>
+                loader.style.opacity = '0'; // Start fading out
+                setTimeout(function () {
+                    loader.style.display = 'none';
+                }, 300); // Hide the loader 300ms after fading out
+            }, 1500); // Start fading out after 1.5 seconds
+        });
+    </script>
 
 
 <script src="{% static 'assets/modules/jquery.min.js' %}"></script>
@@ -207,6 +216,7 @@
 <script src="{% static 'assets/js/page/bootstrap-modal.js' %}"></script>
 
 {% block scripts %}
+
 {% endblock %}
 </body>
 </html>

@@ -1,3 +1,4 @@
+import pandas as pd
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.shortcuts import render, redirect, get_object_or_404
@@ -5,12 +6,13 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
-from .forms import PurchaseOrderForm
+from .forms import PurchaseOrderForm, UploadFileForm
 from .models import PurchaseOrder, ArchiveFolder
 from datetime import datetime
 import openpyxl
 from openpyxl.styles import NamedStyle, Font, PatternFill
 from io import BytesIO
+
 
 # Create your views here.
 
@@ -26,6 +28,7 @@ def login_view(request):
             messages.error(request, 'Invalid username or password')
             return render(request, 'authentication/login.html', {'error': 'Invalid credentials'})
     return render(request, 'authentication/login.html')
+
 
 @login_required
 def dashboard_view(request):
@@ -62,8 +65,6 @@ def purchase_order_create(request):
     return render(request, 'records/purchase_order_form.html', {'form': form})
 
 
-
-
 def purchase_order_success(request):
     return render(request, 'records/purchase_order_success.html')
 
@@ -74,7 +75,8 @@ def purchase_order_list(request):
     date_query = request.GET.get('date')  # 'date' is the name of the date input field
 
     # Start with all orders
-    orders_list = PurchaseOrder.objects.all()
+
+    orders_list = PurchaseOrder.objects.filter(folder__isnull=True)
 
     # If there's a search query, filter the orders accordingly
     if query:
@@ -131,13 +133,15 @@ def purchase_order_list(request):
                         except ValueError:
                             pass  # Handle invalid date input gracefully
 
-
-
     paginator = Paginator(orders_list, 20)  # Paginate after every 20 entries
     page_number = request.GET.get('page')
     orders = paginator.get_page(page_number)
+    folders = ArchiveFolder.objects.all()
 
-    return render(request, 'dashboards/front_desk_dashboard.html', {'orders': orders})
+    return render(request, 'dashboards/front_desk_dashboard.html', {
+        'orders': orders,
+        'folders': folders
+    })
 
 
 def purchase_order_edit(request, id):
@@ -241,7 +245,6 @@ def export_orders_to_excel(request):
         cell.font = header_font
         cell.fill = blue_fill
 
-
     # Populate the sheet with data
     for order in orders_list:
         sheet.append([
@@ -293,23 +296,81 @@ def create_folder(request):
         if folder_name:
             ArchiveFolder.objects.create(name=folder_name)
             return redirect('list_folders')
-    return render(request, 'archive/create_folder.html')
+    return render(request, 'archive/list_folders.html')
+
 
 def list_folders(request):
     folders = ArchiveFolder.objects.all()
     return render(request, 'archive/list_folders.html', {'folders': folders})
+
 
 def delete_folder(request, folder_id):
     folder = ArchiveFolder.objects.get(id=folder_id)
     folder.delete()
     return redirect('list_folders')
 
+
 def archive_orders(request, folder_id):
     folder = ArchiveFolder.objects.get(id=folder_id)
     orders = PurchaseOrder.objects.filter(folder=folder)
-    return render(request, 'archive_orders.html', {'folder': folder, 'orders': orders})
+    return render(request, 'archive/archive_orders.html', {'folder': folder, 'orders': orders})
 
 
+def move_orders_to_folder(request):
+    if request.method == 'POST':
+        folder_id = request.POST.get('folder')
+        order_ids = request.POST.getlist('orders')
+
+        if not folder_id or not order_ids:
+            messages.error(request, 'Folder or orders not selected.')
+            return redirect('purchase_order_list')
+
+        try:
+            folder = ArchiveFolder.objects.get(id=folder_id)
+        except ArchiveFolder.DoesNotExist:
+            messages.error(request, 'Selected folder does not exist.')
+            return redirect('purchase_order_list')
+
+        PurchaseOrder.objects.filter(id__in=order_ids).update(folder=folder)
+        messages.success(request, 'Orders successfully moved.')
+        return redirect('purchase_order_list')
+
+    return redirect('purchase_order_list')
 
 
+def handle_uploaded_file(f):
+    df = pd.read_excel(f, engine='openpyxl')
+    for _, row in df.iterrows():
+        PurchaseOrder.objects.create(
+            date=row.get('Date'),
+            po_number=row.get('PO#'),
+            purchaser=row.get('PURCHASER'),
+            brand=row.get('BRAND'),
+            item_code=row.get('ITEM CODE'),
+            particulars=row.get('PARTICULAR'),
+            quantity=row.get('QTY'),
+            unit=row.get('UNIT'),
+            price=row.get('PRICE'),
+            total_amount=row.get('TOTAL AMOUNT'),
+            site_delivered=row.get('SITE DELIVERED'),
+            fbbd_ref_number=row.get('FBBD DR#'),
+            remarks=row.get('REMARKS'),
+            supplier=row.get('SUPPLIER'),
+            delivery_ref=row.get('DELIVERY REF#'),
+            invoice_type=row.get('INVOICE#'),
+            invoice_no=row.get('INVOICE NO.'),
+            payment_req_ref=row.get('PAYMENT REQ.#'),
+            payment_details=row.get('PAYMENT DETAILS'),
+            remarks2=row.get('REMARKS')
+        )
 
+def upload_file(request):
+    if request.method == 'POST':
+        form = UploadFileForm(request.POST, request.FILES)
+        if form.is_valid():
+            handle_uploaded_file(request.FILES['file'])
+            messages.success(request, 'File uploaded and data imported successfully.')
+            return redirect('front_desk_dashboard')
+    else:
+        form = UploadFileForm()
+    return render(request, 'records/upload.html', {'form': form})
