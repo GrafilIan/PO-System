@@ -1,20 +1,28 @@
 {% extends 'frontdeskbase.html' %}
-
+{% load static %}
 {% block content %}
     <div id="app">
         <div class="main-wrapper container-fluid">
             <div class="main-content">
-                <section class="section container-fluid">
-
-                    <div class="section-body">
-                        <div class="card card-desk">
-                            <div class="card-header">
-                                <h2>Upload Purchase Orders</h2>
-                                <form method="post" enctype="multipart/form-data">
-                                    {% csrf_token %}
-                                    {{ form.as_p }}
-                                    <button type="submit" class="btn btn-primary">Upload</button>
-                                </form>
+                <section class="section">
+                    <div class="container d-flex justify-content-center align-items-center">
+                        <div class="col-12 col-md-8 col-lg-6">
+                            <div class="card card-desk" style="box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); border-radius: 8px;">
+                                <div class="text-center" style="margin-top: 20px;">
+                                    <h2>Upload Purchase Orders</h2>
+                                </div>
+                                <div class="card-body text-center">
+                                    <img src="{% static 'assets/img/upload.jpg' %}" alt="logo" class="img-fluid" style="max-width: 150px; height: auto; margin-bottom: 20px;">
+                                    <form method="post" enctype="multipart/form-data" id="uploadForm">
+                                        {% csrf_token %}
+                                        <div class="d-flex flex-column flex-sm-row justify-content-center align-items-center mb-3">
+                                            <label class="input-group-prepend" for="id_file" style="cursor: pointer;">
+                                                {{ form.file }}
+                                            </label>
+                                            <button type="submit" class="btn btn-primary mt-2 mt-sm-0 ml-sm-2">Upload</button>
+                                        </div>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -22,5 +30,20 @@
             </div>
         </div>
     </div>
-
 {% endblock %}
+
+<script>
+    function displayFileName() {
+        const fileInput = document.getElementById('id_file');
+        const fileNameDisplay = document.getElementById('fileName');
+
+        if (fileInput && fileInput.files.length > 0) {
+            fileNameDisplay.innerHTML = `<p>Selected file: ${fileInput.files[0].name}</p>`;
+        } else {
+            fileNameDisplay.innerHTML = `<p>No file selected</p>`;
+        }
+    }
+
+    // Attach the function to the onchange event
+    document.getElementById('id_file').addEventListener('change', displayFileName);
+</script>

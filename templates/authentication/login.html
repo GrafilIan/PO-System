@@ -13,9 +13,18 @@
     <!-- Template CSS -->
     <link rel="stylesheet" href="{% static 'assets/css/style.css' %}">
     <link rel="stylesheet" href="{% static 'assets/css/components.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/newloader.css' %}">
 </head>
 
 <body style="background-color: #e7e7e7; background-image: url('{% static 'assets/img/Lpage05.jpg' %}'); background-size: cover; background-repeat: no-repeat; background-attachment: fixed;">
+
+<div class="wrapper" id="loader">
+        <div class="three-body">
+            <div class="three-body__dot"></div>
+            <div class="three-body__dot"></div>
+            <div class="three-body__dot"></div>
+        </div>
+    </div>
 
 <div class="container mt-5">
     <div class="row justify-content-center">
@@ -62,5 +71,34 @@
 <!-- General JS Scripts -->
 <script src="{% static 'assets/modules/jquery.min.js' %}"></script>
 <script src="{% static 'assets/modules/bootstrap/js/bootstrap.min.js' %}"></script>
+
+<script src="assets/modules/jquery.min.js"></script>
+<script src="assets/modules/popper.js"></script>
+<script src="assets/modules/tooltip.js"></script>
+<script src="assets/modules/bootstrap/js/bootstrap.min.js"></script>
+<script src="assets/modules/nicescroll/jquery.nicescroll.min.js"></script>
+<script src="assets/modules/moment.min.js"></script>
+<script src="assets/js/stisla.js"></script>
+
+<!-- JS Libraies -->
+
+<!-- Page Specific JS File -->
+
+<!-- Template JS File -->
+<script src="assets/js/scripts.js"></script>
+<script src="assets/js/custom.js"></script>
+
+ <script>
+        window.addEventListener('load', function () {
+            const loader = document.getElementById('loader');
+
+            setTimeout(function () {
+                loader.style.opacity = '0'; // Start fading out
+                setTimeout(function () {
+                    loader.style.display = 'none';
+                }, 300); // Hide the loader 300ms after fading out
+            }, 1500); // Start fading out after 1.5 seconds
+        });
+    </script>
 </body>
 </html>

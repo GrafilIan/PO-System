@@ -1,4 +1,5 @@
 import pandas as pd
+import openpyxl
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.shortcuts import render, redirect, get_object_or_404
@@ -9,7 +10,6 @@ from django.contrib import messages
 from .forms import PurchaseOrderForm, UploadFileForm
 from .models import PurchaseOrder, ArchiveFolder
 from datetime import datetime
-import openpyxl
 from openpyxl.styles import NamedStyle, Font, PatternFill
 from io import BytesIO
 
@@ -170,7 +170,7 @@ def export_orders_to_excel(request):
     date_query = request.GET.get('date')  # Date query parameter
 
     # Start with all orders
-    orders_list = PurchaseOrder.objects.all()
+    orders_list = PurchaseOrder.objects.filter(folder__isnull=True)
 
     # Apply search filter
     if query:
@@ -248,7 +248,7 @@ def export_orders_to_excel(request):
     # Populate the sheet with data
     for order in orders_list:
         sheet.append([
-            order.date.strftime('%Y-%m-%d'), order.po_number, order.purchaser, order.brand, order.item_code,
+            order.date.strftime('%Y-%m-%d') if order.date else 'N/A', order.po_number, order.purchaser, order.brand, order.item_code,
             order.particulars, order.quantity, order.unit, order.price, order.total_amount, order.site_delivered,
             order.fbbd_ref_number, order.remarks, order.supplier, order.delivery_ref, order.delivery_no,
             order.invoice_type, order.invoice_no, order.payment_req_ref, order.payment_details, order.remarks2
@@ -313,7 +313,15 @@ def delete_folder(request, folder_id):
 def archive_orders(request, folder_id):
     folder = ArchiveFolder.objects.get(id=folder_id)
     orders = PurchaseOrder.objects.filter(folder=folder)
-    return render(request, 'archive/archive_orders.html', {'folder': folder, 'orders': orders})
+
+    paginator = Paginator(orders, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'archive/archive_orders.html', {
+        'folder': folder,
+        'orders': page_obj
+    })
 
 
 def move_orders_to_folder(request):
@@ -322,17 +330,21 @@ def move_orders_to_folder(request):
         order_ids = request.POST.getlist('orders')
 
         if not folder_id or not order_ids:
-            messages.error(request, 'Folder or orders not selected.')
+            messages.error(request, 'Please select both a folder and orders to move.')
             return redirect('purchase_order_list')
+
+        folder = get_object_or_404(ArchiveFolder, id=folder_id)
 
         try:
-            folder = ArchiveFolder.objects.get(id=folder_id)
-        except ArchiveFolder.DoesNotExist:
-            messages.error(request, 'Selected folder does not exist.')
+            updated_orders = PurchaseOrder.objects.filter(id__in=order_ids).update(folder=folder)
+            if updated_orders > 0:
+                messages.success(request, f'{updated_orders} orders successfully moved to {folder.name}.')
+            else:
+                messages.warning(request, 'No orders were moved.')
+        except Exception as e:
+            messages.error(request, f'An error occurred while moving orders: {str(e)}')
             return redirect('purchase_order_list')
 
-        PurchaseOrder.objects.filter(id__in=order_ids).update(folder=folder)
-        messages.success(request, 'Orders successfully moved.')
         return redirect('purchase_order_list')
 
     return redirect('purchase_order_list')

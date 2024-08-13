@@ -16,61 +16,59 @@
 
 {% block content %}
 
- <div id="app">
-    <div class="main-wrapper container-fluid">
-        <div class="main-content">
-            <section class="section container-fluid">
-                <div class="section-body">
-                    <div class="card card-desk">
-                        <div class="card-header">
-                            <h4>ARCHIVE FOLDER LIST</h4>
-                            <div class="card-header-action">
-                                <form method="POST" action="{% url 'create_folder' %}">
+    <div id="app">
+        <div class="main-wrapper container-fluid">
+            <div class="main-content">
+                <section class="section container-fluid">
+                    <div class="section-body">
+                        <div class="card card-desk">
+                            <div class="card-header d-flex justify-content-between align-items-center" style="margin-top: 10px">
+                                <h3 class="mb-0">ARCHIVE FOLDER LIST</h3>
+                                <form method="POST" action="{% url 'create_folder' %}"
+                                      class="d-flex align-items-center">
                                     {% csrf_token %}
-                                    <div class="card-body">
-                                        <div class="input-group d-flex justify-content-end">
-                                            <input type="text" name="folder_name" class="form-control col-12"
-                                                   placeholder="New folder name" required>
-                                            <div class="input-group-btn">
-                                                <button class="btn btn-primary btn-icon" type="submit">
-                                                    Create Folder
-                                                    <i class="fas fa-folder"></i>
-                                                </button>
-                                            </div>
+                                    <div class="input-group">
+                                        <input type="text" name="folder_name" class="form-control"
+                                               placeholder="New folder name" required>
+                                        <div class="input-group-append">
+                                            <button type="submit" class="btn btn-primary ml-2">
+                                                Create Folder
+                                                <i class="fas fa-folder"></i>
+                                            </button>
                                         </div>
                                     </div>
                                 </form>
                             </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="container">
-                                <div class="row gx-1 gy-2">
-                                    {% for folder in folders %}
-                                        <div class="col-12 col-sm-6 col-md-4 col-lg-3 d-flex mb-3">
-                                            <div class="fcard w-100">
-                                                <div class="fcard-details">
-                                                    <h4>
-                                                        <a href="{% url 'archive_orders' folder.id %}"
-                                                           class="text-dark font-weight-bold">{{ folder.name }}</a>
-                                                    </h4>
+
+                            <div class="card-body">
+                                <div class="container">
+                                    <div class="row gx-1 gy-2">
+                                        {% for folder in folders %}
+                                            <div class="col-12 col-sm-6 col-md-4 col-lg-3 d-flex mb-3">
+                                                <div class="fcard w-100">
+                                                    <div class="fcard-details" style="text-align: center;">
+                                                        <h4>
+                                                            <a href="{% url 'archive_orders' folder.id %}"
+                                                               class="text-dark font-weight-bold">{{ folder.name }}</a>
+                                                        </h4>
+                                                    </div>
+                                                    <form action="{% url 'delete_folder' folder.id %}" method="post"
+                                                          style="display: inline;">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="fcard-button">Delete</button>
+                                                    </form>
                                                 </div>
-                                                <form action="{% url 'delete_folder' folder.id %}" method="post"
-                                                      style="display: inline;">
-                                                    {% csrf_token %}
-                                                    <button type="submit" class="fcard-button">Delete</button>
-                                                </form>
                                             </div>
-                                        </div>
-                                    {% endfor %}
+                                        {% endfor %}
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </section>
+                </section>
+            </div>
         </div>
     </div>
-</div>
 
 
 

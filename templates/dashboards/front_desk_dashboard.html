@@ -83,6 +83,8 @@
                                                         </button>
                                                     </form>
                                                 </div>
+                                                <a href="{% url 'upload_file' %}" class="btn btn-primary">Upload
+                                                    File</a>
 
                                             </div>
                                         </div>
@@ -129,7 +131,7 @@
                                                             <td>
                                                                 <!-- Edit button -->
                                                                 <a href="{% url 'purchase_order_edit' order.id %}"
-                                                                   class="btn btn-warning btn-sm">
+                                                                   class="btn btn-warning btn-sm" style="width: 75px;">
                                                                     Edit
                                                                 </a>
                                                             </td>
@@ -222,6 +224,48 @@
                 </section>
             </div>
         </div>
+        <!-- Success Modal -->
+        <div class="modal fade" id="successModal" tabindex="-1" role="dialog" aria-labelledby="successModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="successModalLabel">Success!</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        Your orders have been successfully moved to the selected folder.
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-dismiss="modal">OK</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Modal -->
+        <div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="errorModalLabel">Error!</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        There was an error moving the orders. Please try again.
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-dismiss="modal">OK</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
 {% endblock %}
@@ -269,6 +313,76 @@
         });
 
 
+    </script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const selectAllCheckbox = document.getElementById('select-all');
+        const rowCheckboxes = document.querySelectorAll('.select-row');
+        const selectedOrdersDiv = document.getElementById('selected-orders');
+
+        function updateSelectedOrders() {
+            selectedOrdersDiv.innerHTML = ''; // Clear existing hidden inputs
+            rowCheckboxes.forEach(function (checkbox) {
+                if (checkbox.checked) {
+                    const hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.name = 'orders'; // Ensure this matches your view
+                    hiddenInput.value = checkbox.dataset.id;
+                    selectedOrdersDiv.appendChild(hiddenInput);
+                }
+            });
+        }
+
+        selectAllCheckbox.addEventListener('change', function () {
+            const isChecked = selectAllCheckbox.checked;
+            rowCheckboxes.forEach(function (checkbox) {
+                checkbox.checked = isChecked;
+            });
+            updateSelectedOrders();
+        });
+
+        rowCheckboxes.forEach(function (checkbox) {
+            checkbox.addEventListener('change', function () {
+                if (!this.checked) {
+                    selectAllCheckbox.checked = false;
+                }
+                if (document.querySelectorAll('.select-row:checked').length === rowCheckboxes.length) {
+                    selectAllCheckbox.checked = true;
+                }
+                updateSelectedOrders();
+            });
+        });
+
+        // Assuming you use Django messages framework to pass success or error messages
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == 'success' %}
+                    $('#successModal').modal('show');
+                {% elif message.tags == 'error' %}
+                    $('#errorModal').modal('show');
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    });
+</script>
+    <script>
+        document.getElementById('okButton').addEventListener('click', function() {
+            // Hide the modal
+            $('#successModal').modal('hide');
+
+            // Show the loader after the modal is closed
+            $('#successModal').on('hidden.bs.modal', function () {
+                showLoader();
+
+                // Perform any additional actions here, like redirecting or reloading the page
+                window.location.reload();
+            });
+        });
+
+        function showLoader() {
+            // Display the loader here
+            document.getElementById('loader').style.display = 'block';
+        }
     </script>
 
 {% endblock %}
