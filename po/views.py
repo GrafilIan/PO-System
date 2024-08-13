@@ -13,7 +13,6 @@ from datetime import datetime
 from openpyxl.styles import NamedStyle, Font, PatternFill
 from io import BytesIO
 
-
 # Create your views here.
 
 def login_view(request):
@@ -294,8 +293,11 @@ def create_folder(request):
     if request.method == 'POST':
         folder_name = request.POST.get('folder_name')
         if folder_name:
-            ArchiveFolder.objects.create(name=folder_name)
-            return redirect('list_folders')
+            try:
+                ArchiveFolder.objects.create(name=folder_name)
+                return JsonResponse({'status': 'success', 'message': 'Folder created successfully!'})
+            except Exception as e:
+                return JsonResponse({'status': 'error', 'message': f'Error creating folder: {e}'})
     return render(request, 'archive/list_folders.html')
 
 
@@ -383,9 +385,11 @@ def upload_file(request):
     if request.method == 'POST':
         form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
-            handle_uploaded_file(request.FILES['file'])
-            messages.success(request, 'File uploaded and data imported successfully.')
-            return redirect('purchase_order_list')
+            try:
+                handle_uploaded_file(request.FILES['file'])
+                return JsonResponse({'status': 'success', 'message': 'File uploaded and data imported successfully.'})
+            except Exception as e:
+                return JsonResponse({'status': 'error', 'message': str(e)})
     else:
         form = UploadFileForm()
     return render(request, 'records/upload.html', {'form': form})
