@@ -340,10 +340,12 @@ def move_orders_to_folder(request):
 
 def handle_uploaded_file(f):
     df = pd.read_excel(f, engine='openpyxl')
+    df = df.fillna('')  # Replace NaN with an empty string
+
     for _, row in df.iterrows():
         PurchaseOrder.objects.create(
-            date=row.get('Date'),
-            po_number=row.get('PO#'),
+            date=row.get('DATE'),
+            po_number=row.get('PO NUMBER'),
             purchaser=row.get('PURCHASER'),
             brand=row.get('BRAND'),
             item_code=row.get('ITEM CODE'),
@@ -351,17 +353,18 @@ def handle_uploaded_file(f):
             quantity=row.get('QTY'),
             unit=row.get('UNIT'),
             price=row.get('PRICE'),
-            total_amount=row.get('TOTAL AMOUNT'),
+            total_amount=row.get('T. AMOUNT'),
             site_delivered=row.get('SITE DELIVERED'),
-            fbbd_ref_number=row.get('FBBD DR#'),
+            fbbd_ref_number=row.get('FBBD REF#'),
             remarks=row.get('REMARKS'),
             supplier=row.get('SUPPLIER'),
             delivery_ref=row.get('DELIVERY REF#'),
-            invoice_type=row.get('INVOICE#'),
+            delivery_no=row.get('DELIVERY NO.'),
+            invoice_type=row.get('INVOICE TYPE'),
             invoice_no=row.get('INVOICE NO.'),
-            payment_req_ref=row.get('PAYMENT REQ.#'),
+            payment_req_ref=row.get('PAYMENT REQ REF#'),
             payment_details=row.get('PAYMENT DETAILS'),
-            remarks2=row.get('REMARKS')
+            remarks2=row.get('REMARKS2')
         )
 
 def upload_file(request):
@@ -370,7 +373,7 @@ def upload_file(request):
         if form.is_valid():
             handle_uploaded_file(request.FILES['file'])
             messages.success(request, 'File uploaded and data imported successfully.')
-            return redirect('front_desk_dashboard')
+            return redirect('purchase_order_list')
     else:
         form = UploadFileForm()
     return render(request, 'records/upload.html', {'form': form})
