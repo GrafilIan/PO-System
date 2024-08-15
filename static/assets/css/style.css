@@ -1528,7 +1528,7 @@ h6 .badge {
   left: 0;
   width: 100%;
   height: 75px;
-  background-color: #ffad00;
+  background-color: #000072;
   z-index: -1; }
 
 .navbar-desk {
@@ -2885,7 +2885,7 @@ body:not(.sidebar-mini) .sidebar-style-2 .sidebar-menu li.active ul.dropdown-men
 }
 
 .blue-background {
-    background-color: #000054;
+    background-color: #000072;
     color: white !important;
 }
 

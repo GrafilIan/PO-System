@@ -1,6 +1,27 @@
 from django.db import models
 from django.utils import timezone
 
+
+class ItemInventory(models.Model):
+    item_code = models.CharField(max_length=100, blank=True, null=True)
+    supplier = models.CharField(max_length=100, blank=True, null=True)
+    po_product_name = models.CharField(max_length=100, blank=True, null=True)
+    new_product_name = models.CharField(max_length=100, blank=True, null=True)
+    unit = models.CharField(max_length=50, blank=True, null=True)
+    quantity_in = models.IntegerField()
+    quantity_out = models.IntegerField(default=0)
+    stock = models.IntegerField(default=0)
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    total_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+
+    def save(self, *args, **kwargs):
+        self.stock = self.quantity_in - self.quantity_out
+        self.total_amount = self.stock * self.price
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.po_product_name} ({self.supplier})"
+
 class ArchiveFolder(models.Model):
     name = models.CharField(max_length=100)
     created_at = models.DateTimeField(default=timezone.now)
@@ -67,5 +88,7 @@ class PurchaseOrder(models.Model):
 
     def __str__(self):
         return self.po_number
+
+
 
 

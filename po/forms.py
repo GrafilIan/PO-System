@@ -1,5 +1,5 @@
 from django import forms
-from .models import PurchaseOrder
+from .models import PurchaseOrder, ItemInventory
 
 class PurchaseOrderForm(forms.ModelForm):
     class Meta:
@@ -78,3 +78,45 @@ class PurchaseOrderForm(forms.ModelForm):
 class UploadFileForm(forms.Form):
     file = forms.FileField()
 
+
+class ItemInventoryForm(forms.ModelForm):
+    class Meta:
+        model = ItemInventory
+        fields = [
+            'item_code',
+            'supplier',
+            'po_product_name',
+            'new_product_name',
+            'unit',
+            'quantity_in',
+            'quantity_out',
+            'stock',
+            'price',
+            'total_amount'
+        ]
+        widgets = {
+            'item_code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Item Code'}),
+            'supplier': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Supplier'}),
+            'po_product_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'PO Product Name'}),
+            'new_product_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'New Product Name'}),
+            'unit': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Unit'}),
+            'quantity_in': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Quantity In'}),
+            'quantity_out': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Quantity Out'}),
+            'price': forms.NumberInput(attrs={'step': '0.01', 'class': 'form-control', 'placeholder': 'Price'}),
+            'total_amount': forms.NumberInput(attrs={'step': '0.01', 'class': 'form-control', 'placeholder': 'Total Amount', 'readonly': True}),
+            'stock': forms.NumberInput(attrs={'readonly': True, 'class': 'form-control', 'placeholder': 'Stock'})
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(ItemInventoryForm, self).__init__(*args, **kwargs)
+        # Update any additional attributes for the fields if needed
+        self.fields['item_code'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Item Code'})
+        self.fields['supplier'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Supplier'})
+        self.fields['po_product_name'].widget.attrs.update({'class': 'form-control', 'placeholder': 'PO Product Name'})
+        self.fields['new_product_name'].widget.attrs.update({'class': 'form-control', 'placeholder': 'New Product Name'})
+        self.fields['unit'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Unit'})
+        self.fields['quantity_in'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Quantity In'})
+        self.fields['quantity_out'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Quantity Out'})
+        self.fields['price'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Price'})
+        self.fields['total_amount'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Total Amount', 'readonly': True})
+        self.fields['stock'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Stock', 'readonly': True})

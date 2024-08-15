@@ -7,12 +7,11 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
-from .forms import PurchaseOrderForm, UploadFileForm
-from .models import PurchaseOrder, ArchiveFolder
+from .forms import PurchaseOrderForm, UploadFileForm, ItemInventoryForm
+from .models import PurchaseOrder, ArchiveFolder, ItemInventory
 from datetime import datetime
 from openpyxl.styles import NamedStyle, Font, PatternFill
 from io import BytesIO
-
 # Create your views here.
 
 def login_view(request):
@@ -36,7 +35,7 @@ def dashboard_view(request):
     elif request.user.groups.filter(name='Front Desk').exists():
         return purchase_order_list(request)
     elif request.user.groups.filter(name='Inventory Manager').exists():
-        return render(request, 'dashboards/inventory_clerk_dashboard.html')
+        return inventory_table(request)
     elif request.user.is_superuser:
         return render(request, 'dashboards/front_desk_dashboard.html')
     else:
@@ -54,7 +53,31 @@ def purchase_order_create(request):
     if request.method == 'POST':
         form = PurchaseOrderForm(request.POST)
         if form.is_valid():
-            form.save()
+            # Save the purchase order
+            purchase_order = form.save()
+
+            # Check if an inventory record for the item exists
+            inventory_item = ItemInventory.objects.filter(
+                supplier=purchase_order.supplier,
+                po_product_name=purchase_order.particulars,
+                unit=purchase_order.unit,
+                price=purchase_order.price,
+            ).first()
+
+            if inventory_item:
+                # Update existing inventory record
+                inventory_item.quantity_in += purchase_order.quantity
+            else:
+                # Create a new inventory record
+                inventory_item = ItemInventory(
+                    supplier=purchase_order.supplier,
+                    po_product_name=purchase_order.particulars,
+                    unit=purchase_order.unit,
+                    quantity_in=purchase_order.quantity,
+                    price=purchase_order.price,
+                )
+            inventory_item.save()
+
             return JsonResponse({'status': 'success'})
         else:
             return JsonResponse({'status': 'error'})
@@ -64,8 +87,6 @@ def purchase_order_create(request):
     return render(request, 'records/purchase_order_form.html', {'form': form})
 
 
-def purchase_order_success(request):
-    return render(request, 'records/purchase_order_success.html')
 
 
 # For Viewing Records
@@ -149,7 +170,32 @@ def purchase_order_edit(request, id):
     if request.method == 'POST':
         form = PurchaseOrderForm(request.POST, instance=order)
         if form.is_valid():
-            form.save()
+            purchase_order = form.save()
+
+            # Update or create inventory item
+            inventory_item = ItemInventory.objects.filter(
+                supplier=purchase_order.supplier,
+                po_product_name=purchase_order.particulars,
+                unit=purchase_order.unit,
+                price=purchase_order.price,
+            ).first()
+
+            if inventory_item:
+                # Update existing inventory record
+                inventory_item.quantity_in += purchase_order.quantity
+            else:
+                # Create a new inventory record
+                inventory_item = ItemInventory(
+                    supplier=purchase_order.supplier,
+                    po_product_name=purchase_order.particulars,
+                    unit=purchase_order.unit,
+                    quantity_in=purchase_order.quantity,
+                    price=purchase_order.price,
+                )
+
+            # Save the inventory item
+            inventory_item.save()
+
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({'status': 'success'})
             return redirect('dashboard')
@@ -163,7 +209,6 @@ def purchase_order_edit(request, id):
 
 
 # For Exporting Records
-
 def export_orders_to_excel(request):
     query = request.GET.get('q')  # Search query parameter
     date_query = request.GET.get('date')  # Date query parameter
@@ -288,7 +333,6 @@ def export_orders_to_excel(request):
 
 
 # For Archiving Methods
-
 def create_folder(request):
     if request.method == 'POST':
         folder_name = request.POST.get('folder_name')
@@ -357,7 +401,8 @@ def handle_uploaded_file(f):
     df = df.fillna('')  # Replace NaN with an empty string
 
     for _, row in df.iterrows():
-        PurchaseOrder.objects.create(
+        # Create or update the PurchaseOrder
+        purchase_order = PurchaseOrder.objects.create(
             date=row.get('DATE'),
             po_number=row.get('PO NUMBER'),
             purchaser=row.get('PURCHASER'),
@@ -381,6 +426,31 @@ def handle_uploaded_file(f):
             remarks2=row.get('REMARKS2')
         )
 
+        # Check if an inventory record for the item exists
+        inventory_item = ItemInventory.objects.filter(
+            supplier=purchase_order.supplier,
+            po_product_name=purchase_order.particulars,
+            unit=purchase_order.unit,
+            price=purchase_order.price,
+        ).first()
+
+        if inventory_item:
+            # Update existing inventory record
+            inventory_item.quantity_in += purchase_order.quantity
+        else:
+            # Create a new inventory record
+            inventory_item = ItemInventory(
+                supplier=purchase_order.supplier,
+                po_product_name=purchase_order.particulars,
+                unit=purchase_order.unit,
+                quantity_in=purchase_order.quantity,
+                price=purchase_order.price,
+            )
+
+        # Save the inventory item
+        inventory_item.save()
+
+
 def upload_file(request):
     if request.method == 'POST':
         form = UploadFileForm(request.POST, request.FILES)
@@ -393,3 +463,139 @@ def upload_file(request):
     else:
         form = UploadFileForm()
     return render(request, 'records/upload.html', {'form': form})
+
+
+# For INVENTORY
+
+def inventory_table(request):
+    query = request.GET.get('q')  # 'q' is the name of the search input field
+
+    # Start with all inventory items
+    inventory_items = ItemInventory.objects.all()
+
+    # If there's a search query, filter the inventory items accordingly
+    if query:
+        inventory_items = inventory_items.filter(
+            Q(item_code__icontains=query) |
+            Q(supplier__icontains=query) |
+            Q(po_product_name__icontains=query) |
+            Q(new_product_name__icontains=query) |
+            Q(unit__icontains=query) |
+            Q(quantity_in__icontains=query) |
+            Q(quantity_out__icontains=query) |
+            Q(price__icontains=query) |
+            Q(stock__icontains=query)
+        )
+
+    paginator = Paginator(inventory_items, 20)  # Paginate after every 20 entries
+    page_number = request.GET.get('page')
+    inventory_items = paginator.get_page(page_number)
+
+    return render(request, 'dashboards/inventory_clerk_dashboard.html', {
+        'inventory_items': inventory_items
+    })
+
+
+def inventory_edit(request, id):
+    inventory_item = get_object_or_404(ItemInventory, id=id)
+
+    if request.method == 'POST':
+        form = ItemInventoryForm(request.POST, instance=inventory_item)
+        if form.is_valid():
+            form.save()
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': True})
+            return redirect('item_inventory_list')  # Adjust redirect URL as needed
+        else:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': False})
+    else:
+        form = ItemInventoryForm(instance=inventory_item)
+
+    return render(request, 'inventory/inventory_edit.html', {'form': form, 'item': inventory_item})
+
+
+def export_inventory_to_excel(request):
+    query = request.GET.get('q')  # Search query parameter
+
+    # Start with all inventory items
+    inventory_list = ItemInventory.objects.all()
+
+    # Apply search filter
+    if query:
+        inventory_list = inventory_list.filter(
+            Q(item_code__icontains=query) |
+            Q(supplier__icontains=query) |
+            Q(po_product_name__icontains=query) |
+            Q(new_product_name__icontains=query) |
+            Q(unit__icontains=query) |
+            Q(quantity_in__icontains=query) |
+            Q(quantity_out__icontains=query) |
+            Q(stock__icontains=query) |
+            Q(price__icontains=query) |
+            Q(total_amount__icontains=query)
+        )
+
+    # Create a workbook and a sheet
+    workbook = openpyxl.Workbook()
+    sheet = workbook.active
+    sheet.title = 'Inventory'
+
+    header_font = Font(bold=True)
+    blue_fill = PatternFill(start_color='00B0F0', end_color='00B0F0', fill_type='solid')
+    currency_format = '#,##0.00'
+
+    # Define the headers
+    headers = [
+        'Item Code', 'Supplier', 'PO Product Name', 'New Product Name', 'Unit',
+        'Quantity In', 'Quantity Out', 'Stock', 'Price', 'Total Amount'
+    ]
+    sheet.append(headers)
+
+    for cell in sheet[1]:
+        cell.font = header_font
+        cell.fill = blue_fill
+
+    # Populate the sheet with data
+    for item in inventory_list:
+        sheet.append([
+            item.item_code, item.supplier, item.po_product_name, item.new_product_name,
+            item.unit, item.quantity_in, item.quantity_out, item.stock,
+            item.price, item.total_amount
+        ])
+
+    for cell in sheet['I']:  # Assuming price is in column I (index 9)
+        if cell.row > 1:  # Skip header row
+            cell.number_format = currency_format
+
+    for cell in sheet['J']:  # Assuming total_amount is in column J (index 10)
+        if cell.row > 1:  # Skip header row
+            cell.number_format = currency_format
+
+    # Adjust column widths
+    for column in sheet.columns:
+        max_length = 0
+        column_letter = column[0].column_letter  # Get the column name (e.g., 'A', 'B', etc.)
+        for cell in column:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(cell.value)
+            except:
+                pass
+        adjusted_width = (max_length + 2)  # Add extra space for better visibility
+        sheet.column_dimensions[column_letter].width = adjusted_width
+
+    # Create an in-memory buffer
+    buffer = BytesIO()
+    workbook.save(buffer)
+    buffer.seek(0)
+
+    # Set the response to return the Excel file
+    response = HttpResponse(
+        buffer,
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename=Inventory.xlsx'
+    return response
+
+
