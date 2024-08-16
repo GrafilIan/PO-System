@@ -3,6 +3,7 @@
 {% block title %}Admin Dashboard{% endblock %}
 
 {% load static %}
+{% load humanize %}
 
 {% block head %}
     <link rel="stylesheet" href="{% static 'assets/modules/bootstrap-social/bootstrap-social.css' %}">
@@ -10,8 +11,7 @@
     <link rel="stylesheet"
           href="{% static 'assets/modules/datatables/DataTables-1.10.16/css/dataTables.bootstrap4.min.css' %}">
     <link rel="stylesheet" href="{% static 'assets/modules/datatables/Select-1.2.4/css/select.bootstrap4.min.css' %}">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+
 {% endblock %}
 
 {% block content %}
@@ -86,8 +86,8 @@
                                                             <td>{{ item.quantity_in }}</td>
                                                             <td>{{ item.quantity_out }}</td>
                                                             <td>{{ item.stock }}</td>
-                                                            <td>{{ item.price }}</td>
-                                                            <td>{{ item.total_amount }}</td>
+                                                            <td>{{ item.price|floatformat:2|intcomma }}</td>
+                                                            <td>{{ item.total_amount|floatformat:2|intcomma }}</td>
                                                             <td>
                                                                 <!-- Edit button -->
                                                                 <a href="{% url 'inventory_edit' item.id %}"

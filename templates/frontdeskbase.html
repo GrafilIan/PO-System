@@ -28,7 +28,7 @@
 
     <!-- Start GA -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-94034622-3"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="{% static 'assets/js/sweetalert2.all.min.js' %}"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
 
@@ -93,7 +93,7 @@
                             <a href="{% url 'purchase_order_list' %}" class="nav-link"><i class="fas fa-boxes"></i><span>Inventory</span></a>
                         </li>
                         <li class="nav-item">
-                            <a href="supplier.html" class="nav-link"><i
+                            <a href="#" class="nav-link"><i
                                     class="fas fa-truck"></i><span>PO Supplier</span></a>
                         </li>
                         <li class="nav-item">
@@ -110,21 +110,13 @@
 </div>
 
 <!-- General JS Scripts -->
-<script src="assets/modules/jquery.min.js"></script>
-<script src="assets/modules/popper.js"></script>
-<script src="assets/modules/tooltip.js"></script>
-<script src="assets/modules/bootstrap/js/bootstrap.min.js"></script>
-<script src="assets/modules/nicescroll/jquery.nicescroll.min.js"></script>
-<script src="assets/modules/moment.min.js"></script>
-<script src="assets/js/stisla.js"></script>
 
 <!-- JS Libraies -->
 
 <!-- Page Specific JS File -->
 
 <!-- Template JS File -->
-<script src="assets/js/scripts.js"></script>
-<script src="assets/js/custom.js"></script>
+>
 </body>
 {% block style %}
 {% endblock %}
@@ -168,7 +160,7 @@
                 setTimeout(function () {
                     loader.style.display = 'none';
                 }, 300); // Hide the loader 300ms after fading out
-            }, 1500); // Start fading out after 1.5 seconds
+            }, 500); // Start fading out after 0.5 seconds
         });
     </script>
 
@@ -180,6 +172,7 @@
 <script src="{% static 'assets/modules/nicescroll/jquery.nicescroll.min.js' %}"></script>
 <script src="{% static 'assets/modules/moment.min.js' %}"></script>
 <script src="{% static 'assets/js/stisla.js' %}"></script>
+
 
 
 <!-- JS Libraries -->
@@ -196,6 +189,7 @@
 <script src="{% static 'assets/js/scripts.js' %}"></script>
 <script src="{% static 'assets/js/custom.js' %}"></script>
 <script src="{% static 'assets/js/page_reload_script.js' %}"></script>
+
 
 <!-- JS Libraies -->
 <script src="{% static 'assets/modules/prism/prism.js' %}"></script>

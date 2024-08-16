@@ -51,14 +51,9 @@
                                             <div class="row">
 
                                                 <div class="col-auto">
-                                                    <form action="{% url 'export_orders_to_excel' %}" method="get">
-                                                        <input type="hidden" name="q" value="{{ request.GET.q }}">
-                                                        <input type="hidden" name="date" value="{{ request.GET.date }}">
-                                                        <button type="submit" class="btn btn-primary">Export to Excel
-                                                        </button>
-                                                    </form>
+                                                    <a href="{% url 'export_archived_orders' folder.id %}" class="btn btn-primary">Export Archived Orders</a>
                                                 </div>
-                                                
+
                                             </div>
                                         </div>
                                         <div class="card-body p-0">
@@ -66,7 +61,7 @@
                                                 <table class="table table-hover table-striped" id="sortable-table">
                                                     <thead>
                                                     <tr class="archive-background">
-                                                        
+
                                                         <th style="color: white;">ACTIONS</th>
                                                         <th style="white-space: nowrap; color: white;">DATE</th>
                                                         <th style="color: white;">PO#</th>
@@ -92,7 +87,7 @@
                                                     {% for order in orders %}
                                                         <tr role="row" class="odd">
                                                         <tr role="row" class="odd">
-                                                            
+
                                                             <td>
                                                                 <!-- Edit button -->
                                                                 <a href="{% url 'purchase_order_edit' order.id %}"

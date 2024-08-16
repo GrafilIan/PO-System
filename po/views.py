@@ -7,11 +7,14 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
+from openpyxl.workbook import Workbook
+
 from .forms import PurchaseOrderForm, UploadFileForm, ItemInventoryForm
 from .models import PurchaseOrder, ArchiveFolder, ItemInventory
 from datetime import datetime
-from openpyxl.styles import NamedStyle, Font, PatternFill
+from openpyxl.styles import Font, PatternFill
 from io import BytesIO
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 # Create your views here.
 
 def login_view(request):
@@ -89,12 +92,13 @@ def purchase_order_create(request):
 
 
 
+
 # For Viewing Records
 def purchase_order_list(request):
     query = request.GET.get('q')  # 'q' is the name of the search input field
     date_query = request.GET.get('date')  # 'date' is the name of the date input field
+    page_number = request.GET.get('page', 1)
 
-    # Start with all orders
 
     orders_list = PurchaseOrder.objects.filter(folder__isnull=True)
 
@@ -153,13 +157,21 @@ def purchase_order_list(request):
                         except ValueError:
                             pass  # Handle invalid date input gracefully
 
-    paginator = Paginator(orders_list, 20)  # Paginate after every 20 entries
-    page_number = request.GET.get('page')
-    orders = paginator.get_page(page_number)
+    paginator = Paginator(orders_list, 20)  # Show 10 orders per page
+    try:
+        orders = paginator.page(page_number)
+    except PageNotAnInteger:
+        orders = paginator.page(1)
+    except EmptyPage:
+        orders = paginator.page(paginator.num_pages)
+
     folders = ArchiveFolder.objects.all()
 
     return render(request, 'dashboards/front_desk_dashboard.html', {
         'orders': orders,
+        'query': query,
+        'date_query': date_query,
+        'page_number': page_number,
         'folders': folders
     })
 
@@ -288,6 +300,7 @@ def export_orders_to_excel(request):
     for cell in sheet[1]:
         cell.font = header_font
         cell.fill = blue_fill
+        cell.value = cell.value.upper() if cell.value is not None else cell.value
 
     # Populate the sheet with data
     for order in orders_list:
@@ -332,6 +345,83 @@ def export_orders_to_excel(request):
     return response
 
 
+def export_archived_orders_to_excel(request, folder_id):
+    try:
+        # Get the folder by ID
+        folder = ArchiveFolder.objects.get(id=folder_id)
+        orders_list = PurchaseOrder.objects.filter(folder=folder)
+
+        # Create a workbook and a sheet
+        workbook = Workbook()
+        sheet = workbook.active
+        sheet.title = 'Archived Orders'
+
+        # Define header styles
+        header_font = Font(bold=True)
+        blue_fill = PatternFill(start_color='00B0F0', end_color='00B0F0', fill_type='solid')
+        currency_format = '#,##0.00'
+
+        # Define the headers
+        headers = [
+            'Date', 'PO Number', 'Purchaser', 'Brand', 'Item Code', 'Particulars',
+            'Quantity', 'Unit', 'Price', 'Total Amount',
+            'Site Delivered', 'FBBD Ref#', 'Remarks', 'Supplier', 'Delivery Ref#',
+            'Delivery No.', 'Invoice Type', 'Invoice No.', 'Payment Req Ref#',
+            'Payment Details', 'Remarks2'
+        ]
+        sheet.append(headers)
+
+        for cell in sheet[1]:
+            cell.font = header_font
+            cell.fill = blue_fill
+            cell.value = cell.value.upper() if cell.value is not None else cell.value
+
+        # Populate the sheet with data
+        for order in orders_list:
+            sheet.append([
+                order.date.strftime('%Y-%m-%d') if order.date else 'N/A', order.po_number, order.purchaser, order.brand,
+                order.item_code,
+                order.particulars, order.quantity, order.unit, order.price, order.total_amount, order.site_delivered,
+                order.fbbd_ref_number, order.remarks, order.supplier, order.delivery_ref, order.delivery_no,
+                order.invoice_type, order.invoice_no, order.payment_req_ref, order.payment_details, order.remarks2
+            ])
+
+        for cell in sheet['I']:  # Assuming price is in column I (index 9)
+            if cell.row > 1:  # Skip header row
+                cell.number_format = currency_format
+
+        for cell in sheet['J']:  # Assuming total_amount is in column J (index 10)
+            if cell.row > 1:  # Skip header row
+                cell.number_format = currency_format
+
+        for column in sheet.columns:
+            max_length = 0
+            column_letter = column[0].column_letter  # Get the column name (e.g., 'A', 'B', etc.)
+            for cell in column:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(cell.value)
+                except:
+                    pass
+            adjusted_width = (max_length + 2)  # Add extra space for better visibility
+            sheet.column_dimensions[column_letter].width = adjusted_width
+
+        # Create an in-memory buffer
+        buffer = BytesIO()
+        workbook.save(buffer)
+        buffer.seek(0)
+
+        # Set the response to return the Excel file
+        response = HttpResponse(
+            buffer,
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = f'attachment; filename=ArchivedOrders_{folder.name}.xlsx'
+        return response
+
+    except ArchiveFolder.DoesNotExist:
+        return HttpResponse("Folder not found", status=404)
+
 # For Archiving Methods
 def create_folder(request):
     if request.method == 'POST':
@@ -370,6 +460,8 @@ def archive_orders(request, folder_id):
     })
 
 
+
+
 def move_orders_to_folder(request):
     if request.method == 'POST':
         folder_id = request.POST.get('folder')
@@ -396,6 +488,9 @@ def move_orders_to_folder(request):
     return redirect('purchase_order_list')
 
 
+
+
+# For Uploading Files
 def handle_uploaded_file(f):
     df = pd.read_excel(f, engine='openpyxl')
     df = df.fillna('')  # Replace NaN with an empty string

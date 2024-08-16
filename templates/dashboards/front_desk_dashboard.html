@@ -3,6 +3,7 @@
 {% block title %}Front Desk Dashboard{% endblock %}
 
 {% load static %}
+{% load humanize %}
 
 {% block head %}
     <link rel="stylesheet" href="{% static 'assets/modules/bootstrap-social/bootstrap-social.css' %}">
@@ -131,7 +132,7 @@
                                                             <td>
                                                                 <!-- Edit button -->
                                                                 <a href="{% url 'purchase_order_edit' order.id %}"
-                                                                   class="btn btn-warning btn-sm" style="width: 75px;">
+                                                                   class="btn btn-dark btn-sm" style="width: 75px;">
                                                                     Edit
                                                                 </a>
                                                             </td>
@@ -142,8 +143,8 @@
                                                             <td class="no-wrap">{{ order.particulars }}</td>
                                                             <td>{{ order.quantity }}</td>
                                                             <td>{{ order.unit }}</td>
-                                                            <td>{{ order.price }}</td>
-                                                            <td>{{ order.total_amount }}</td>
+                                                            <td>{{ order.price|floatformat:2|intcomma }}</td>
+                                                            <td>{{ order.total_amount|floatformat:2|intcomma }}</td>
                                                             <td class="no-wrap">{{ order.site_delivered }}</td>
                                                             <td>{{ order.fbbd_ref_number }}</td>
                                                             <td>{{ order.remarks }}</td>
@@ -177,7 +178,8 @@
                                                         {% if orders.has_previous %}
                                                             <li class="page-item">
                                                                 <a class="page-link"
-                                                                   href="?page={{ orders.previous_page_number }}"
+                                                                   href="?page=
+                                                                           {{ orders.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}"
                                                                    aria-label="Previous">
                                                                     <span aria-hidden="true">&laquo;</span>
                                                                 </a>
@@ -186,33 +188,49 @@
                                                         {% for num in orders.paginator.page_range %}
                                                             <li class="page-item {% if orders.number == num %}active{% endif %}">
                                                                 <a class="page-link"
-                                                                   href="?page={{ num }}">{{ num }}</a>
+                                                                   href="?page=
+                                                                           {{ num }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}">{{ num }}</a>
                                                             </li>
                                                         {% endfor %}
                                                         {% if orders.has_next %}
                                                             <li class="page-item">
                                                                 <a class="page-link"
-                                                                   href="?page={{ orders.next_page_number }}"
+                                                                   href="?page=
+                                                                           {{ orders.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}"
                                                                    aria-label="Next">
                                                                     <span aria-hidden="true">&raquo;</span>
                                                                 </a>
                                                             </li>
                                                         {% endif %}
+                                                        <!-- Link to Last Page -->
+                                                        <li class="page-item {% if orders.number == orders.paginator.num_pages %}active{% endif %}">
+                                                            <a class="page-link"
+                                                               href="?page=
+                                                                       {{ orders.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}">
+                                                                Last
+                                                            </a>
+                                                        </li>
                                                     </ul>
                                                 </nav>
                                             </div>
+
+
                                             <form method="get" action="" class="form-inline justify-content-center">
+                                                <input type="hidden" name="q" value="{{ query }}">
+                                                <input type="hidden" name="date" value="{{ date_query }}">
                                                 <div class="form-group mb-2">
                                                     <label for="page-number" class="sr-only">Page</label>
                                                     <input type="number" class="form-control" id="page-number"
                                                            name="page" min="1"
                                                            max="{{ orders.paginator.num_pages }}"
-                                                           placeholder="Page No." required style="width: 120px;">
+                                                           placeholder="Page No." required style="width: 120px;"
+                                                           oninput="this.value = this.value.trim();">
                                                 </div>
                                                 <button type="submit" class="btn btn-primary mb-2" style="width: 70px;">
                                                     Go
                                                 </button>
                                             </form>
+
                                             <p>Page {{ orders.number }} of {{ orders.paginator.num_pages }}</p>
                                         </div>
                                     </div>
@@ -315,58 +333,58 @@
 
     </script>
     <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const selectAllCheckbox = document.getElementById('select-all');
-        const rowCheckboxes = document.querySelectorAll('.select-row');
-        const selectedOrdersDiv = document.getElementById('selected-orders');
+        document.addEventListener('DOMContentLoaded', function () {
+            const selectAllCheckbox = document.getElementById('select-all');
+            const rowCheckboxes = document.querySelectorAll('.select-row');
+            const selectedOrdersDiv = document.getElementById('selected-orders');
 
-        function updateSelectedOrders() {
-            selectedOrdersDiv.innerHTML = ''; // Clear existing hidden inputs
-            rowCheckboxes.forEach(function (checkbox) {
-                if (checkbox.checked) {
-                    const hiddenInput = document.createElement('input');
-                    hiddenInput.type = 'hidden';
-                    hiddenInput.name = 'orders'; // Ensure this matches your view
-                    hiddenInput.value = checkbox.dataset.id;
-                    selectedOrdersDiv.appendChild(hiddenInput);
-                }
-            });
-        }
+            function updateSelectedOrders() {
+                selectedOrdersDiv.innerHTML = ''; // Clear existing hidden inputs
+                rowCheckboxes.forEach(function (checkbox) {
+                    if (checkbox.checked) {
+                        const hiddenInput = document.createElement('input');
+                        hiddenInput.type = 'hidden';
+                        hiddenInput.name = 'orders'; // Ensure this matches your view
+                        hiddenInput.value = checkbox.dataset.id;
+                        selectedOrdersDiv.appendChild(hiddenInput);
+                    }
+                });
+            }
 
-        selectAllCheckbox.addEventListener('change', function () {
-            const isChecked = selectAllCheckbox.checked;
-            rowCheckboxes.forEach(function (checkbox) {
-                checkbox.checked = isChecked;
-            });
-            updateSelectedOrders();
-        });
-
-        rowCheckboxes.forEach(function (checkbox) {
-            checkbox.addEventListener('change', function () {
-                if (!this.checked) {
-                    selectAllCheckbox.checked = false;
-                }
-                if (document.querySelectorAll('.select-row:checked').length === rowCheckboxes.length) {
-                    selectAllCheckbox.checked = true;
-                }
+            selectAllCheckbox.addEventListener('change', function () {
+                const isChecked = selectAllCheckbox.checked;
+                rowCheckboxes.forEach(function (checkbox) {
+                    checkbox.checked = isChecked;
+                });
                 updateSelectedOrders();
             });
-        });
 
-        // Assuming you use Django messages framework to pass success or error messages
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == 'success' %}
-                    $('#successModal').modal('show');
-                {% elif message.tags == 'error' %}
-                    $('#errorModal').modal('show');
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-    });
-</script>
+            rowCheckboxes.forEach(function (checkbox) {
+                checkbox.addEventListener('change', function () {
+                    if (!this.checked) {
+                        selectAllCheckbox.checked = false;
+                    }
+                    if (document.querySelectorAll('.select-row:checked').length === rowCheckboxes.length) {
+                        selectAllCheckbox.checked = true;
+                    }
+                    updateSelectedOrders();
+                });
+            });
+
+            // Assuming you use Django messages framework to pass success or error messages
+            {% if messages %}
+                {% for message in messages %}
+                    {% if message.tags == 'success' %}
+                        $('#successModal').modal('show');
+                    {% elif message.tags == 'error' %}
+                        $('#errorModal').modal('show');
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+        });
+    </script>
     <script>
-        document.getElementById('okButton').addEventListener('click', function() {
+        document.getElementById('okButton').addEventListener('click', function () {
             // Hide the modal
             $('#successModal').modal('hide');
 
@@ -384,6 +402,7 @@
             document.getElementById('loader').style.display = 'block';
         }
     </script>
+
 
 {% endblock %}
 
