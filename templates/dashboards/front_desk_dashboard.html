@@ -95,9 +95,9 @@
                                                 <table class="table table-hover table-striped" id="sortable-table">
                                                     <thead>
                                                     <tr class="green-background">
-                                                        <th style="color: white;">
-                                                            <input type="checkbox" id="select-all">
+                                                        <th style="color: white; width: 10px; text-align: center;">#
                                                         </th>
+
                                                         <th style="color: white;">ACTIONS</th>
                                                         <th style="white-space: nowrap; color: white;">DATE</th>
                                                         <th style="color: white;">PO#</th>
@@ -119,16 +119,17 @@
                                                         </th>
                                                         <th class="no-wrap" style="color: white;">PAYMENT REQ.#</th>
                                                         <th style="color: white;">REMARKS</th>
+                                                        <th style="color: white;">
+                                                            <input type="checkbox" id="select-all">
+                                                        </th>
                                                     </tr>
                                                     </thead>
                                                     <tbody>
                                                     {% for order in orders %}
                                                         <tr role="row" class="odd">
                                                         <tr role="row" class="odd">
-                                                            <td>
-                                                                <input type="checkbox" class="select-row"
-                                                                       data-id="{{ order.id }}">
-                                                            </td>
+                                                            <td style="width: 10px; text-align: center;">{{ forloop.counter }}</td>
+
                                                             <td>
                                                                 <!-- Edit button -->
                                                                 <a href="{% url 'purchase_order_edit' order.id %}"
@@ -163,6 +164,10 @@
                                                                     {{ order.remarks2 }}
                                                                 </span>
                                                             </td>
+                                                            <td>
+                                                                <input type="checkbox" class="select-row"
+                                                                       data-id="{{ order.id }}">
+                                                            </td>
                                                         </tr>
                                                     {% endfor %}
                                                     </tbody>
@@ -179,6 +184,7 @@
                                                             <li class="page-item">
                                                                 <a class="page-link"
                                                                    href="?page=
+
                                                                            {{ orders.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}"
                                                                    aria-label="Previous">
                                                                     <span aria-hidden="true">&laquo;</span>
@@ -189,6 +195,7 @@
                                                             <li class="page-item {% if orders.number == num %}active{% endif %}">
                                                                 <a class="page-link"
                                                                    href="?page=
+
                                                                            {{ num }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}">{{ num }}</a>
                                                             </li>
                                                         {% endfor %}
@@ -196,6 +203,7 @@
                                                             <li class="page-item">
                                                                 <a class="page-link"
                                                                    href="?page=
+
                                                                            {{ orders.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}"
                                                                    aria-label="Next">
                                                                     <span aria-hidden="true">&raquo;</span>
@@ -206,6 +214,7 @@
                                                         <li class="page-item {% if orders.number == orders.paginator.num_pages %}active{% endif %}">
                                                             <a class="page-link"
                                                                href="?page=
+
                                                                        {{ orders.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}">
                                                                 Last
                                                             </a>
