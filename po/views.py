@@ -10,7 +10,7 @@ from django.contrib import messages
 from openpyxl.workbook import Workbook
 
 from .forms import PurchaseOrderForm, UploadFileForm, ItemInventoryForm
-from .models import PurchaseOrder, ArchiveFolder, ItemInventory
+from .models import PurchaseOrder, ArchiveFolder, ItemInventory, SupplierFolder
 from datetime import datetime
 from openpyxl.styles import Font, PatternFill
 from io import BytesIO
@@ -59,6 +59,21 @@ def purchase_order_create(request):
             # Save the purchase order
             purchase_order = form.save()
 
+            # Get the supplier name from the purchase order
+            supplier_name = purchase_order.supplier
+
+            if supplier_name:
+                # Check if a SupplierFolder with the same name exists
+                folder, created = SupplierFolder.objects.get_or_create(name=supplier_name)
+
+                if not created:
+                    # Existing folder; optionally handle updates here
+                    pass
+
+                # Update the purchase order to reference the SupplierFolder
+                purchase_order.supplier_folder = folder
+                purchase_order.save()
+
             # Check if an inventory record for the item exists
             inventory_item = ItemInventory.objects.filter(
                 supplier=purchase_order.supplier,
@@ -100,7 +115,7 @@ def purchase_order_list(request):
     page_number = request.GET.get('page', 1)
 
 
-    orders_list = PurchaseOrder.objects.filter(folder__isnull=True)
+    orders_list = PurchaseOrder.objects.filter(folder__isnull=True, archived=False)
 
     # If there's a search query, filter the orders accordingly
     if query:
@@ -442,8 +457,16 @@ def list_folders(request):
 
 def delete_folder(request, folder_id):
     folder = ArchiveFolder.objects.get(id=folder_id)
+    orders = PurchaseOrder.objects.filter(folder=folder)
+
+    # Archive the orders instead of deleting them
+    orders.update(archived=True)
+
+    # Optionally, you might want to disassociate the orders from the folder
+    # orders.update(folder=None)
+
     folder.delete()
-    return redirect('list_folders')
+    return redirect('purchase_order_list')
 
 
 def archive_orders(request, folder_id):
@@ -458,8 +481,6 @@ def archive_orders(request, folder_id):
         'folder': folder,
         'orders': page_obj
     })
-
-
 
 
 def move_orders_to_folder(request):
@@ -694,3 +715,49 @@ def export_inventory_to_excel(request):
     return response
 
 
+# SUPPLIER
+
+def delete_supplier_folder(request, folder_id):
+    if request.method == 'POST':
+        folder = get_object_or_404(SupplierFolder, id=folder_id)
+        folder.delete()  # This will set the supplier_folder field in PurchaseOrder to NULL
+        return JsonResponse({'success': True})
+
+    return JsonResponse({'success': False, 'error': 'Invalid request method.'})
+
+def supplier_list_folders(request):
+    if request.method == 'POST':
+        folder_name = request.POST.get('folder_name')
+
+        if folder_name:
+            new_folder, created = SupplierFolder.objects.get_or_create(name=folder_name)
+
+            if created:
+                # Handle matching orders here
+                matching_orders = PurchaseOrder.objects.filter(supplier=folder_name)
+                for order in matching_orders:
+                    order.supplier_folder = new_folder
+                    order.save()
+
+                return JsonResponse({'success': True, 'message': 'Folder created successfully.'})
+            else:
+                return JsonResponse({'success': False, 'message': 'Folder with this name already exists.'})
+
+    # Handling GET requests to render the folder list
+    folders = SupplierFolder.objects.all()
+    context = {
+        'folders': folders,
+    }
+    return render(request, 'supplier/supplier_list_folders.html', context)
+
+
+def view_folder_contents(request, folder_id):
+    folder = get_object_or_404(SupplierFolder, id=folder_id)
+    purchase_orders = PurchaseOrder.objects.filter(supplier_folder=folder)
+
+    context = {
+        'folder': folder,
+        'purchase_orders': purchase_orders,
+    }
+
+    return render(request, 'supplier/view_folder_contents.html', context)

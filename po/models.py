@@ -2,6 +2,13 @@ from django.db import models
 from django.utils import timezone
 
 
+class SupplierFolder(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
 class ItemInventory(models.Model):
     item_code = models.CharField(max_length=100, blank=True, null=True)
     supplier = models.CharField(max_length=100, blank=True, null=True)
@@ -43,6 +50,11 @@ class PurchaseOrder(models.Model):
         ('CI', 'CI')
     ]
 
+    PAYMENT_DETAILS_CHOICES = [
+        ('Check Voucher', 'Check Voucher'),
+        ('Cash Voucher', 'Cash Voucher')
+    ]
+
     REMARKS2_CHOICES = [
         ('On Hold', 'On Hold'),
         ('For Signature', 'For Signature'),
@@ -70,9 +82,11 @@ class PurchaseOrder(models.Model):
     invoice_type = models.CharField(max_length=10, choices=INVOICE_CHOICES, verbose_name='Invoice#',null=True, blank=True)
     invoice_no = models.CharField(max_length=255, verbose_name='Invoice No.',null=True, blank=True)
     payment_req_ref = models.CharField(max_length=255, verbose_name='Payment Req Ref#',null=True, blank=True)
-    payment_details = models.TextField(blank=True, null=True, verbose_name='Payment Details')
+    payment_details = models.TextField(max_length=20, choices=PAYMENT_DETAILS_CHOICES, blank=True, null=True, verbose_name='Payment Details')
     remarks2 = models.CharField(max_length=20, choices=REMARKS2_CHOICES, verbose_name='Remarks2',null=True)
     folder = models.ForeignKey(ArchiveFolder, on_delete=models.SET_NULL, null=True, blank=True)
+    archived = models.BooleanField(default=False)
+    supplier_folder = models.ForeignKey(SupplierFolder, on_delete=models.SET_NULL, null=True, blank=True)
 
     @property
     def remarks2_badge(self):

@@ -1,0 +1,26 @@
+{% extends 'frontdeskbase.html' %}
+
+{% block title %}Front Desk Dashboard{% endblock %}
+
+{% load static %}
+
+{% block head %}
+    <link rel="stylesheet" href="{% static 'assets/modules/bootstrap-social/bootstrap-social.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/modules/datatables/datatables.min.css' %}">
+    <link rel="stylesheet"
+          href="{% static 'assets/modules/datatables/DataTables-1.10.16/css/dataTables.bootstrap4.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/modules/datatables/Select-1.2.4/css/select.bootstrap4.min.css' %}">
+{% endblock %}
+
+
+{% block content %}
+<form method="post" action="{% url 'add_supplier_folder' %}">
+    {% csrf_token %}
+    <label for="folder_name">Folder Name:</label>
+    <input type="text" id="folder_name" name="folder_name" required>
+    <button type="submit">Create Folder</button>
+</form>
+<a href="{% url 'supplier_list_folders' %}" class="nav-link"><i
+                                    class="fas fa-archive"></i><span>Supplier List</span></a>
+{% endblock %}
+

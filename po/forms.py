@@ -46,7 +46,7 @@ class PurchaseOrderForm(forms.ModelForm):
             'invoice_type': forms.Select(attrs={'class': 'form-control', 'placeholder': 'Invoice Type'}),
             'invoice_no': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Invoice No.'}),
             'payment_req_ref': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Payment Req Ref#'}),
-            'payment_details': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Payment Details'}),
+            'payment_details': forms.Select(attrs={'class': 'form-control', 'placeholder': 'Payment Details'}),
             'remarks2': forms.Select(attrs={'class': 'form-control'})
         }
 

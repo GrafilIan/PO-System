@@ -22,6 +22,11 @@ urlpatterns = [
     path('inventory/', views.inventory_table, name='inventory_table'),
     path('inventory/edit/<int:id>/', views.inventory_edit, name='inventory_edit'),
     path('export-inventory/', views.export_inventory_to_excel, name='export_inventory_to_excel'),
-    path('export_archived_orders/<int:folder_id>/', views.export_archived_orders_to_excel, name='export_archived_orders'),
+    path('export_archived_orders/<int:folder_id>/', views.export_archived_orders_to_excel,
+         name='export_archived_orders'),
+
+    path('supfolders/', views.supplier_list_folders, name='supplier_list_folders'),
+    path('supfolders/<int:folder_id>/view/', views.view_folder_contents, name='view_folder_contents'),
+    path('supfolders/<int:folder_id>/delete/', views.delete_supplier_folder, name='delete_supplier_folder'),
 
 ]
