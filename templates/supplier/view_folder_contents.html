@@ -13,12 +13,10 @@
 {% endblock %}
 
 {% block content %}
-
     <div id="app">
         <div class="main-wrapper container-fluid">
             <div class="main-content">
                 <section class="section container-fluid">
-
                     <div class="section-body">
                         <div class="card card-desk">
                             <div class="card-header">
@@ -30,29 +28,26 @@
                                         <div class="card-header" style="background-color: #4682b4; color: white;">
                                             <h4>Purchase Order Data Table</h4>
                                             <div class="card-header-action">
-                                                <form method="get" action=""
-                                                      class="form-inline justify-content-center col-12">
+                                                <form method="get" action="" class="form-inline justify-content-center col-12">
                                                     <div class="input-group">
                                                         <input type="text" name="q" class="form-control"
                                                                placeholder="Search" value="{{ request.GET.q }}">
                                                         <div class="input-group-btn">
-                                                            <button class="btn btn-primary" type="submit"><i
-                                                                    class="fas fa-search"></i></button>
+                                                            <button class="btn btn-primary" type="submit">
+                                                                <i class="fas fa-search"></i>
+                                                            </button>
                                                         </div>
                                                         {% if request.GET.q %}
-                                                            <a href="{% url 'purchase_order_list' %}"
-                                                               class="btn btn-secondary">Clear Filter</a>
+                                                            <a href="{% url 'purchase_order_list' %}" class="btn btn-secondary">Clear Filter</a>
                                                         {% endif %}
                                                     </div>
                                                 </form>
                                             </div>
 
                                             <div class="row">
-
                                                 <div class="col-auto">
                                                     <a href="{% url 'export_archived_orders' folder.id %}" class="btn btn-primary">Export Archived Orders</a>
                                                 </div>
-
                                             </div>
                                         </div>
                                         <div class="card-body p-0">
@@ -60,7 +55,7 @@
                                                 <table class="table table-hover table-striped" id="sortable-table">
                                                     <thead>
                                                     <tr class="archive-background">
-
+                                                        <th><input type="checkbox" id="select-all"></th>
                                                         <th style="white-space: nowrap; color: white;">DATE</th>
                                                         <th style="color: white;">PO#</th>
                                                         <th style="color: white;">PURCHASER</th>
@@ -84,8 +79,7 @@
                                                     <tbody>
                                                     {% for order in purchase_orders %}
                                                         <tr role="row" class="odd">
-                                                        <tr role="row" class="odd">
-
+                                                            <td><input type="checkbox" class="select-row" value="{{ order.id }}"></td>
                                                             <td class="no-wrap">{{ order.date }}</td>
                                                             <td>{{ order.po_number }}</td>
                                                             <td class="no-wrap">{{ order.purchaser }}</td>
@@ -116,8 +110,6 @@
                                                         </tr>
                                                     {% endfor %}
                                                     </tbody>
-                                                    <div>
-                                                    </div>
                                                 </table>
                                             </div>
 
@@ -172,10 +164,62 @@
 
                         </div>
                     </div>
+                </section>
             </div>
-
         </div>
     </div>
 
+    <!-- Success Modal -->
+    <div class="modal fade" id="success-modal" tabindex="-1" role="dialog" aria-labelledby="success-modal-label" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="success-modal-label">Success</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    Your request was successful!
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
+    <!-- Error Modal -->
+    <div class="modal fade" id="error-modal" tabindex="-1" role="dialog" aria-labelledby="error-modal-label" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="error-modal-label">Error</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    Something went wrong. Please try again.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        const table = document.getElementById('sortable-table');
+if (table) {
+    const cells = table.querySelectorAll('tbody td');
+    cells.forEach(cell => {
+        if (cell.textContent.trim() === 'None') {
+            cell.style.color = 'transparent';  // Hide the text without removing it
+        }
+    });
+}
+    </script>
 {% endblock %}

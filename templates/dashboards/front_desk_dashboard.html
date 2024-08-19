@@ -11,7 +11,6 @@
     <link rel="stylesheet"
           href="{% static 'assets/modules/datatables/DataTables-1.10.16/css/dataTables.bootstrap4.min.css' %}">
     <link rel="stylesheet" href="{% static 'assets/modules/datatables/Select-1.2.4/css/select.bootstrap4.min.css' %}">
-
 {% endblock %}
 
 {% block content %}
@@ -19,7 +18,6 @@
         <div class="main-wrapper container-fluid">
             <div class="main-content">
                 <section class="section container-fluid">
-
                     <div class="section-body">
                         <div class="card card-desk">
                             <div class="card-header">
@@ -45,7 +43,6 @@
                             </div>
 
                             <div class="card-body">
-
                                 <div class="col-12">
                                     <div class="card">
                                         <div class="card-header" style="background-color: darkgreen; color: white;">
@@ -60,18 +57,14 @@
                                                             <button class="btn btn-primary" type="submit"><i
                                                                     class="fas fa-search"></i></button>
                                                         </div>
-
                                                     </div>
-
                                                     <div class="col-auto">
                                                         {% if request.GET.q %}
                                                             <a href="{% url 'purchase_order_list' %}"
                                                                class="btn btn-outline-primary">Clear Filter</a>
                                                         {% endif %}
                                                     </div>
-
-                                                    <a href="{% url 'purchase_order_create' %}"
-                                                       class="btn btn-primary">Add</a>
+                                                    <a href="{% url 'purchase_order_create' %}" class="btn btn-primary">Add</a>
                                                 </form>
                                             </div>
 
@@ -86,18 +79,15 @@
                                                 </div>
                                                 <a href="{% url 'upload_file' %}" class="btn btn-primary">Upload
                                                     File</a>
-
                                             </div>
                                         </div>
                                         <div class="card-body p-0">
                                             <div class="table-responsive">
-
                                                 <table class="table table-hover table-striped" id="sortable-table">
                                                     <thead>
                                                     <tr class="green-background">
                                                         <th style="color: white; width: 10px; text-align: center;">#
                                                         </th>
-
                                                         <th style="color: white;">ACTIONS</th>
                                                         <th style="white-space: nowrap; color: white;">DATE</th>
                                                         <th style="color: white;">PO#</th>
@@ -108,15 +98,13 @@
                                                         <th style="color: white;">UNIT</th>
                                                         <th style="color: white;">PRICE</th>
                                                         <th class="no-wrap" style="color: white;">TOTAL AMOUNT</th>
-                                                        <th class="no-wrap" style="color: white;">SITE DELIVERED
-                                                        </th>
+                                                        <th class="no-wrap" style="color: white;">SITE DELIVERED</th>
                                                         <th class="no-wrap" style="color: white;">FBBD DR#</th>
                                                         <th style="color: white;">REMARKS</th>
                                                         <th style="color: white;">SUPPLIER</th>
                                                         <th class="no-wrap" style="color: white;">DELIVERY REF#</th>
                                                         <th style="color: white;">INVOICE#</th>
-                                                        <th class="no-wrap" style="color: white;">PAYMENT DETAILS
-                                                        </th>
+                                                        <th class="no-wrap" style="color: white;">PAYMENT DETAILS</th>
                                                         <th class="no-wrap" style="color: white;">PAYMENT REQ.#</th>
                                                         <th style="color: white;">REMARKS</th>
                                                         <th style="color: white;">
@@ -127,15 +115,12 @@
                                                     <tbody>
                                                     {% for order in orders %}
                                                         <tr role="row" class="odd">
-                                                        <tr role="row" class="odd">
                                                             <td style="width: 10px; text-align: center;">{{ forloop.counter }}</td>
-
                                                             <td>
                                                                 <!-- Edit button -->
                                                                 <a href="{% url 'purchase_order_edit' order.id %}"
-                                                                   class="btn btn-dark btn-sm" style="width: 75px;">
-                                                                    Edit
-                                                                </a>
+                                                                   class="btn btn-dark btn-sm"
+                                                                   style="width: 75px;">Edit</a>
                                                             </td>
                                                             <td class="no-wrap">{{ order.date }}</td>
                                                             <td>{{ order.po_number }}</td>
@@ -155,14 +140,15 @@
                                                             <td>{{ order.payment_details }}</td>
                                                             <td>{{ order.payment_req_ref }}</td>
                                                             <td>
-                                                                <span style="background-color: {{ order.remarks2_badge }};
-                                                                        color: white;
-                                                                        padding: 5px 10px;
-                                                                        border-radius: 20px;
-                                                                        display: inline-block;
-                                                                        white-space: nowrap;">
-                                                                    {{ order.remarks2 }}
-                                                                </span>
+                                                                    <span class="remarks2-badge"
+                                                                          style="background-color: {{ order.remarks2_badge }};
+                                                                                  color: white;
+                                                                                  padding: 5px 10px;
+                                                                                  border-radius: 20px;
+                                                                                  display: inline-block;
+                                                                                  white-space: nowrap;">
+                                                                        {{ order.remarks2 }}
+                                                                    </span>
                                                             </td>
                                                             <td>
                                                                 <input type="checkbox" class="select-row"
@@ -171,8 +157,6 @@
                                                         </tr>
                                                     {% endfor %}
                                                     </tbody>
-                                                    <div>
-                                                    </div>
                                                 </table>
                                             </div>
 
@@ -185,6 +169,7 @@
                                                                 <a class="page-link"
                                                                    href="?page=
 
+
                                                                            {{ orders.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}"
                                                                    aria-label="Previous">
                                                                     <span aria-hidden="true">&laquo;</span>
@@ -196,15 +181,14 @@
                                                                 <a class="page-link"
                                                                    href="?page=
 
+
                                                                            {{ num }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}">{{ num }}</a>
                                                             </li>
                                                         {% endfor %}
                                                         {% if orders.has_next %}
                                                             <li class="page-item">
-                                                                <a class="page-link"
-                                                                   href="?page=
-
-                                                                           {{ orders.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}"
+                                                                <a class="page-link" href="?page=
+                                                                        {{ orders.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}"
                                                                    aria-label="Next">
                                                                     <span aria-hidden="true">&raquo;</span>
                                                                 </a>
@@ -212,18 +196,14 @@
                                                         {% endif %}
                                                         <!-- Link to Last Page -->
                                                         <li class="page-item {% if orders.number == orders.paginator.num_pages %}active{% endif %}">
-                                                            <a class="page-link"
-                                                               href="?page=
-
-                                                                       {{ orders.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}">
-                                                                Last
-                                                            </a>
+                                                            <a class="page-link" href="?page=
+                                                                    {{ orders.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}">
+                                                                Last</a>
                                                         </li>
+
                                                     </ul>
                                                 </nav>
                                             </div>
-
-
                                             <form method="get" action="" class="form-inline justify-content-center">
                                                 <input type="hidden" name="q" value="{{ query }}">
                                                 <input type="hidden" name="date" value="{{ date_query }}">
@@ -241,9 +221,9 @@
                                             </form>
 
                                             <p>Page {{ orders.number }} of {{ orders.paginator.num_pages }}</p>
+
                                         </div>
                                     </div>
-
                                 </div>
                             </div>
                         </div>
@@ -251,48 +231,48 @@
                 </section>
             </div>
         </div>
-        <!-- Success Modal -->
-        <div class="modal fade" id="successModal" tabindex="-1" role="dialog" aria-labelledby="successModalLabel"
-             aria-hidden="true">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="successModalLabel">Success!</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        Your orders have been successfully moved to the selected folder.
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-primary" data-dismiss="modal">OK</button>
-                    </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal fade" id="success-modal" tabindex="-1" role="dialog" aria-labelledby="successModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="successModalLabel">Success</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    The orders have been moved successfully.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">OK</button>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Error Modal -->
-        <div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel"
-             aria-hidden="true">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="errorModalLabel">Error!</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        There was an error moving the orders. Please try again.
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-primary" data-dismiss="modal">OK</button>
-                    </div>
+    <!-- Error Modal -->
+    <div class="modal fade" id="error-modal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="errorModalLabel">Error</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    There was an error processing your request. Please try again.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">OK</button>
                 </div>
             </div>
         </div>
-
     </div>
 
 {% endblock %}
@@ -392,6 +372,7 @@
             {% endif %}
         });
     </script>
+
     <script>
         document.getElementById('okButton').addEventListener('click', function () {
             // Hide the modal
@@ -410,6 +391,51 @@
             // Display the loader here
             document.getElementById('loader').style.display = 'block';
         }
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('move-orders-form');
+            const successModal = new bootstrap.Modal(document.getElementById('success-modal'));
+            const errorModal = new bootstrap.Modal(document.getElementById('error-modal'));
+
+            // Handle form submission
+            form.addEventListener('submit', function (event) {
+                event.preventDefault();
+
+                // Simulate form submission (replace with actual submission logic)
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', form.action, true);
+                xhr.setRequestHeader('X-CSRFToken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+                xhr.onload = function () {
+                    if (xhr.status === 200) {
+                        // Success
+                        successModal.show();
+                        // Reload page after closing modal
+                        document.querySelector('#success-modal .btn-secondary').addEventListener('click', function () {
+                            window.location.reload();
+                        });
+                    } else {
+                        // Error
+                        errorModal.show();
+                    }
+                };
+                xhr.send(new FormData(form));
+            });
+
+            // Hide 'None' text
+            document.querySelectorAll('td').forEach(td => {
+                if (td.textContent.trim() === 'None') {
+                    td.innerHTML = '<span style="visibility: hidden;">None</span>';
+                }
+            });
+
+            // Select/Deselect All Checkboxes
+            document.getElementById('select-all').addEventListener('change', function () {
+                document.querySelectorAll('.select-row').forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                });
+            });
+        });
     </script>
 
 

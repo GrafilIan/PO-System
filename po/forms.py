@@ -120,3 +120,19 @@ class ItemInventoryForm(forms.ModelForm):
         self.fields['price'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Price'})
         self.fields['total_amount'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Total Amount', 'readonly': True})
         self.fields['stock'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Stock', 'readonly': True})
+
+    def clean(self):
+        cleaned_data = super().clean()
+        # Clean specific fields or set default values if needed
+        if not cleaned_data.get('quantity'):
+            cleaned_data['quantity'] = 0  # or any default value if needed
+        if not cleaned_data.get('price'):
+            cleaned_data['price'] = 0.0  # or any default value if needed
+        if not cleaned_data.get('total_amount'):
+            cleaned_data['total_amount'] = 0.0  # or any default value if needed
+        if not cleaned_data.get('unit'):
+            cleaned_data['unit'] = ''  # or any default value if needed
+
+        # Perform any other custom validation or cleaning here
+
+        return cleaned_data

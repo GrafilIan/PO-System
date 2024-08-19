@@ -57,7 +57,7 @@ def purchase_order_create(request):
         form = PurchaseOrderForm(request.POST)
         if form.is_valid():
             # Save the purchase order
-            purchase_order = form.save()
+            purchase_order = form.save(commit=False)
 
             # Get the supplier name from the purchase order
             supplier_name = purchase_order.supplier
