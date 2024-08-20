@@ -28,5 +28,6 @@ urlpatterns = [
     path('supfolders/', views.supplier_list_folders, name='supplier_list_folders'),
     path('supfolders/<int:folder_id>/view/', views.view_folder_contents, name='view_folder_contents'),
     path('supfolders/<int:folder_id>/delete/', views.delete_supplier_folder, name='delete_supplier_folder'),
+    path('export-supplier-contents/<int:folder_id>/', views.export_supplier_contents, name='export_supplier_contents'),
 
 ]

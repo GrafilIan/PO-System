@@ -56,23 +56,25 @@ def purchase_order_create(request):
     if request.method == 'POST':
         form = PurchaseOrderForm(request.POST)
         if form.is_valid():
-            # Save the purchase order
+            # Save the new purchase order
             purchase_order = form.save(commit=False)
 
             # Get the supplier name from the purchase order
             supplier_name = purchase_order.supplier
 
             if supplier_name:
-                # Check if a SupplierFolder with the same name exists
+                # Create or get the SupplierFolder associated with this supplier
                 folder, created = SupplierFolder.objects.get_or_create(name=supplier_name)
 
-                if not created:
-                    # Existing folder; optionally handle updates here
-                    pass
-
-                # Update the purchase order to reference the SupplierFolder
+                # Associate the new purchase order with the supplier's folder
                 purchase_order.supplier_folder = folder
                 purchase_order.save()
+
+                # Ensure all existing purchase orders with the same supplier are associated with the folder
+                matching_orders = PurchaseOrder.objects.filter(supplier=supplier_name, supplier_folder__isnull=True)
+                for order in matching_orders:
+                    order.supplier_folder = folder
+                    order.save()
 
             # Check if an inventory record for the item exists
             inventory_item = ItemInventory.objects.filter(
@@ -103,93 +105,6 @@ def purchase_order_create(request):
         form = PurchaseOrderForm()
 
     return render(request, 'records/purchase_order_form.html', {'form': form})
-
-
-
-
-
-# For Viewing Records
-def purchase_order_list(request):
-    query = request.GET.get('q')  # 'q' is the name of the search input field
-    date_query = request.GET.get('date')  # 'date' is the name of the date input field
-    page_number = request.GET.get('page', 1)
-
-
-    orders_list = PurchaseOrder.objects.filter(folder__isnull=True, archived=False)
-
-    # If there's a search query, filter the orders accordingly
-    if query:
-        orders_list = orders_list.filter(
-            Q(date__icontains=query) |
-            Q(po_number__icontains=query) |
-            Q(purchaser__icontains=query) |
-            Q(brand__icontains=query) |
-            Q(item_code__icontains=query) |
-            Q(particulars__icontains=query) |
-            Q(quantity__icontains=query) |
-            Q(unit__icontains=query) |
-            Q(price__icontains=query) |
-            Q(total_amount__icontains=query) |
-            Q(site_delivered__icontains=query) |
-            Q(fbbd_ref_number__icontains=query) |
-            Q(remarks__icontains=query) |
-            Q(supplier__icontains=query) |
-            Q(delivery_ref__icontains=query) |
-            Q(delivery_no__icontains=query) |
-            Q(invoice_type__icontains=query) |
-            Q(invoice_no__icontains=query) |
-            Q(payment_req_ref__icontains=query) |
-            Q(payment_details__icontains=query) |
-            Q(remarks2__icontains=query)
-        )
-
-    # If there's a date query, filter by date
-    if date_query:
-        try:
-            # Try parsing full date (e.g., "Aug 11, 2024")
-            date_obj = datetime.strptime(date_query, '%b %d, %Y').date()
-            orders_list = orders_list.filter(date=date_obj)
-        except ValueError:
-            try:
-                # Try parsing month and year only (e.g., "Aug 2024")
-                date_obj = datetime.strptime(date_query, '%b %Y')
-                orders_list = orders_list.filter(date__year=date_obj.year, date__month=date_obj.month)
-            except ValueError:
-                try:
-                    # Try parsing full month name and year (e.g., "August 2024")
-                    date_obj = datetime.strptime(date_query, '%B %Y')
-                    orders_list = orders_list.filter(date__year=date_obj.year, date__month=date_obj.month)
-                except ValueError:
-                    try:
-                        # Try parsing month only (e.g., "08" for August or "11" for November)
-                        month_number = int(date_query)
-                        orders_list = orders_list.filter(date__month=month_number)
-                    except ValueError:
-                        try:
-                            # Try parsing full month name only (e.g., "August")
-                            date_obj = datetime.strptime(date_query, '%B')
-                            orders_list = orders_list.filter(date__month=date_obj.month)
-                        except ValueError:
-                            pass  # Handle invalid date input gracefully
-
-    paginator = Paginator(orders_list, 20)  # Show 10 orders per page
-    try:
-        orders = paginator.page(page_number)
-    except PageNotAnInteger:
-        orders = paginator.page(1)
-    except EmptyPage:
-        orders = paginator.page(paginator.num_pages)
-
-    folders = ArchiveFolder.objects.all()
-
-    return render(request, 'dashboards/front_desk_dashboard.html', {
-        'orders': orders,
-        'query': query,
-        'date_query': date_query,
-        'page_number': page_number,
-        'folders': folders
-    })
-
 
 def purchase_order_edit(request, id):
     order = get_object_or_404(PurchaseOrder, id=id)
@@ -235,7 +150,80 @@ def purchase_order_edit(request, id):
     return render(request, 'records/purchase_order_edit.html', {'form': form, 'order': order})
 
 
-# For Exporting Records
+
+def purchase_order_list(request):
+    query = request.GET.get('q')  # Single search input
+    page_number = request.GET.get('page', 1)
+
+    orders_list = PurchaseOrder.objects.filter(folder__isnull=True, archived=False)
+
+    # If there's a search query, filter the orders accordingly
+    if query:
+        try:
+            # Try to interpret the query as a date first
+            date_obj = datetime.strptime(query, '%b %d, %Y').date()
+            orders_list = orders_list.filter(date=date_obj)
+        except ValueError:
+            try:
+                # Try parsing month and year only (e.g., "Aug 2024")
+                date_obj = datetime.strptime(query, '%b %Y')
+                orders_list = orders_list.filter(date__year=date_obj.year, date__month=date_obj.month)
+            except ValueError:
+                try:
+                    # Try parsing full month name and year (e.g., "August 2024")
+                    date_obj = datetime.strptime(query, '%B %Y')
+                    orders_list = orders_list.filter(date__year=date_obj.year, date__month=date_obj.month)
+                except ValueError:
+                    try:
+                        # Try parsing month only (e.g., "08" for August or "11" for November)
+                        month_number = int(query)
+                        orders_list = orders_list.filter(date__month=month_number)
+                    except ValueError:
+                        # If not a date, treat it as a general text search
+                        orders_list = orders_list.filter(
+                            Q(po_number__icontains=query) |
+                            Q(purchaser__icontains=query) |
+                            Q(brand__icontains=query) |
+                            Q(item_code__icontains=query) |
+                            Q(particulars__icontains=query) |
+                            Q(quantity__icontains=query) |
+                            Q(unit__icontains=query) |
+                            Q(price__icontains=query) |
+                            Q(total_amount__icontains=query) |
+                            Q(site_delivered__icontains=query) |
+                            Q(fbbd_ref_number__icontains=query) |
+                            Q(remarks__icontains=query) |
+                            Q(supplier__icontains=query) |
+                            Q(delivery_ref__icontains=query) |
+                            Q(delivery_no__icontains=query) |
+                            Q(invoice_type__icontains=query) |
+                            Q(invoice_no__icontains=query) |
+                            Q(payment_req_ref__icontains=query) |
+                            Q(payment_details__icontains=query) |
+                            Q(remarks2__icontains=query)
+                        )
+
+    paginator = Paginator(orders_list, 20)  # Show 20 orders per page
+    try:
+        orders = paginator.page(page_number)
+    except PageNotAnInteger:
+        orders = paginator.page(1)
+    except EmptyPage:
+        orders = paginator.page(paginator.num_pages)
+
+    folders = ArchiveFolder.objects.all()
+
+    return render(request, 'dashboards/front_desk_dashboard.html', {
+        'orders': orders,
+        'query': query,
+        'page_number': page_number,
+        'folders': folders
+    })
+
+
+
+
+# --------------------------------------For Exporting Records----------------------------------------------
 def export_orders_to_excel(request):
     query = request.GET.get('q')  # Search query parameter
     date_query = request.GET.get('date')  # Date query parameter
@@ -437,6 +425,85 @@ def export_archived_orders_to_excel(request, folder_id):
     except ArchiveFolder.DoesNotExist:
         return HttpResponse("Folder not found", status=404)
 
+
+def export_supplier_contents(request, folder_id):
+    try:
+        # Get the supplier folder by ID
+        folder = SupplierFolder.objects.get(id=folder_id)
+        orders_list = PurchaseOrder.objects.filter(supplier=folder.name)
+
+        # Create a workbook and a sheet
+        workbook = Workbook()
+        sheet = workbook.active
+        sheet.title = 'Supplier Orders'
+
+        # Define header styles
+        header_font = Font(bold=True)
+        blue_fill = PatternFill(start_color='00B0F0', end_color='00B0F0', fill_type='solid')
+        currency_format = '#,##0.00'
+
+        # Define the headers
+        headers = [
+            'Date', 'PO Number', 'Purchaser', 'Brand', 'Item Code', 'Particulars',
+            'Quantity', 'Unit', 'Price', 'Total Amount',
+            'Site Delivered', 'FBBD Ref#', 'Remarks', 'Supplier', 'Delivery Ref#',
+            'Delivery No.', 'Invoice Type', 'Invoice No.', 'Payment Req Ref#',
+            'Payment Details', 'Remarks2'
+        ]
+        sheet.append(headers)
+
+        for cell in sheet[1]:
+            cell.font = header_font
+            cell.fill = blue_fill
+            cell.value = cell.value.upper() if cell.value is not None else cell.value
+
+        # Populate the sheet with data
+        for order in orders_list:
+            sheet.append([
+                order.date.strftime('%Y-%m-%d') if order.date else 'N/A', order.po_number, order.purchaser, order.brand,
+                order.item_code,
+                order.particulars, order.quantity, order.unit, order.price, order.total_amount, order.site_delivered,
+                order.fbbd_ref_number, order.remarks, order.supplier, order.delivery_ref, order.delivery_no,
+                order.invoice_type, order.invoice_no, order.payment_req_ref, order.payment_details, order.remarks2
+            ])
+
+        for cell in sheet['I']:  # Assuming price is in column I (index 9)
+            if cell.row > 1:  # Skip header row
+                cell.number_format = currency_format
+
+        for cell in sheet['J']:  # Assuming total_amount is in column J (index 10)
+            if cell.row > 1:  # Skip header row
+                cell.number_format = currency_format
+
+        for column in sheet.columns:
+            max_length = 0
+            column_letter = column[0].column_letter  # Get the column name (e.g., 'A', 'B', etc.)
+            for cell in column:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(cell.value)
+                except:
+                    pass
+            adjusted_width = (max_length + 2)  # Add extra space for better visibility
+            sheet.column_dimensions[column_letter].width = adjusted_width
+
+        # Create an in-memory buffer
+        buffer = BytesIO()
+        workbook.save(buffer)
+        buffer.seek(0)
+
+        # Set the response to return the Excel file
+        response = HttpResponse(
+            buffer,
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = f'attachment; filename=SupplierOrders_{folder.name}.xlsx'
+        return response
+
+    except SupplierFolder.DoesNotExist:
+        return HttpResponse("Supplier Folder not found", status=404)
+
+
 # For Archiving Methods
 def create_folder(request):
     if request.method == 'POST':
@@ -510,7 +577,6 @@ def move_orders_to_folder(request):
 
 
 
-
 # For Uploading Files
 def handle_uploaded_file(f):
     df = pd.read_excel(f, engine='openpyxl')
@@ -518,7 +584,7 @@ def handle_uploaded_file(f):
 
     for _, row in df.iterrows():
         # Create or update the PurchaseOrder
-        purchase_order = PurchaseOrder.objects.create(
+        purchase_order = PurchaseOrder(
             date=row.get('DATE'),
             po_number=row.get('PO NUMBER'),
             purchaser=row.get('PURCHASER'),
@@ -541,6 +607,18 @@ def handle_uploaded_file(f):
             payment_details=row.get('PAYMENT DETAILS'),
             remarks2=row.get('REMARKS2')
         )
+
+        # Check if the supplier folder exists or create a new one
+        supplier_name = purchase_order.supplier
+        if supplier_name:
+            folder, created = SupplierFolder.objects.get_or_create(name=supplier_name)
+            # Optionally handle updates to the folder if needed
+
+            # Update the purchase order to reference the SupplierFolder
+            purchase_order.supplier_folder = folder
+
+        # Save the purchase order
+        purchase_order.save()
 
         # Check if an inventory record for the item exists
         inventory_item = ItemInventory.objects.filter(
@@ -581,7 +659,7 @@ def upload_file(request):
     return render(request, 'records/upload.html', {'form': form})
 
 
-# For INVENTORY
+# -----------------------------For INVENTORY----------------------------------------------
 
 def inventory_table(request):
     query = request.GET.get('q')  # 'q' is the name of the search input field
@@ -715,7 +793,7 @@ def export_inventory_to_excel(request):
     return response
 
 
-# SUPPLIER
+# ----------------------------SUPPLIER----------------------------------------------
 
 def delete_supplier_folder(request, folder_id):
     if request.method == 'POST':
@@ -724,6 +802,7 @@ def delete_supplier_folder(request, folder_id):
         return JsonResponse({'success': True})
 
     return JsonResponse({'success': False, 'error': 'Invalid request method.'})
+
 
 def supplier_list_folders(request):
     if request.method == 'POST':

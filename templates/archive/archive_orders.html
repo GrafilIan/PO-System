@@ -51,7 +51,8 @@
                                             <div class="row">
 
                                                 <div class="col-auto">
-                                                    <a href="{% url 'export_archived_orders' folder.id %}" class="btn btn-primary">Export Archived Orders</a>
+                                                    <a href="{% url 'export_archived_orders' folder.id %}"
+                                                       class="btn btn-primary">Export Archived Orders</a>
                                                 </div>
 
                                             </div>
@@ -186,4 +187,18 @@
         </div>
     </div>
     </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const table = document.getElementById('sortable-table');
+    if (table) {
+        const cells = table.querySelectorAll('tbody td');
+        cells.forEach(cell => {
+            if (cell.textContent.trim() === 'None') {
+                cell.style.color = 'transparent';  // Hide the text without removing it
+            }
+        });
+    }
+</script>
 {% endblock %}

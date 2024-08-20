@@ -51,8 +51,11 @@
                                                 <form method="get" action=""
                                                       class="form-inline justify-content-center col-12">
                                                     <div class="input-group">
+                                                        <!-- Single Search Input -->
                                                         <input type="text" name="q" class="form-control"
-                                                               placeholder="Search" value="{{ request.GET.q }}">
+                                                               placeholder="Search by text or date"
+                                                               value="{{ request.GET.q }}">
+
                                                         <div class="input-group-btn">
                                                             <button class="btn btn-primary" type="submit"><i
                                                                     class="fas fa-search"></i></button>
@@ -66,6 +69,7 @@
                                                     </div>
                                                     <a href="{% url 'purchase_order_create' %}" class="btn btn-primary">Add</a>
                                                 </form>
+
                                             </div>
 
                                             <div class="row">
@@ -103,6 +107,8 @@
                                                         <th style="color: white;">REMARKS</th>
                                                         <th style="color: white;">SUPPLIER</th>
                                                         <th class="no-wrap" style="color: white;">DELIVERY REF#</th>
+                                                        <th class="no-wrap" style="color: white;">DELIVERY NO.</th>
+                                                        <th style="color: white;">INVOICE TYPE</th>
                                                         <th style="color: white;">INVOICE#</th>
                                                         <th class="no-wrap" style="color: white;">PAYMENT DETAILS</th>
                                                         <th class="no-wrap" style="color: white;">PAYMENT REQ.#</th>
@@ -136,6 +142,8 @@
                                                             <td>{{ order.remarks }}</td>
                                                             <td class="no-wrap">{{ order.supplier }}</td>
                                                             <td>{{ order.delivery_ref }}</td>
+                                                            <td>{{ order.delivery_no }}</td>
+                                                            <td>{{ order.invoice_type }}</td>
                                                             <td>{{ order.invoice_no }}</td>
                                                             <td>{{ order.payment_details }}</td>
                                                             <td>{{ order.payment_req_ref }}</td>
@@ -170,6 +178,7 @@
                                                                    href="?page=
 
 
+
                                                                            {{ orders.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}"
                                                                    aria-label="Previous">
                                                                     <span aria-hidden="true">&laquo;</span>
@@ -182,12 +191,14 @@
                                                                    href="?page=
 
 
+
                                                                            {{ num }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}">{{ num }}</a>
                                                             </li>
                                                         {% endfor %}
                                                         {% if orders.has_next %}
                                                             <li class="page-item">
                                                                 <a class="page-link" href="?page=
+
                                                                         {{ orders.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}"
                                                                    aria-label="Next">
                                                                     <span aria-hidden="true">&raquo;</span>
@@ -197,6 +208,7 @@
                                                         <!-- Link to Last Page -->
                                                         <li class="page-item {% if orders.number == orders.paginator.num_pages %}active{% endif %}">
                                                             <a class="page-link" href="?page=
+
                                                                     {{ orders.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}">
                                                                 Last</a>
                                                         </li>
