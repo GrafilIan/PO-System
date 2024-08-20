@@ -1,0 +1,233 @@
+{% extends 'inventorybase.html' %}
+
+{% block title %}Transaction History{% endblock %}
+
+{% load static %}
+
+{% block head %}
+    <link rel="stylesheet" href="{% static 'assets/modules/datatables/datatables.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/modules/datatables/DataTables-1.10.16/css/dataTables.bootstrap4.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/modules/datatables/Select-1.2.4/css/select.bootstrap4.min.css' %}">
+{% endblock %}
+
+{% block content %}
+    <div class="main-wrapper container-fluid">
+        <div class="main-content">
+            <section class="section container-fluid">
+                <div class="section-body">
+                    <div class="card card-secondary">
+                        <div class="card-header">
+                            <h4>Transaction History</h4>
+                            <div class="card-header-action">
+                                    <form method="get" action="" class="form-inline justify-content-center col-12">
+                                        <div class="input-group">
+                                            <!-- Single Search Input -->
+                                            <input type="text" name="q" class="form-control"
+                                                   placeholder="Search by text or date"
+                                                   value="{{ request.GET.q }}">
+
+                                            <div class="input-group-btn">
+                                                <button class="btn btn-primary" type="submit"><i
+                                                        class="fas fa-search"></i></button>
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            {% if request.GET.q %}
+                                                <a href="{% url 'transaction_history' %}" class="btn btn-outline-primary">Clear Filter</a>
+                                            {% endif %}
+                                        </div>
+                                    </form>
+                                </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table id="transactionTable" class="table table-hover table-striped">
+                                    <thead>
+                                        <tr class="blue-background">
+                                            <th class="no-wrap" style="color: white;">Date</th>
+                                            <th class="no-wrap" style="color: white;">Item Code</th>
+                                            <th class="no-wrap" style="color: white;">Supplier</th>
+                                            <th class="no-wrap" style="color: white;">PO Product Name</th>
+                                            <th class="no-wrap" style="color: white;">New Product Name</th>
+                                            <th class="no-wrap" style="color: white;">Unit</th>
+                                            <th class="no-wrap" style="color: white;">Quantity Out</th>
+                                            <th class="no-wrap" style="color: white;">Price</th>
+                                            <th class="no-wrap" style="color: white;">Total Amount</th>
+                                            <th class="no-wrap" style="color: white;">Site Delivered</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for transaction in transactions %}
+                                        <tr>
+                                            <td class="no-wrap">{{ transaction.date }}</td>
+                                            <td class="no-wrap">{{ transaction.item_code }}</td>
+                                            <td class="no-wrap">{{ transaction.supplier }}</td>
+                                            <td class="no-wrap">{{ transaction.po_product_name }}</td>
+                                            <td class="no-wrap">{{ transaction.new_product_name }}</td>
+                                            <td class="no-wrap">{{ transaction.unit }}</td>
+                                            <td class="no-wrap">{{ transaction.quantity_out }}</td>
+                                            <td class="no-wrap">{{ transaction.price }}</td>
+                                            <td class="no-wrap">{{ transaction.total_amount }}</td>
+                                            <td class="no-wrap">{{ transaction.site_delivered }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Pagination Controls -->
+                            <div class="pagination-wrapper">
+                                <nav aria-label="Page navigation">
+                                    <ul class="pagination justify-content-center">
+                                        {% if transactions.has_previous %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ transactions.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}" aria-label="Previous">
+                                                    <span aria-hidden="true">&laquo;</span>
+                                                </a>
+                                            </li>
+                                        {% endif %}
+                                        {% for num in transactions.paginator.page_range %}
+                                            <li class="page-item {% if transactions.number == num %}active{% endif %}">
+                                                <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}">{{ num }}</a>
+                                            </li>
+                                        {% endfor %}
+                                        {% if transactions.has_next %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ transactions.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}" aria-label="Next">
+                                                    <span aria-hidden="true">&raquo;</span>
+                                                </a>
+                                            </li>
+                                        {% endif %}
+                                    </ul>
+                                </nav>
+                            </div>
+                            <p>Page {{ transactions.number }} of {{ transactions.paginator.num_pages }}</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+{% endblock %}
+
+
+{% block scripts %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchForm = document.getElementById('search-form');
+
+            // Handle form submission for search
+            searchForm.addEventListener('submit', function (event) {
+                event.preventDefault();
+                const query = searchInput.value.trim();
+                if (query) {
+                    window.location.href = `?q=${encodeURIComponent(query)}`;
+                } else {
+                    window.location.href = '?';  // Clear search
+                }
+            });
+
+            // Pagination functionality
+            const paginationLinks = document.querySelectorAll('.pagination a');
+
+            paginationLinks.forEach(link => {
+                link.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    const pageUrl = this.getAttribute('href');
+                    fetch(pageUrl)
+                        .then(response => response.text())
+                        .then(html => {
+                            document.querySelector('#transaction-history').innerHTML = html;
+                        });
+                });
+            });
+
+            // Handle success and error modals (if applicable)
+            {% if messages %}
+                {% for message in messages %}
+                    {% if message.tags == 'success' %}
+                        $('#successModal').modal('show');
+                    {% elif message.tags == 'error' %}
+                        $('#errorModal').modal('show');
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const selectAllCheckbox = document.getElementById('select-all');
+            const rowCheckboxes = document.querySelectorAll('.select-row');
+            const selectedOrdersDiv = document.getElementById('selected-orders');
+
+            function updateSelectedOrders() {
+                selectedOrdersDiv.innerHTML = ''; // Clear existing hidden inputs
+                rowCheckboxes.forEach(function (checkbox) {
+                    if (checkbox.checked) {
+                        const hiddenInput = document.createElement('input');
+                        hiddenInput.type = 'hidden';
+                        hiddenInput.name = 'transactions'; // Ensure this matches your view
+                        hiddenInput.value = checkbox.dataset.id;
+                        selectedOrdersDiv.appendChild(hiddenInput);
+                    }
+                });
+            }
+
+            selectAllCheckbox.addEventListener('change', function () {
+                const isChecked = selectAllCheckbox.checked;
+                rowCheckboxes.forEach(function (checkbox) {
+                    checkbox.checked = isChecked;
+                });
+                updateSelectedOrders();
+            });
+
+            rowCheckboxes.forEach(function (checkbox) {
+                checkbox.addEventListener('change', function () {
+                    if (!this.checked) {
+                        selectAllCheckbox.checked = false;
+                    }
+                    if (document.querySelectorAll('.select-row:checked').length === rowCheckboxes.length) {
+                        selectAllCheckbox.checked = true;
+                    }
+                    updateSelectedOrders();
+                });
+            });
+
+            // Handle form submission and modal display
+            const moveForm = document.getElementById('move-orders-form');
+            const successModal = new bootstrap.Modal(document.getElementById('success-modal'));
+            const errorModal = new bootstrap.Modal(document.getElementById('error-modal'));
+
+            moveForm.addEventListener('submit', function (event) {
+                event.preventDefault();
+
+                // Simulate form submission (replace with actual submission logic)
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', moveForm.action, true);
+                xhr.setRequestHeader('X-CSRFToken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+                xhr.onload = function () {
+                    if (xhr.status === 200) {
+                        successModal.show();
+                        // Reload page after closing modal
+                        document.querySelector('#success-modal .btn-secondary').addEventListener('click', function () {
+                            window.location.reload();
+                        });
+                    } else {
+                        errorModal.show();
+                    }
+                };
+                xhr.send(new FormData(moveForm));
+            });
+
+            // Hide 'None' text
+            document.querySelectorAll('td').forEach(td => {
+                if (td.textContent.trim() === 'None') {
+                    td.innerHTML = '<span style="visibility: hidden;">None</span>';
+                }
+            });
+        });
+    </script>
+{% endblock %}
+
+

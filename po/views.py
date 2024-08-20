@@ -10,7 +10,7 @@ from django.contrib import messages
 from openpyxl.workbook import Workbook
 
 from .forms import PurchaseOrderForm, UploadFileForm, ItemInventoryForm
-from .models import PurchaseOrder, ArchiveFolder, ItemInventory, SupplierFolder
+from .models import PurchaseOrder, ArchiveFolder, ItemInventory, SupplierFolder, InventoryHistory
 from datetime import datetime
 from openpyxl.styles import Font, PatternFill
 from io import BytesIO
@@ -792,6 +792,64 @@ def export_inventory_to_excel(request):
     response['Content-Disposition'] = 'attachment; filename=Inventory.xlsx'
     return response
 
+
+
+def transaction_history(request):
+    query = request.GET.get('q')  # Get search query from request
+    page_number = request.GET.get('page', 1)  # Get page number from request
+
+    # Retrieve all records from InventoryHistory
+    transactions = InventoryHistory.objects.all().order_by('-date')
+
+    # Apply search filter if a query is present
+    if query:
+        try:
+            # Try to interpret the query as a date first
+            date_obj = datetime.strptime(query, '%b %d, %Y').date()
+            transactions = transactions.filter(date=date_obj)
+        except ValueError:
+            try:
+                # Try parsing month and year only (e.g., "Aug 2024")
+                date_obj = datetime.strptime(query, '%b %Y')
+                transactions = transactions.filter(date__year=date_obj.year, date__month=date_obj.month)
+            except ValueError:
+                try:
+                    # Try parsing full month name and year (e.g., "August 2024")
+                    date_obj = datetime.strptime(query, '%B %Y')
+                    transactions = transactions.filter(date__year=date_obj.year, date__month=date_obj.month)
+                except ValueError:
+                    try:
+                        # Try parsing month only (e.g., "08" for August or "11" for November)
+                        month_number = int(query)
+                        transactions = transactions.filter(date__month=month_number)
+                    except ValueError:
+                        # If not a date, treat it as a general text search
+                        transactions = transactions.filter(
+                            Q(item_code__icontains=query) |
+                            Q(supplier__icontains=query) |
+                            Q(po_product_name__icontains=query) |
+                            Q(new_product_name__icontains=query) |
+                            Q(unit__icontains=query) |
+                            Q(quantity_out__icontains=query) |
+                            Q(price__icontains=query) |
+                            Q(total_amount__icontains=query) |
+                            Q(site_delivered__icontains=query)
+                        )
+
+    # Paginate the filtered transactions
+    paginator = Paginator(transactions, 20)  # Show 20 transactions per page
+    try:
+        transactions_page = paginator.page(page_number)
+    except PageNotAnInteger:
+        transactions_page = paginator.page(1)
+    except EmptyPage:
+        transactions_page = paginator.page(paginator.num_pages)
+
+    return render(request, 'Inventory/transaction_history.html', {
+        'transactions': transactions_page,
+        'query': query,
+        'page_number': page_number
+    })
 
 # ----------------------------SUPPLIER----------------------------------------------
 

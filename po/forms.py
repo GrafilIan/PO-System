@@ -83,6 +83,7 @@ class ItemInventoryForm(forms.ModelForm):
     class Meta:
         model = ItemInventory
         fields = [
+            'date',
             'item_code',
             'supplier',
             'po_product_name',
@@ -92,9 +93,11 @@ class ItemInventoryForm(forms.ModelForm):
             'quantity_out',
             'stock',
             'price',
-            'total_amount'
+            'total_amount',
+            'site_delivered',
         ]
         widgets = {
+            'date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control', 'placeholder': 'Date'}),
             'item_code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Item Code'}),
             'supplier': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Supplier'}),
             'po_product_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'PO Product Name'}),
@@ -104,12 +107,14 @@ class ItemInventoryForm(forms.ModelForm):
             'quantity_out': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Quantity Out'}),
             'price': forms.NumberInput(attrs={'step': '0.01', 'class': 'form-control', 'placeholder': 'Price'}),
             'total_amount': forms.NumberInput(attrs={'step': '0.01', 'class': 'form-control', 'placeholder': 'Total Amount', 'readonly': True}),
-            'stock': forms.NumberInput(attrs={'readonly': True, 'class': 'form-control', 'placeholder': 'Stock'})
+            'stock': forms.NumberInput(attrs={'readonly': True, 'class': 'form-control', 'placeholder': 'Stock'}),
+            'site_delivered': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Site Delivered'}),
         }
 
     def __init__(self, *args, **kwargs):
         super(ItemInventoryForm, self).__init__(*args, **kwargs)
         # Update any additional attributes for the fields if needed
+        self.fields['date'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Date'})
         self.fields['item_code'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Item Code'})
         self.fields['supplier'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Supplier'})
         self.fields['po_product_name'].widget.attrs.update({'class': 'form-control', 'placeholder': 'PO Product Name'})
@@ -120,6 +125,7 @@ class ItemInventoryForm(forms.ModelForm):
         self.fields['price'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Price'})
         self.fields['total_amount'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Total Amount', 'readonly': True})
         self.fields['stock'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Stock', 'readonly': True})
+        self.fields['site_delivered'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Site Delivered'})
 
     def clean(self):
         cleaned_data = super().clean()

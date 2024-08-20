@@ -10,6 +10,7 @@ class SupplierFolder(models.Model):
 
 
 class ItemInventory(models.Model):
+    date = models.DateField(verbose_name='Date', null=True)
     item_code = models.CharField(max_length=100, blank=True, null=True)
     supplier = models.CharField(max_length=100, blank=True, null=True)
     po_product_name = models.CharField(max_length=100, blank=True, null=True)
@@ -20,14 +21,74 @@ class ItemInventory(models.Model):
     stock = models.IntegerField(default=0)
     price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    site_delivered = models.CharField(max_length=255, verbose_name='Site Delivered', null=True, blank=True)
 
     def save(self, *args, **kwargs):
-        self.stock = self.quantity_in - self.quantity_out
-        self.total_amount = self.stock * self.price
+        if self.pk:
+            # Fetch the previous record from the database
+            previous = ItemInventory.objects.get(pk=self.pk)
+            print(f"Previous QTY OUT: {previous.quantity_out}")
+            print(f"Current QTY OUT: {self.quantity_out}")
+
+            # The current input is how much more we want to subtract from stock
+            quantity_out_delta = self.quantity_out  # This is the new quantity being subtracted
+
+            # Update the cumulative quantity_out by adding the new quantity to the previous total
+            new_quantity_out = previous.quantity_out + quantity_out_delta
+            print(f"New QTY OUT (cumulative): {new_quantity_out}")
+
+            # Update the current record with the correct cumulative quantity_out
+            self.quantity_out = new_quantity_out
+            self.stock = self.quantity_in - new_quantity_out
+            self.total_amount = self.stock * self.price
+
+            print(f"New Stock: {self.stock}")
+            print(f"New Total Amount: {self.total_amount}")
+
+            # Create a history entry with the current quantity_out input (delta), not the cumulative
+            InventoryHistory.objects.create(
+                item=self,
+                date=self.date,
+                item_code=self.item_code,
+                supplier=self.supplier,
+                po_product_name=self.po_product_name,
+                new_product_name=self.new_product_name,
+                unit=self.unit,
+                quantity_in=self.quantity_in,
+                quantity_out=quantity_out_delta,  # Log the delta/change, not the cumulative
+                stock=self.stock,
+                price=self.price,
+                total_amount=self.total_amount,
+                site_delivered=self.site_delivered,
+            )
+        else:
+            # For new records, set initial stock and total_amount
+            self.stock = self.quantity_in - self.quantity_out
+            self.total_amount = self.stock * self.price
+
         super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.po_product_name} ({self.supplier})"
+
+
+class InventoryHistory(models.Model):
+    item = models.ForeignKey(ItemInventory, on_delete=models.CASCADE)
+    date = models.DateField()
+    item_code = models.CharField(max_length=100, blank=True, null=True)
+    supplier = models.CharField(max_length=100, blank=True, null=True)
+    po_product_name = models.CharField(max_length=100, blank=True, null=True)
+    new_product_name = models.CharField(max_length=100, blank=True, null=True)
+    unit = models.CharField(max_length=50, blank=True, null=True)
+    quantity_in = models.IntegerField()
+    quantity_out = models.IntegerField(default=0)
+    stock = models.IntegerField(default=0)
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    total_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    site_delivered = models.CharField(max_length=255, verbose_name='Site Delivered', null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.po_product_name} ({self.item_code}) - {self.quantity_out}"
 
 class ArchiveFolder(models.Model):
     name = models.CharField(max_length=100)

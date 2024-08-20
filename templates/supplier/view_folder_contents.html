@@ -70,6 +70,8 @@
                                                         <th style="color: white;">REMARKS</th>
                                                         <th style="color: white;">SUPPLIER</th>
                                                         <th class="no-wrap" style="color: white;">DELIVERY REF#</th>
+                                                        <th class="no-wrap" style="color: white;">DELIVERY NO.</th>
+                                                        <th style="color: white;">INVOICE TYPE</th>
                                                         <th style="color: white;">INVOICE#</th>
                                                         <th class="no-wrap" style="color: white;">PAYMENT DETAILS</th>
                                                         <th class="no-wrap" style="color: white;">PAYMENT REQ.#</th>
@@ -94,6 +96,8 @@
                                                             <td>{{ order.remarks }}</td>
                                                             <td class="no-wrap">{{ order.supplier }}</td>
                                                             <td>{{ order.delivery_ref }}</td>
+                                                            <td>{{ order.delivery_no }}</td>
+                                                            <td>{{ order.invoice_type }}</td>
                                                             <td>{{ order.invoice_no }}</td>
                                                             <td>{{ order.payment_details }}</td>
                                                             <td>{{ order.payment_req_ref }}</td>
@@ -119,8 +123,7 @@
                                                     <ul class="pagination justify-content-center">
                                                         {% if orders.has_previous %}
                                                             <li class="page-item">
-                                                                <a class="page-link"
-                                                                   href="?page={{ orders.previous_page_number }}"
+                                                                <a class="page-link" href="?page={{ orders.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}"
                                                                    aria-label="Previous">
                                                                     <span aria-hidden="true">&laquo;</span>
                                                                 </a>
@@ -128,34 +131,44 @@
                                                         {% endif %}
                                                         {% for num in orders.paginator.page_range %}
                                                             <li class="page-item {% if orders.number == num %}active{% endif %}">
-                                                                <a class="page-link"
-                                                                   href="?page={{ num }}">{{ num }}</a>
+                                                                <a class="page-link"href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}">
+                                                                    {{ num }}
+                                                                </a>
                                                             </li>
                                                         {% endfor %}
                                                         {% if orders.has_next %}
                                                             <li class="page-item">
-                                                                <a class="page-link"
-                                                                   href="?page={{ orders.next_page_number }}"
+                                                                <a class="page-link" href="?page={{ orders.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}"
                                                                    aria-label="Next">
                                                                     <span aria-hidden="true">&raquo;</span>
                                                                 </a>
                                                             </li>
                                                         {% endif %}
+                                                        <!-- Link to Last Page -->
+                                                        <li class="page-item {% if orders.number == orders.paginator.num_pages %}active{% endif %}">
+                                                            <a class="page-link" href="?page={{ orders.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}">
+                                                                Last</a>
+                                                        </li>
+
                                                     </ul>
                                                 </nav>
                                             </div>
                                             <form method="get" action="" class="form-inline justify-content-center">
+                                                <input type="hidden" name="q" value="{{ query }}">
+                                                <input type="hidden" name="date" value="{{ date_query }}">
                                                 <div class="form-group mb-2">
                                                     <label for="page-number" class="sr-only">Page</label>
                                                     <input type="number" class="form-control" id="page-number"
                                                            name="page" min="1"
                                                            max="{{ orders.paginator.num_pages }}"
-                                                           placeholder="Page No." required style="width: 120px;">
+                                                           placeholder="Page No." required style="width: 120px;"
+                                                           oninput="this.value = this.value.trim();">
                                                 </div>
                                                 <button type="submit" class="btn btn-primary mb-2" style="width: 70px;">
                                                     Go
                                                 </button>
                                             </form>
+
                                             <p>Page {{ orders.number }} of {{ orders.paginator.num_pages }}</p>
                                         </div>
                                     </div>
