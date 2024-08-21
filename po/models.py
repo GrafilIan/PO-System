@@ -79,7 +79,7 @@ class ItemInventory(models.Model):
 
 class InventoryHistory(models.Model):
     item = models.ForeignKey(ItemInventory, on_delete=models.CASCADE)
-    date = models.DateField()
+    date = models.DateField(null=True)
     item_code = models.CharField(max_length=100, blank=True, null=True)
     supplier = models.CharField(max_length=100, blank=True, null=True)
     po_product_name = models.CharField(max_length=100, blank=True, null=True)

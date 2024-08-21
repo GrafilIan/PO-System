@@ -111,4 +111,15 @@
             </div>
         </div>
     </div>
+
+<script>
+    document.querySelectorAll('td').forEach(td => {
+                if (td.textContent.trim() === 'None') {
+                    td.innerHTML = '<span style="visibility: hidden;">None</span>';
+                }
+            });
+</script>
+
 {% endblock %}
+
+
