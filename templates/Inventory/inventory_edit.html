@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="{% static 'assets/modules/datatables/DataTables-1.10.16/css/dataTables.bootstrap4.min.css' %}">
     <link rel="stylesheet" href="{% static 'assets/modules/datatables/Select-1.2.4/css/select.bootstrap4.min.css' %}">
     <script src="{% static 'assets/js/cleave.min.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> <!-- Include SweetAlert2 -->
 {% endblock %}
 
 {% block content %}
@@ -58,9 +59,16 @@
                                     {{ form.new_product_name }}
                                 </div>
 
-                                <div class="form-group col-6 col-sm-6">
-                                    <label for="date">Site Delivered</label>
-                                    {{ form.site_delivered }}
+                                <!-- Location Type -->
+                                <div class="form-group col-12 col-sm-6">
+                                    <label for="location_type">Location Type</label>
+                                    {{ form.location_type }}
+                                </div>
+
+                                <!-- Location Name -->
+                                <div class="form-group col-12 col-sm-6">
+                                    <label for="location_name">Location Name</label>
+                                    {{ form.location_name }}
                                 </div>
 
                                 <div class="form-group col-6 col-sm-3">
@@ -103,46 +111,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Success Modal -->
-            <div class="modal fade" id="successModal" tabindex="-1" role="dialog" aria-labelledby="successModalLabel" aria-hidden="true">
-                <div class="modal-dialog" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="successModalLabel">Success!</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                        <div class="modal-body">
-                            Your record has been saved successfully.
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-primary" id="okButton" data-redirect-url="{% url 'inventory_table' %}">OK</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Error Modal -->
-            <div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel" aria-hidden="true">
-                <div class="modal-dialog" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="errorModalLabel">Error!</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                        <div class="modal-body">
-                            There was an error saving the record.
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-primary" data-dismiss="modal">OK</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 {% endblock %}
@@ -168,22 +136,35 @@
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
-                    $('#successModal').modal('show');
+                    Swal.fire({
+                        title: 'Success!',
+                        text: 'Your record has been saved successfully.',
+                        icon: 'success',
+                        confirmButtonText: 'OK'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = "{% url 'inventory_table' %}";
+                        }
+                    });
                 } else {
-                    $('#errorModal').modal('show');
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'There was an error saving the record.',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                $('#errorModal').modal('show');
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'There was an error saving the record.',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
             });
         });
-
-        // Redirect to a specific URL when the OK button in the success modal is clicked
-        document.getElementById('okButton').addEventListener('click', function() {
-            window.location.href = this.getAttribute('data-redirect-url');
-        });
     });
-</script>
-
+    </script>
 {% endblock %}

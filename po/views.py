@@ -10,7 +10,8 @@ from django.contrib import messages
 from openpyxl.workbook import Workbook
 
 from .forms import PurchaseOrderForm, UploadFileForm, ItemInventoryForm
-from .models import PurchaseOrder, ArchiveFolder, ItemInventory, SupplierFolder, InventoryHistory, SiteInventoryFolder
+from .models import PurchaseOrder, ArchiveFolder, ItemInventory, SupplierFolder, InventoryHistory, SiteInventoryFolder, \
+    ClientInventoryFolder
 from datetime import datetime
 from openpyxl.styles import Font, PatternFill
 from io import BytesIO
@@ -697,33 +698,39 @@ def inventory_edit(request, id):
         form = ItemInventoryForm(request.POST, instance=inventory_item)
         if form.is_valid():
             updated_item = form.save(commit=False)
+            location_type = form.cleaned_data.get('location_type')
+            location_name = form.cleaned_data.get('location_name')
 
-            # Get the site_delivered name from the updated item
-            site_delivered_name = updated_item.site_delivered
+            if location_type == 'site_delivered':
+                # Create or get the site folder
+                folder, created = SiteInventoryFolder.objects.get_or_create(name=location_name)
+                updated_item.site_inventory_folder = folder
 
-            if site_delivered_name:
-                # Create or get the SiteInventoryFolder associated with this site_delivered
-                folder, created = SiteInventoryFolder.objects.get_or_create(name=site_delivered_name)
-
-                # Associate the updated item with the site_delivered folder
-                updated_item.folder = folder
+                # Save the updated item
                 updated_item.save()
 
-                # Update all InventoryHistory records with the same site_delivered
-                matching_transactions = InventoryHistory.objects.filter(site_delivered=site_delivered_name)
-                for transaction in matching_transactions:
-                    transaction.site_inventory_folder = folder
-                    transaction.save()
+                # Update or associate existing transactions with the folder
+                InventoryHistory.objects.filter(site_delivered=location_name).update(site_inventory_folder=folder)
 
-                return JsonResponse({'status': 'success'})
-            else:
-                return JsonResponse({'status': 'error', 'message': 'Invalid site_delivered value.'})
+            elif location_type == 'client':
+                # Create or get the client folder
+                client_folder, created = ClientInventoryFolder.objects.get_or_create(name=location_name)
+                updated_item.client_inventory_folder = client_folder
+
+                # Save the updated item
+                updated_item.save()
+
+                # Update or associate existing transactions with the client folder
+                InventoryHistory.objects.filter(client=location_name).update(client_inventory_folder=client_folder)
+
+            return JsonResponse({'status': 'success'})
         else:
             return JsonResponse({'status': 'error', 'errors': form.errors})
     else:
         form = ItemInventoryForm(instance=inventory_item)
 
     return render(request, 'inventory/inventory_edit.html', {'form': form, 'item': inventory_item})
+
 
 
 def export_inventory_to_excel(request):
@@ -850,7 +857,8 @@ def transaction_history(request):
                             Q(quantity_out__icontains=query) |
                             Q(price__icontains=query) |
                             Q(total_amount__icontains=query) |
-                            Q(site_delivered__icontains=query)
+                            Q(site_delivered__icontains=query) |
+                            Q(client__name__icontains=query)
                         )
 
     # Paginate the filtered transactions
@@ -939,6 +947,76 @@ def view_site_inventory_folder_contents(request, folder_id):
     }
 
     return render(request, 'Inventory/site_folder_contents.html', context)
+
+
+def create_client_inventory_folder(request):
+    if request.method == 'POST':
+        folder_name = request.POST.get('folder_name')
+
+        if folder_name:
+            new_folder, created = ClientInventoryFolder.objects.get_or_create(name=folder_name)
+
+            if created:
+                # Handle matching transactions here
+                matching_transactions = InventoryHistory.objects.filter(client=folder_name)
+                for transaction in matching_transactions:
+                    transaction.client_inventory_folder = new_folder
+                    transaction.save()
+
+                return JsonResponse({'success': True, 'message': 'Client folder created and transactions updated successfully.'})
+            else:
+                return JsonResponse({'success': False, 'message': 'Client folder with this name already exists.'})
+
+    return JsonResponse({'success': False, 'error': 'Invalid request method.'})
+
+
+def delete_client_inventory_folder(request, folder_id):
+    if request.method == 'POST':
+        folder = get_object_or_404(ClientInventoryFolder, id=folder_id)
+        folder.delete()  # This will set the client_inventory_folder field in InventoryHistory to NULL
+        return JsonResponse({'success': True})
+
+    return JsonResponse({'success': False, 'error': 'Invalid request method.'})
+
+
+def client_inventory_folder_list(request):
+    if request.method == 'POST':
+        folder_name = request.POST.get('folder_name')
+
+        if folder_name:
+            # Create or get the folder
+            new_folder, created = ClientInventoryFolder.objects.get_or_create(name=folder_name)
+
+            if created:
+                # Handle matching orders here
+                matching_orders = PurchaseOrder.objects.filter(client=folder_name)
+                for order in matching_orders:
+                    order.client_inventory_folder = new_folder
+                    order.save()
+
+                return JsonResponse({'success': True, 'message': 'Folder created and orders updated successfully.'})
+            else:
+                return JsonResponse({'success': False, 'message': 'Folder with this name already exists.'})
+
+    # Handling GET requests to render the folder list
+    folders = ClientInventoryFolder.objects.all()
+    context = {
+        'folders': folders,
+    }
+    return render(request, 'Inventory/client_inventory_folder_list.html', context)
+
+
+
+def view_client_inventory_folder_contents(request, folder_id):
+    folder = get_object_or_404(ClientInventoryFolder, id=folder_id)
+    transactions = InventoryHistory.objects.filter(client_inventory_folder=folder)
+
+    context = {
+        'folder': folder,
+        'transactions': transactions,
+    }
+
+    return render(request, 'Inventory/client_folder_contents.html', context)
 
 # ----------------------------SUPPLIER----------------------------------------------
 

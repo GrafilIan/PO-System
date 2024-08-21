@@ -80,6 +80,21 @@ class UploadFileForm(forms.Form):
 
 
 class ItemInventoryForm(forms.ModelForm):
+    LOCATION_CHOICES = [
+        ('site_delivered', 'Site Delivered'),
+        ('client', 'Client'),
+    ]
+
+    location_type = forms.ChoiceField(
+        choices=LOCATION_CHOICES,
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        label='Location Type',
+    )
+    location_name = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter Site or Client Name'}),
+        label='Location Name',
+    )
+
     class Meta:
         model = ItemInventory
         fields = [
@@ -94,7 +109,9 @@ class ItemInventoryForm(forms.ModelForm):
             'stock',
             'price',
             'total_amount',
-            'site_delivered',
+            'site_delivered',  # This will be used based on the choice made
+            'location_type',   # New field for choosing between site and client
+            'location_name',   # New field for entering the site or client name
         ]
         widgets = {
             'date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control', 'placeholder': 'Date'}),
@@ -108,37 +125,23 @@ class ItemInventoryForm(forms.ModelForm):
             'price': forms.NumberInput(attrs={'step': '0.01', 'class': 'form-control', 'placeholder': 'Price'}),
             'total_amount': forms.NumberInput(attrs={'step': '0.01', 'class': 'form-control', 'placeholder': 'Total Amount', 'readonly': True}),
             'stock': forms.NumberInput(attrs={'readonly': True, 'class': 'form-control', 'placeholder': 'Stock'}),
-            'site_delivered': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Site Delivered'}),
         }
 
     def __init__(self, *args, **kwargs):
         super(ItemInventoryForm, self).__init__(*args, **kwargs)
-        # Update any additional attributes for the fields if needed
-        self.fields['date'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Date'})
-        self.fields['item_code'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Item Code'})
-        self.fields['supplier'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Supplier'})
-        self.fields['po_product_name'].widget.attrs.update({'class': 'form-control', 'placeholder': 'PO Product Name'})
-        self.fields['new_product_name'].widget.attrs.update({'class': 'form-control', 'placeholder': 'New Product Name'})
-        self.fields['unit'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Unit'})
-        self.fields['quantity_in'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Quantity In'})
-        self.fields['quantity_out'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Quantity Out'})
-        self.fields['price'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Price'})
-        self.fields['total_amount'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Total Amount', 'readonly': True})
-        self.fields['stock'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Stock', 'readonly': True})
-        self.fields['site_delivered'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Site Delivered'})
+        # Set widget attributes in init to ensure all fields have the correct attributes
+        for field_name, field in self.fields.items():
+            field.widget.attrs.update({'class': 'form-control', 'placeholder': field.label})
 
     def clean(self):
         cleaned_data = super().clean()
-        # Clean specific fields or set default values if needed
-        if not cleaned_data.get('quantity'):
-            cleaned_data['quantity'] = 0  # or any default value if needed
-        if not cleaned_data.get('price'):
-            cleaned_data['price'] = 0.0  # or any default value if needed
-        if not cleaned_data.get('total_amount'):
-            cleaned_data['total_amount'] = 0.0  # or any default value if needed
-        if not cleaned_data.get('unit'):
-            cleaned_data['unit'] = ''  # or any default value if needed
+        location_type = cleaned_data.get('location_type')
+        location_name = cleaned_data.get('location_name')
 
-        # Perform any other custom validation or cleaning here
+        if location_type == 'site_delivered':
+            cleaned_data['site_delivered'] = location_name
+        elif location_type == 'client':
+            cleaned_data['site_delivered'] = None
 
         return cleaned_data
+

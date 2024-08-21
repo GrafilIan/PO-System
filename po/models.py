@@ -6,6 +6,12 @@ class SiteInventoryFolder(models.Model):
     def __str__(self):
         return self.name
 
+class ClientInventoryFolder(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+
+    def __str__(self):
+        return self.name
+
 class SupplierFolder(models.Model):
     name = models.CharField(max_length=255, unique=True)
 
@@ -14,6 +20,11 @@ class SupplierFolder(models.Model):
 
 
 class ItemInventory(models.Model):
+    SITE_OR_CLIENT_CHOICES = (
+        ('site', 'Site Delivered'),
+        ('client', 'Client'),
+    )
+
     date = models.DateField(verbose_name='Date', null=True)
     item_code = models.CharField(max_length=100, blank=True, null=True)
     supplier = models.CharField(max_length=100, blank=True, null=True)
@@ -25,8 +36,11 @@ class ItemInventory(models.Model):
     stock = models.IntegerField(default=0)
     price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    site_or_client_choice = models.CharField(max_length=10, choices=SITE_OR_CLIENT_CHOICES, default='site')
     site_delivered = models.CharField(max_length=255, verbose_name='Site Delivered', null=True, blank=True)
-    folder = models.ForeignKey(SiteInventoryFolder, on_delete=models.SET_NULL, null=True, blank=True)
+    client = models.CharField(max_length=255, verbose_name='Client', null=True, blank=True)
+    site_folder = models.ForeignKey(SiteInventoryFolder, on_delete=models.SET_NULL, null=True, blank=True, related_name='site_item_inventories')
+    client_folder = models.ForeignKey(ClientInventoryFolder, on_delete=models.SET_NULL, null=True, blank=True, related_name='client_item_inventories')
 
     def save(self, *args, **kwargs):
         if self.pk:
@@ -64,7 +78,8 @@ class ItemInventory(models.Model):
                 stock=self.stock,
                 price=self.price,
                 total_amount=self.total_amount,
-                site_delivered=self.site_delivered,
+                site_delivered=self.site_delivered if self.site_or_client_choice == 'site' else None,
+                client=self.client if self.site_or_client_choice == 'client' else None,
             )
         else:
             # For new records, set initial stock and total_amount
@@ -92,6 +107,8 @@ class InventoryHistory(models.Model):
     total_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0)
     site_delivered = models.CharField(max_length=255, verbose_name='Site Delivered', null=True, blank=True)
     site_inventory_folder = models.ForeignKey(SiteInventoryFolder, on_delete=models.SET_NULL, null=True, blank=True)
+    client = models.CharField(max_length=255, verbose_name='Client', null=True, blank=True)
+    client_inventory_folder = models.ForeignKey(ClientInventoryFolder, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         return f"{self.po_product_name} ({self.item_code}) - {self.quantity_out}"
