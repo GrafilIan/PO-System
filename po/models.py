@@ -36,33 +36,29 @@ class ItemInventory(models.Model):
     stock = models.IntegerField(default=0)
     price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0)
-    site_or_client_choice = models.CharField(max_length=10, choices=SITE_OR_CLIENT_CHOICES, default='site')
+    site_or_client_choice = models.CharField(max_length=10, choices=SITE_OR_CLIENT_CHOICES, blank=True, null=True)
     site_delivered = models.CharField(max_length=255, verbose_name='Site Delivered', null=True, blank=True)
     client = models.CharField(max_length=255, verbose_name='Client', null=True, blank=True)
-    site_folder = models.ForeignKey(SiteInventoryFolder, on_delete=models.SET_NULL, null=True, blank=True, related_name='site_item_inventories')
-    client_folder = models.ForeignKey(ClientInventoryFolder, on_delete=models.SET_NULL, null=True, blank=True, related_name='client_item_inventories')
+    site_inventory_folder = models.ForeignKey(SiteInventoryFolder, on_delete=models.CASCADE, null=True, blank=True)
+    client_inventory_folder = models.ForeignKey(ClientInventoryFolder, on_delete=models.CASCADE, null=True, blank=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.location_type = kwargs.get('location_type', None)
 
     def save(self, *args, **kwargs):
         if self.pk:
             # Fetch the previous record from the database
             previous = ItemInventory.objects.get(pk=self.pk)
-            print(f"Previous QTY OUT: {previous.quantity_out}")
-            print(f"Current QTY OUT: {self.quantity_out}")
 
             # The current input is how much more we want to subtract from stock
-            quantity_out_delta = self.quantity_out  # This is the new quantity being subtracted
+            quantity_out_delta = self.quantity_out
 
             # Update the cumulative quantity_out by adding the new quantity to the previous total
             new_quantity_out = previous.quantity_out + quantity_out_delta
-            print(f"New QTY OUT (cumulative): {new_quantity_out}")
-
-            # Update the current record with the correct cumulative quantity_out
             self.quantity_out = new_quantity_out
             self.stock = self.quantity_in - new_quantity_out
             self.total_amount = self.stock * self.price
-
-            print(f"New Stock: {self.stock}")
-            print(f"New Total Amount: {self.total_amount}")
 
             # Create a history entry with the current quantity_out input (delta), not the cumulative
             InventoryHistory.objects.create(
@@ -86,10 +82,21 @@ class ItemInventory(models.Model):
             self.stock = self.quantity_in - self.quantity_out
             self.total_amount = self.stock * self.price
 
+        if self.site_or_client_choice == 'site':
+            self.site_delivered = self.site_delivered
+            self.client = None
+        elif self.site_or_client_choice == 'client':
+            self.client = self.client
+            self.site_delivered = None
+
+        # Ensure site_or_client_choice is set correctly
+        self.site_or_client_choice = self.site_or_client_choice or self.location_type
+
         super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.po_product_name} ({self.supplier})"
+
 
 
 class InventoryHistory(models.Model):

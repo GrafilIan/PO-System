@@ -18,9 +18,10 @@
             <div class="main-content">
                 <section class="section container-fluid">
                     <div class="section-body">
-                        <div class="card card-desk">
-                            <div class="card-header">
-                                <h4>INVENTORY RECORDS OF {{ folder.name }}</h4>
+                        <div class="card card-primary">
+                            <div class="card-header"
+                                 style="display: flex; justify-content: center; align-items: center;">
+                                <h2>INVENTORY RECORDS OF {{ folder.name }}</h2>
                             </div>
                             <div class="card-body">
                                 <div class="col-12">
@@ -32,34 +33,36 @@
                                             <div class="table-responsive">
                                                 <table class="table table-hover table-striped" id="sortable-table">
                                                     <thead>
-                                                        <tr class="blue-background">
-                                                            <th style="white-space: nowrap; color: white;">Transaction ID</th>
-                                                            <th style="white-space: nowrap; color: white;">Site Delivered</th>
-                                                            <th style="white-space: nowrap; color: white;">Date</th>
-                                                            <th style="white-space: nowrap; color: white;">Item</th>
-                                                            <th style="white-space: nowrap; color: white;">Quantity In</th>
-                                                            <th style="white-space: nowrap; color: white;">Quantity Out</th>
-                                                            <th style="white-space: nowrap; color: white;">Price</th>
-                                                            <th style="white-space: nowrap; color: white;">Total Amount</th>
-                                                        </tr>
+                                                    <tr class="blue-background">
+                                                        <th style="white-space: nowrap; color: white;">Transaction ID
+                                                        </th>
+                                                        <th style="white-space: nowrap; color: white;">Site Delivered
+                                                        </th>
+                                                        <th style="white-space: nowrap; color: white;">Date</th>
+                                                        <th style="white-space: nowrap; color: white;">Item</th>
+                                                        <th style="white-space: nowrap; color: white;">Quantity In</th>
+                                                        <th style="white-space: nowrap; color: white;">Quantity Out</th>
+                                                        <th style="white-space: nowrap; color: white;">Price</th>
+                                                        <th style="white-space: nowrap; color: white;">Total Amount</th>
+                                                    </tr>
                                                     </thead>
                                                     <tbody>
-                                                        {% for transaction in transactions %}
-                                                            <tr>
-                                                                <td>{{ transaction.id }}</td>
-                                                                <td>{{ transaction.site_delivered }}</td>
-                                                                <td>{{ transaction.date }}</td>
-                                                                <td>{{ transaction.item }}</td>
-                                                                <td>{{ transaction.quantity_in }}</td>
-                                                                <td>{{ transaction.quantity_out }}</td>
-                                                                <td>{{ transaction.price }}</td>
-                                                                <td>{{ transaction.total_amount }}</td>
-                                                            </tr>
-                                                        {% empty %}
-                                                            <tr>
-                                                                <td colspan="8">No transactions found.</td>
-                                                            </tr>
-                                                        {% endfor %}
+                                                    {% for transaction in transactions %}
+                                                        <tr>
+                                                            <td>{{ transaction.id }}</td>
+                                                            <td>{{ transaction.site_delivered }}</td>
+                                                            <td>{{ transaction.date }}</td>
+                                                            <td>{{ transaction.item }}</td>
+                                                            <td>{{ transaction.quantity_in }}</td>
+                                                            <td>{{ transaction.quantity_out }}</td>
+                                                            <td>{{ transaction.price }}</td>
+                                                            <td>{{ transaction.total_amount }}</td>
+                                                        </tr>
+                                                    {% empty %}
+                                                        <tr>
+                                                            <td colspan="8">No transactions found.</td>
+                                                        </tr>
+                                                    {% endfor %}
                                                     </tbody>
                                                 </table>
                                             </div>
@@ -75,7 +78,8 @@
     </div>
 
     <!-- Success Modal -->
-    <div class="modal fade" id="success-modal" tabindex="-1" role="dialog" aria-labelledby="success-modal-label" aria-hidden="true">
+    <div class="modal fade" id="success-modal" tabindex="-1" role="dialog" aria-labelledby="success-modal-label"
+         aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -95,7 +99,8 @@
     </div>
 
     <!-- Error Modal -->
-    <div class="modal fade" id="error-modal" tabindex="-1" role="dialog" aria-labelledby="error-modal-label" aria-hidden="true">
+    <div class="modal fade" id="error-modal" tabindex="-1" role="dialog" aria-labelledby="error-modal-label"
+         aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">

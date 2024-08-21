@@ -700,8 +700,9 @@ def inventory_edit(request, id):
             updated_item = form.save(commit=False)
             location_type = form.cleaned_data.get('location_type')
             location_name = form.cleaned_data.get('location_name')
+            updated_item.site_or_client_choice = location_type
 
-            if location_type == 'site_delivered':
+            if location_type == 'site':
                 # Create or get the site folder
                 folder, created = SiteInventoryFolder.objects.get_or_create(name=location_name)
                 updated_item.site_inventory_folder = folder
@@ -730,6 +731,7 @@ def inventory_edit(request, id):
         form = ItemInventoryForm(instance=inventory_item)
 
     return render(request, 'inventory/inventory_edit.html', {'form': form, 'item': inventory_item})
+
 
 
 

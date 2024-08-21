@@ -59,13 +59,13 @@
 
                                         <div class="card-body p-0">
                                             <div class="table-responsive">
-                                                <table class="table table-striped w-100" id="sortable-table">
+                                                <table class="table table-striped table-hover w-100" id="sortable-table">
                                                     <thead>
                                                     <tr class="blue-background">
                                                         <th style="color: white;">Item Code</th>
                                                         <th class="no-wrap" style="color: white;">Supplier</th>
                                                         <th class="no-wrap" style="color: white;">P.O Product Name</th>
-                                                        <th class="no-wrap" style="color: white;">BTCS Product Name</th>
+                                                        <!--<th class="no-wrap" style="color: white;">BTCS Product Name</th>-->
                                                         <th style="color: white;">Unit</th>
                                                         <th class="no-wrap" style="color: white;">QTY IN</th>
                                                         <th class="no-wrap" style="color: white;">QTY OUT</th>
@@ -81,7 +81,7 @@
                                                             <td>{{ item.item_code }}</td>
                                                             <td class="no-wrap">{{ item.supplier }}</td>
                                                             <td class="no-wrap">{{ item.po_product_name }}</td>
-                                                            <td class="no-wrap">{{ item.new_product_name }}</td>
+                                                            <!--<td class="no-wrap">{{ item.new_product_name }}</td>-->
                                                             <td>{{ item.unit }}</td>
                                                             <td>{{ item.quantity_in }}</td>
                                                             <td>{{ item.quantity_out }}</td>

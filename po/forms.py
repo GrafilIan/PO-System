@@ -81,7 +81,7 @@ class UploadFileForm(forms.Form):
 
 class ItemInventoryForm(forms.ModelForm):
     LOCATION_CHOICES = [
-        ('site_delivered', 'Site Delivered'),
+        ('site', 'Site Delivered'),
         ('client', 'Client'),
     ]
 
@@ -110,6 +110,7 @@ class ItemInventoryForm(forms.ModelForm):
             'price',
             'total_amount',
             'site_delivered',  # This will be used based on the choice made
+            'client',          # This will be used based on the choice made
             'location_type',   # New field for choosing between site and client
             'location_name',   # New field for entering the site or client name
         ]
@@ -138,10 +139,15 @@ class ItemInventoryForm(forms.ModelForm):
         location_type = cleaned_data.get('location_type')
         location_name = cleaned_data.get('location_name')
 
-        if location_type == 'site_delivered':
+        if location_type == 'site':
             cleaned_data['site_delivered'] = location_name
+            cleaned_data['client'] = None
         elif location_type == 'client':
+            cleaned_data['client'] = location_name
             cleaned_data['site_delivered'] = None
+
+        # Ensure site_or_client_choice is set
+        cleaned_data['site_or_client_choice'] = location_type
 
         return cleaned_data
 
