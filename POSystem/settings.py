@@ -88,8 +88,12 @@ WSGI_APPLICATION = 'POSystem.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'newposystemdb',  # The name of your MySQL database
+        'USER': 'root',           # Your MySQL username
+        'PASSWORD': 'Grafilmysql2002',   # Your MySQL password
+        'HOST': 'localhost',                 # Or the IP address of your MySQL server
+        'PORT': '3306',                      # The default MySQL port (you can change this if needed)
     }
 }
 

@@ -6,7 +6,8 @@
 
 {% block head %}
     <link rel="stylesheet" href="{% static 'assets/modules/datatables/datatables.min.css' %}">
-    <link rel="stylesheet" href="{% static 'assets/modules/datatables/DataTables-1.10.16/css/dataTables.bootstrap4.min.css' %}">
+    <link rel="stylesheet"
+          href="{% static 'assets/modules/datatables/DataTables-1.10.16/css/dataTables.bootstrap4.min.css' %}">
     <link rel="stylesheet" href="{% static 'assets/modules/datatables/Select-1.2.4/css/select.bootstrap4.min.css' %}">
 {% endblock %}
 
@@ -16,48 +17,54 @@
             <section class="section container-fluid">
                 <div class="section-body">
                     <div class="card card-secondary">
-                        <div class="card-header">
+                        <div class="card-header" style="background-color: #0a0a0a; color: white;">
                             <h4>Transaction History</h4>
                             <div class="card-header-action">
-                                    <form method="get" action="" class="form-inline justify-content-center col-12">
-                                        <div class="input-group">
-                                            <!-- Single Search Input -->
-                                            <input type="text" name="q" class="form-control"
-                                                   placeholder="Search by text or date"
-                                                   value="{{ request.GET.q }}">
+                                <form method="get" action="" class="form-inline justify-content-center col-12">
+                                    <div class="input-group">
+                                        <!-- Single Search Input -->
+                                        <input type="text" name="q" class="form-control"
+                                               placeholder="Search by text or date"
+                                               value="{{ request.GET.q }}">
 
-                                            <div class="input-group-btn">
-                                                <button class="btn btn-primary" type="submit"><i
-                                                        class="fas fa-search"></i></button>
-                                            </div>
+                                        <div class="input-group-btn">
+                                            <button class="btn btn-primary" type="submit"><i
+                                                    class="fas fa-search"></i></button>
                                         </div>
-                                        <div class="col-auto">
-                                            {% if request.GET.q %}
-                                                <a href="{% url 'transaction_history' %}" class="btn btn-outline-primary">Clear Filter</a>
-                                            {% endif %}
-                                        </div>
-                                    </form>
-                                </div>
+                                    </div>
+                                    <div class="col-auto">
+                                        {% if request.GET.q %}
+                                            <a href="{% url 'transaction_history' %}" class="btn btn-outline-primary">Clear
+                                                Filter</a>
+                                        {% endif %}
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                         <div class="card-body p-0">
                             <div class="table-responsive">
                                 <table id="transactionTable" class="table table-hover table-striped">
                                     <thead>
-                                        <tr class="blue-background">
-                                            <th class="no-wrap" style="color: white;">Date</th>
-                                            <th class="no-wrap" style="color: white;">Item Code</th>
-                                            <th class="no-wrap" style="color: white;">Supplier</th>
-                                            <th class="no-wrap" style="color: white;">PO Product Name</th>
-                                            <th class="no-wrap" style="color: white;">New Product Name</th>
-                                            <th class="no-wrap" style="color: white;">Unit</th>
-                                            <th class="no-wrap" style="color: white;">Quantity Out</th>
-                                            <th class="no-wrap" style="color: white;">Price</th>
-                                            <th class="no-wrap" style="color: white;">Total Amount</th>
-                                            <th class="no-wrap" style="color: white;">Site Delivered</th>
-                                        </tr>
+                                    <tr class="blue-background">
+                                        <th class="no-wrap" style="color: white;">Date</th>
+                                        <th class="no-wrap" style="color: white;">Item Code</th>
+                                        <th class="no-wrap" style="color: white;">Supplier</th>
+                                        <th class="no-wrap" style="color: white;">PO Product Name</th>
+                                        <th class="no-wrap" style="color: white;">New Product Name</th>
+                                        <th class="no-wrap" style="color: white;">Unit</th>
+                                        <th class="no-wrap" style="color: white;">Quantity Out</th>
+                                        <th class="no-wrap" style="color: white;">Price</th>
+                                        <th class="no-wrap" style="color: white;">Total Amount</th>
+                                        <th class="no-wrap" style="color: white;">Site Delivered</th>
+                                        <th class="no-wrap" style="color: white;">Client</th>
+                                        <th class="no-wrap" style="color: white;">DELIVERY REF#</th>
+                                        <th class="no-wrap" style="color: white;">DELIVERY NO.</th>
+                                        <th style="color: white;">INVOICE TYPE</th>
+                                        <th style="color: white;">INVOICE#</th>
+                                    </tr>
                                     </thead>
                                     <tbody>
-                                        {% for transaction in transactions %}
+                                    {% for transaction in transactions %}
                                         <tr>
                                             <td class="no-wrap">{{ transaction.date }}</td>
                                             <td class="no-wrap">{{ transaction.item_code }}</td>
@@ -69,8 +76,13 @@
                                             <td class="no-wrap">{{ transaction.price }}</td>
                                             <td class="no-wrap">{{ transaction.total_amount }}</td>
                                             <td class="no-wrap">{{ transaction.site_delivered }}</td>
+                                            <td class="no-wrap">{{ transaction.client }}</td>
+                                            <td class="no-wrap">{{ transaction.delivery_ref }}</td>
+                                            <td class="no-wrap">{{ transaction.delivery_no }}</td>
+                                            <td class="no-wrap">{{ transaction.invoice_type }}</td>
+                                            <td class="no-wrap">{{ transaction.invoice_no }}</td>
                                         </tr>
-                                        {% endfor %}
+                                    {% endfor %}
                                     </tbody>
                                 </table>
                             </div>
@@ -81,19 +93,27 @@
                                     <ul class="pagination justify-content-center">
                                         {% if transactions.has_previous %}
                                             <li class="page-item">
-                                                <a class="page-link" href="?page={{ transactions.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}" aria-label="Previous">
+                                                <a class="page-link" href="?page=
+
+                                                        {{ transactions.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}"
+                                                   aria-label="Previous">
                                                     <span aria-hidden="true">&laquo;</span>
                                                 </a>
                                             </li>
                                         {% endif %}
                                         {% for num in transactions.paginator.page_range %}
                                             <li class="page-item {% if transactions.number == num %}active{% endif %}">
-                                                <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}">{{ num }}</a>
+                                                <a class="page-link" href="?page=
+
+                                                        {{ num }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}">{{ num }}</a>
                                             </li>
                                         {% endfor %}
                                         {% if transactions.has_next %}
                                             <li class="page-item">
-                                                <a class="page-link" href="?page={{ transactions.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}" aria-label="Next">
+                                                <a class="page-link" href="?page=
+
+                                                        {{ transactions.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}"
+                                                   aria-label="Next">
                                                     <span aria-hidden="true">&raquo;</span>
                                                 </a>
                                             </li>
@@ -220,9 +240,14 @@
                 xhr.send(new FormData(moveForm));
             });
 
-            // Hide 'None' text
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Hide 'None' text in all table cells
             document.querySelectorAll('td').forEach(td => {
-                if (td.textContent.trim() === 'None') {
+                const content = td.textContent.trim();
+                if (content === 'None' || content.toLowerCase() === 'none') {
                     td.innerHTML = '<span style="visibility: hidden;">None</span>';
                 }
             });

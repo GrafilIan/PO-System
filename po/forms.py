@@ -113,6 +113,10 @@ class ItemInventoryForm(forms.ModelForm):
             'client',          # This will be used based on the choice made
             'location_type',   # New field for choosing between site and client
             'location_name',   # New field for entering the site or client name
+            'delivery_ref',
+            'delivery_no',
+            'invoice_type',
+            'invoice_no',
         ]
         widgets = {
             'date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control', 'placeholder': 'Date'}),
@@ -126,6 +130,10 @@ class ItemInventoryForm(forms.ModelForm):
             'price': forms.NumberInput(attrs={'step': '0.01', 'class': 'form-control', 'placeholder': 'Price'}),
             'total_amount': forms.NumberInput(attrs={'step': '0.01', 'class': 'form-control', 'placeholder': 'Total Amount', 'readonly': True}),
             'stock': forms.NumberInput(attrs={'readonly': True, 'class': 'form-control', 'placeholder': 'Stock'}),
+            'delivery_ref': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Delivery Ref#'}),
+            'delivery_no': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Delivery No.'}),
+            'invoice_type': forms.Select(attrs={'class': 'form-control', 'placeholder': 'Invoice Type'}),
+            'invoice_no': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Invoice No.'}),
         }
 
     def __init__(self, *args, **kwargs):

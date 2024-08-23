@@ -7,7 +7,8 @@
 {% block head %}
     <link rel="stylesheet" href="{% static 'assets/modules/bootstrap-social/bootstrap-social.css' %}">
     <link rel="stylesheet" href="{% static 'assets/modules/datatables/datatables.min.css' %}">
-    <link rel="stylesheet" href="{% static 'assets/modules/datatables/DataTables-1.10.16/css/dataTables.bootstrap4.min.css' %}">
+    <link rel="stylesheet"
+          href="{% static 'assets/modules/datatables/DataTables-1.10.16/css/dataTables.bootstrap4.min.css' %}">
     <link rel="stylesheet" href="{% static 'assets/modules/datatables/Select-1.2.4/css/select.bootstrap4.min.css' %}">
     <script src="{% static 'assets/js/cleave.min.js' %}"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> <!-- Include SweetAlert2 -->
@@ -30,75 +31,125 @@
                         <h2>Edit Item Inventory</h2>
                     </div>
                     <div class="card-body">
-                        <form id="itemInventoryForm" method="post" action="{% url 'inventory_edit' item.id %}" enctype="multipart/form-data">
+                        <form id="itemInventoryForm" method="post" action="{% url 'inventory_edit' item.id %}"
+                              enctype="multipart/form-data">
                             {% csrf_token %}
 
                             <div class="row">
-                                <div class="form-group col-6 col-sm-3">
+                                <!-- Date Field -->
+                                <div class="form-group col-12 col-sm-4">
                                     <label for="date">Date</label>
                                     {{ form.date }}
                                 </div>
 
-                                <div class="form-group col-6 col-sm-4">
+                                <!-- Item Code Field -->
+                                <div class="form-group col-12 col-sm-4">
                                     <label for="item_code">Item Code</label>
                                     {{ form.item_code }}
                                 </div>
 
-                                <div class="form-group col-6 col-sm-5">
+                                <!-- Supplier Field -->
+                                <div class="form-group col-12 col-sm-4">
                                     <label for="supplier">Supplier</label>
-                                    {{ form.supplier }}
+                                    <input type="text" name="supplier" value="{{ form.supplier.value }}"
+                                           class="form-control" disabled>
+                                    <input type="hidden" name="supplier" value="{{ form.supplier.value }}">
                                 </div>
 
+                                <!-- PO Product Name Field -->
                                 <div class="form-group col-12 col-sm-6">
                                     <label for="po_product_name">PO Product Name</label>
-                                    {{ form.po_product_name }}
+                                    <input type="text" name="po_product_name" value="{{ form.po_product_name.value }}"
+                                           class="form-control" disabled>
+                                    <input type="hidden" name="po_product_name" value="{{ form.po_product_name.value }}">
                                 </div>
 
+                                <!-- New Product Name Field -->
                                 <div class="form-group col-12 col-sm-6">
                                     <label for="new_product_name">New Product Name</label>
                                     {{ form.new_product_name }}
                                 </div>
 
-                                <!-- Location Type -->
+                                <!-- Location Type Field -->
                                 <div class="form-group col-12 col-sm-6">
                                     <label for="location_type">Location Type</label>
                                     {{ form.location_type }}
                                 </div>
 
-                                <!-- Location Name -->
+                                <!-- Location Name Field -->
                                 <div class="form-group col-12 col-sm-6">
                                     <label for="location_name">Location Name</label>
                                     {{ form.location_name }}
                                 </div>
 
-                                <div class="form-group col-6 col-sm-3">
+                                <!-- Quantity In Field -->
+                                <div class="form-group col-12 col-sm-4">
                                     <label for="quantity_in">Quantity In</label>
-                                    {{ form.quantity_in }}
+                                    <input type="text" name="quantity_in" value="{{ form.quantity_in.value }}"
+                                           class="form-control" disabled>
+                                    <input type="hidden" name="quantity_in" value="{{ form.quantity_in.value }}">
                                 </div>
 
-                                <div class="form-group col-6 col-sm-3">
+                                <!-- Quantity Out Field -->
+                                <div class="form-group col-12 col-sm-4">
                                     <label for="quantity_out">Quantity Out</label>
                                     {{ form.quantity_out }}
                                 </div>
 
-                                <div class="form-group col-6 col-sm-3">
-                                    <label for="unit">Unit</label>
-                                    {{ form.unit }}
-                                </div>
-
-                                <div class="form-group col-6 col-sm-3">
-                                    <label for="price">Price</label>
-                                    {{ form.price }}
-                                </div>
-
-                                <div class="form-group col-6 col-sm-3">
+                                <!-- Stock Field -->
+                                <div class="form-group col-12 col-sm-4">
                                     <label for="stock">Stock</label>
-                                    {{ form.stock }}
+                                    <input type="text" name="stock" value="{{ form.stock.value }}" class="form-control"
+                                           disabled>
+                                    <input type="hidden" name="stock" value="{{ form.stock.value }}">
                                 </div>
 
-                                <div class="form-group col-6 col-sm-3">
+                                <!-- Unit Field -->
+                                <div class="form-group col-12 col-sm-4">
+                                    <label for="unit">Unit</label>
+                                    <input type="text" name="unit" value="{{ form.unit.value }}" class="form-control"
+                                           disabled>
+                                    <input type="hidden" name="unit" value="{{ form.unit.value }}">
+                                </div>
+
+                                <!-- Price Field -->
+                                <div class="form-group col-12 col-sm-4">
+                                    <label for="price">Price</label>
+                                    <input type="text" name="price" value="{{ form.price.value }}" class="form-control"
+                                           disabled>
+                                    <input type="hidden" name="price" value="{{ form.price.value }}">
+                                </div>
+
+                                <!-- Total Amount Field -->
+                                <div class="form-group col-12 col-sm-4">
                                     <label for="total_amount">Total Amount</label>
-                                    {{ form.total_amount }}
+                                    <input type="text" name="total_amount" value="{{ form.total_amount.value }}"
+                                           class="form-control" disabled>
+                                    <input type="hidden" name="total_amount" value="{{ form.total_amount.value }}">
+                                </div>
+
+                                <!-- Delivery Ref Field -->
+                                <div class="form-group col-12 col-sm-6">
+                                    <label for="delivery_ref">Delivery Ref.</label>
+                                    {{ form.delivery_ref }}
+                                </div>
+
+                                <!-- Delivery No Field -->
+                                <div class="form-group col-12 col-sm-6">
+                                    <label for="delivery_no">Delivery No.</label>
+                                    {{ form.delivery_no }}
+                                </div>
+
+                                <!-- Invoice Type Field -->
+                                <div class="form-group col-12 col-sm-6">
+                                    <label for="invoice_type">Invoice Type</label>
+                                    {{ form.invoice_type }}
+                                </div>
+
+                                <!-- Invoice No Field -->
+                                <div class="form-group col-12 col-sm-6">
+                                    <label for="invoice_no">Invoice No.</label>
+                                    {{ form.invoice_no }}
                                 </div>
                             </div>
 
@@ -117,11 +168,22 @@
 
 {% block scripts %}
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         var form = document.getElementById('itemInventoryForm');
 
-        form.addEventListener('submit', function(event) {
+        form.addEventListener('submit', function (event) {
             event.preventDefault(); // Prevent the default form submission
+
+            // Copy disabled fields to hidden fields
+            var disabledFields = form.querySelectorAll('[disabled]');
+            disabledFields.forEach(function(field) {
+                var name = field.getAttribute('name');
+                var value = field.value;
+                var hiddenField = form.querySelector('input[name="' + name + '"][type="hidden"]');
+                if (hiddenField) {
+                    hiddenField.value = value;
+                }
+            });
 
             var formData = new FormData(form);
 
@@ -133,38 +195,39 @@
                     'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value
                 }
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    Swal.fire({
-                        title: 'Success!',
-                        text: 'Your record has been saved successfully.',
-                        icon: 'success',
-                        confirmButtonText: 'OK'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            window.location.href = "{% url 'inventory_table' %}";
-                        }
-                    });
-                } else {
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        Swal.fire({
+                            title: 'Success!',
+                            text: 'Your record has been saved successfully.',
+                            icon: 'success',
+                            confirmButtonText: 'OK'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.location.href = "{% url 'inventory_table' %}";
+                            }
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: 'There was an error saving the record.',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
                     Swal.fire({
                         title: 'Error!',
                         text: 'There was an error saving the record.',
                         icon: 'error',
                         confirmButtonText: 'OK'
                     });
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                Swal.fire({
-                    title: 'Error!',
-                    text: 'There was an error saving the record.',
-                    icon: 'error',
-                    confirmButtonText: 'OK'
                 });
-            });
         });
     });
-    </script>
+</script>
+
 {% endblock %}

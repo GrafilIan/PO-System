@@ -616,7 +616,8 @@ select.form-control:not([size]):not([multiple]) {
     position: static; }
   .card .card-body {
     padding-top: 20px;
-    padding-bottom: 20px; }
+    padding-bottom: 20px;
+    background-color: #f1f1f1;}
     .card .card-body .section-title {
       margin: 30px 0 10px 0;
       font-size: 16px; }
@@ -2891,6 +2892,11 @@ body:not(.sidebar-mini) .sidebar-style-2 .sidebar-menu li.active ul.dropdown-men
 
 .green-background {
     background-color: darkgreen;
+    color: white !important;
+}
+
+.black-background{
+    background-color: #151515;
     color: white !important;
 }
 

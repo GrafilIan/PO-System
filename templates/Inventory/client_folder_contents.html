@@ -1,4 +1,5 @@
 {% extends 'inventorybase.html' %}
+{% load humanize %}
 
 {% block title %}{{ folder.name }} - Contents{% endblock %}
 
@@ -19,53 +20,109 @@
                 <section class="section container-fluid">
                     <div class="section-body">
                         <div class="card card-desk">
-                            <div class="card-header">
-                                <h4>INVENTORY RECORDS OF {{ folder.name }}</h4>
+                            <div class="card-header"
+                                 style="display: flex; justify-content: space-between; align-items: center;">
+                                <h2>INVENTORY RECORDS OF {{ folder.name }}</h2>
+                                <h3><strong>Total Amount:</strong> {{ total_amount|floatformat:2|intcomma }}</h3>
                             </div>
                             <div class="card-body">
                                 <div class="col-12">
                                     <div class="card">
-                                        <div class="card-header" style="background-color: #4682b4; color: white;">
-                                            <h4>Inventory History Table</h4>
+                                        <div class="card-header"
+                                             style="background-color: #e59e00; color: #090909; display: flex; justify-content: space-between; align-items: center;">
+                                            <h4>Client Records Table</h4>
+                                            <a href="{% url 'export_client_folder_contents' folder.id %}"
+                                               class="btn btn-primary" style="float: right;">
+                                                Export to Excel
+                                            </a>
                                         </div>
+
+
                                         <div class="card-body p-0">
                                             <div class="table-responsive">
                                                 <table class="table table-hover table-striped" id="sortable-table">
                                                     <thead>
-                                                        <tr class="blue-background">
-                                                            <th style="white-space: nowrap; color: white;">Transaction ID</th>
-                                                            <th style="white-space: nowrap; color: white;">Site Delivered</th>
-                                                            <th style="white-space: nowrap; color: white;">Date</th>
-                                                            <th style="white-space: nowrap; color: white;">Item</th>
-                                                            <th style="white-space: nowrap; color: white;">Quantity In</th>
-                                                            <th style="white-space: nowrap; color: white;">Quantity Out</th>
-                                                            <th style="white-space: nowrap; color: white;">Price</th>
-                                                            <th style="white-space: nowrap; color: white;">Total Amount</th>
-                                                        </tr>
+                                                    <tr class="blue-background">
+                                                        <th style="white-space: nowrap; color: white;">Transaction ID
+                                                        </th>
+                                                        <th style="white-space: nowrap; color: white;">Date</th>
+                                                        <th style="white-space: nowrap; color: white;">Item</th>
+                                                        <th style="white-space: nowrap; color: white;">Quantity In</th>
+                                                        <th style="white-space: nowrap; color: white;">Quantity Out</th>
+                                                        <th style="white-space: nowrap; color: white;">Price</th>
+                                                        <th style="white-space: nowrap; color: white;">Total Amount</th>
+                                                        <th style="white-space: nowrap; color: white;">Delivery Ref</th>
+                                                        <th style="white-space: nowrap; color: white;">Delivery No.</th>
+                                                        <th style="color: white;">INVOICE TYPE</th>
+                                                        <th style="color: white;">INVOICE#</th>
+                                                    </tr>
                                                     </thead>
                                                     <tbody>
-                                                        {% for transaction in transactions %}
-                                                            <tr>
-                                                                <td>{{ transaction.id }}</td>
-                                                                <td>{{ transaction.site_delivered }}</td>
-                                                                <td>{{ transaction.date }}</td>
-                                                                <td>{{ transaction.item }}</td>
-                                                                <td>{{ transaction.quantity_in }}</td>
-                                                                <td>{{ transaction.quantity_out }}</td>
-                                                                <td>{{ transaction.price }}</td>
-                                                                <td>{{ transaction.total_amount }}</td>
-                                                            </tr>
-                                                        {% empty %}
-                                                            <tr>
-                                                                <td colspan="8">No transactions found.</td>
-                                                            </tr>
-                                                        {% endfor %}
+                                                    {% for transaction in transactions %}
+                                                        <tr>
+                                                            <td>{{ transaction.id }}</td>
+                                                            <td class="no-wrap">{{ transaction.date }}</td>
+                                                            <td class="no-wrap">{{ transaction.item }}</td>
+                                                            <td>{{ transaction.quantity_in }}</td>
+                                                            <td>{{ transaction.quantity_out }}</td>
+                                                            <td>{{ transaction.price|floatformat:2|intcomma }}</td>
+                                                            <td>{{ transaction.total_amount|floatformat:2|intcomma  }}</td>
+                                                            <td>{{ transaction.delivery_ref }}</td>
+                                                            <td>{{ transaction.delivery_no }}</td>
+                                                            <td>{{ transaction.invoice_type }}</td>
+                                                            <td>{{ transaction.invoice_no }}</td>
+                                                        </tr>
+                                                    {% empty %}
+                                                        <tr>
+                                                            <td colspan="8">No transactions found.</td>
+                                                        </tr>
+                                                    {% endfor %}
                                                     </tbody>
                                                 </table>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
+                                <!-- Pagination Controls -->
+                                <div class="pagination-wrapper">
+                                    <nav aria-label="Page navigation">
+                                        <ul class="pagination justify-content-center">
+                                            {% if transactions.has_previous %}
+                                                <li class="page-item">
+                                                    <a class="page-link"
+                                                       href="?page={{ transactions.previous_page_number }}"
+                                                       aria-label="Previous">
+                                                        <span aria-hidden="true">&laquo;</span>
+                                                    </a>
+                                                </li>
+                                            {% endif %}
+                                            {% for num in transactions.paginator.page_range %}
+                                                <li class="page-item {% if transactions.number == num %}active{% endif %}">
+                                                    <a class="page-link" href="?page={{ num }}">
+                                                        {{ num }}
+                                                    </a>
+                                                </li>
+                                            {% endfor %}
+                                            {% if transactions.has_next %}
+                                                <li class="page-item">
+                                                    <a class="page-link"
+                                                       href="?page={{ transactions.next_page_number }}"
+                                                       aria-label="Next">
+                                                        <span aria-hidden="true">&raquo;</span>
+                                                    </a>
+                                                </li>
+                                            {% endif %}
+                                            <!-- Link to Last Page -->
+                                            <li class="page-item {% if transactions.number == transactions.paginator.num_pages %}active{% endif %}">
+                                                <a class="page-link"
+                                                   href="?page={{ transactions.paginator.num_pages }}">
+                                                    Last
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </nav>
+                                </div>
+
                             </div>
                         </div>
                     </div>
@@ -75,7 +132,8 @@
     </div>
 
     <!-- Success Modal -->
-    <div class="modal fade" id="success-modal" tabindex="-1" role="dialog" aria-labelledby="success-modal-label" aria-hidden="true">
+    <div class="modal fade" id="success-modal" tabindex="-1" role="dialog" aria-labelledby="success-modal-label"
+         aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -95,7 +153,8 @@
     </div>
 
     <!-- Error Modal -->
-    <div class="modal fade" id="error-modal" tabindex="-1" role="dialog" aria-labelledby="error-modal-label" aria-hidden="true">
+    <div class="modal fade" id="error-modal" tabindex="-1" role="dialog" aria-labelledby="error-modal-label"
+         aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">

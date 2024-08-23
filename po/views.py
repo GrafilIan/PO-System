@@ -16,6 +16,7 @@ from datetime import datetime
 from openpyxl.styles import Font, PatternFill
 from io import BytesIO
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.db.models import Sum
 # Create your views here.
 
 def login_view(request):
@@ -49,7 +50,6 @@ def dashboard_view(request):
 def logout_view(request):
     logout(request)
     return redirect('login')
-
 
 # For Creating or Adding Records
 
@@ -96,6 +96,10 @@ def purchase_order_create(request):
                     unit=purchase_order.unit,
                     quantity_in=purchase_order.quantity,
                     price=purchase_order.price,
+                    delivery_ref=purchase_order.delivery_ref,
+                    delivery_no=purchase_order.delivery_no,
+                    invoice_type=purchase_order.invoice_type,
+                    invoice_no=purchase_order.invoice_no,
                 )
             inventory_item.save()
 
@@ -106,6 +110,7 @@ def purchase_order_create(request):
         form = PurchaseOrderForm()
 
     return render(request, 'records/purchase_order_form.html', {'form': form})
+
 
 def purchase_order_edit(request, id):
     order = get_object_or_404(PurchaseOrder, id=id)
@@ -640,6 +645,10 @@ def handle_uploaded_file(f):
                 unit=purchase_order.unit,
                 quantity_in=purchase_order.quantity,
                 price=purchase_order.price,
+                delivery_ref=purchase_order.delivery_ref,
+                delivery_no=purchase_order.delivery_no,
+                invoice_type=purchase_order.invoice_type,
+                invoice_no=purchase_order.invoice_no,
             )
 
         # Save the inventory item
@@ -684,10 +693,10 @@ def inventory_table(request):
 
     paginator = Paginator(inventory_items, 20)  # Paginate after every 20 entries
     page_number = request.GET.get('page')
-    inventory_items = paginator.get_page(page_number)
+    page_obj = paginator.get_page(page_number)
 
     return render(request, 'dashboards/inventory_clerk_dashboard.html', {
-        'inventory_items': inventory_items
+        'page_obj': page_obj
     })
 
 
@@ -731,8 +740,6 @@ def inventory_edit(request, id):
         form = ItemInventoryForm(instance=inventory_item)
 
     return render(request, 'inventory/inventory_edit.html', {'form': form, 'item': inventory_item})
-
-
 
 
 def export_inventory_to_excel(request):
@@ -819,6 +826,173 @@ def export_inventory_to_excel(request):
     return response
 
 
+def export_site_folder_contents(request, folder_id):
+    try:
+        # Get the site inventory folder by ID
+        folder = SiteInventoryFolder.objects.get(id=folder_id)
+        transactions = InventoryHistory.objects.filter(site_inventory_folder=folder)
+
+        # Create a workbook and a sheet
+        workbook = Workbook()
+        sheet = workbook.active
+        sheet.title = 'Site Inventory Records'
+
+        # Define header styles
+        header_font = Font(bold=True)
+        blue_fill = PatternFill(start_color='00B0F0', end_color='00B0F0', fill_type='solid')
+        currency_format = '#,##0.00'
+
+        # Define the headers
+        headers = [
+            'Transaction ID', 'Site Delivered', 'Date', 'Item', 'Quantity In', 'Quantity Out',
+            'Price', 'Total Amount', 'Delivery Ref', 'Delivery No.'
+        ]
+        sheet.append(headers)
+
+        for cell in sheet[1]:
+            cell.font = header_font
+            cell.fill = blue_fill
+            cell.value = cell.value.upper() if cell.value is not None else cell.value
+
+        # Populate the sheet with data
+        for transaction in transactions:
+            sheet.append([
+                transaction.id,
+                transaction.site_delivered,
+                transaction.date.strftime('%Y-%m-%d') if transaction.date else 'N/A',
+                str(transaction.item),  # Convert ItemInventory instance to string
+                transaction.quantity_in,
+                transaction.quantity_out,
+                transaction.price,
+                transaction.total_amount,
+                transaction.delivery_ref,
+                transaction.delivery_no,
+            ])
+
+        # Apply currency format to price and total_amount columns
+        for cell in sheet['G']:  # Assuming price is in column G (index 7)
+            if cell.row > 1:  # Skip header row
+                cell.number_format = currency_format
+
+        for cell in sheet['H']:  # Assuming total_amount is in column H (index 8)
+            if cell.row > 1:  # Skip header row
+                cell.number_format = currency_format
+
+        # Adjust column widths
+        for column in sheet.columns:
+            max_length = 0
+            column_letter = column[0].column_letter  # Get the column name (e.g., 'A', 'B', etc.)
+            for cell in column:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(cell.value)
+                except:
+                    pass
+            adjusted_width = (max_length + 2)  # Add extra space for better visibility
+            sheet.column_dimensions[column_letter].width = adjusted_width
+
+        # Create an in-memory buffer
+        buffer = BytesIO()
+        workbook.save(buffer)
+        buffer.seek(0)
+
+        # Set the response to return the Excel file
+        response = HttpResponse(
+            buffer,
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = f'attachment; filename=SiteInventory_{folder.name}.xlsx'
+        return response
+
+    except SiteInventoryFolder.DoesNotExist:
+        return HttpResponse("Site Inventory Folder not found", status=404)
+
+
+
+def export_client_folder_contents(request, folder_id):
+    try:
+        # Get the client inventory folder by ID
+        folder = ClientInventoryFolder.objects.get(id=folder_id)
+        transactions = InventoryHistory.objects.filter(client_inventory_folder=folder)
+
+        # Create a workbook and a sheet
+        workbook = Workbook()
+        sheet = workbook.active
+        sheet.title = 'Client Inventory Records'
+
+        # Define header styles
+        header_font = Font(bold=True)
+        blue_fill = PatternFill(start_color='00B0F0', end_color='00B0F0', fill_type='solid')
+        currency_format = '#,##0.00'
+
+        # Define the headers
+        headers = [
+            'Transaction ID', 'Client', 'Date', 'Item', 'Quantity In', 'Quantity Out',
+            'Price', 'Total Amount', 'Delivery Ref', 'Delivery No.', 'Invoice Type', 'Invoice#'
+        ]
+        sheet.append(headers)
+
+        for cell in sheet[1]:
+            cell.font = header_font
+            cell.fill = blue_fill
+            cell.value = cell.value.upper() if cell.value is not None else cell.value
+
+        # Populate the sheet with data
+        for transaction in transactions:
+            sheet.append([
+                transaction.id,
+                transaction.client if transaction.client else 'N/A',  # Using client as a string directly
+                transaction.date.strftime('%Y-%m-%d') if transaction.date else 'N/A',
+                str(transaction.item),  # Convert ItemInventory instance to string
+                transaction.quantity_in,
+                transaction.quantity_out,
+                transaction.price,
+                transaction.total_amount,
+                transaction.delivery_ref,
+                transaction.delivery_no,
+                transaction.invoice_type,
+                transaction.invoice_no,
+            ])
+
+        # Apply currency format to price and total_amount columns
+        for cell in sheet['G']:  # Assuming price is in column G (index 7)
+            if cell.row > 1:  # Skip header row
+                cell.number_format = currency_format
+
+        for cell in sheet['H']:  # Assuming total_amount is in column H (index 8)
+            if cell.row > 1:  # Skip header row
+                cell.number_format = currency_format
+
+        # Adjust column widths
+        for column in sheet.columns:
+            max_length = 0
+            column_letter = column[0].column_letter  # Get the column name (e.g., 'A', 'B', etc.)
+            for cell in column:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(cell.value)
+                except:
+                    pass
+            adjusted_width = (max_length + 2)  # Add extra space for better visibility
+            sheet.column_dimensions[column_letter].width = adjusted_width
+
+        # Create an in-memory buffer
+        buffer = BytesIO()
+        workbook.save(buffer)
+        buffer.seek(0)
+
+        # Set the response to return the Excel file
+        response = HttpResponse(
+            buffer,
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = f'attachment; filename=ClientInventory_{folder.name}.xlsx'
+        return response
+
+    except ClientInventoryFolder.DoesNotExist:
+        return HttpResponse("Client Inventory Folder not found", status=404)
+
+
 #----------------------------Transaction History----------------------------------------------
 def transaction_history(request):
     query = request.GET.get('q')  # Get search query from request
@@ -860,7 +1034,7 @@ def transaction_history(request):
                             Q(price__icontains=query) |
                             Q(total_amount__icontains=query) |
                             Q(site_delivered__icontains=query) |
-                            Q(client__name__icontains=query)
+                            Q(client__icontains=query)
                         )
 
     # Paginate the filtered transactions
@@ -938,14 +1112,27 @@ def site_inventory_folder_list(request):
     return render(request, 'Inventory/site_inventory_folder_list.html', context)
 
 
-
 def view_site_inventory_folder_contents(request, folder_id):
     folder = get_object_or_404(SiteInventoryFolder, id=folder_id)
-    transactions = InventoryHistory.objects.filter(site_inventory_folder=folder)
+    transactions_list = InventoryHistory.objects.filter(site_inventory_folder=folder)
+
+    # Calculate total_amount
+    total_amount = transactions_list.aggregate(total_amount_sum=Sum('total_amount'))['total_amount_sum'] or 0
+
+    # Pagination
+    paginator = Paginator(transactions_list, 20)  # Show 20 transactions per page
+    page_number = request.GET.get('page')
+    try:
+        transactions = paginator.page(page_number)
+    except PageNotAnInteger:
+        transactions = paginator.page(1)
+    except EmptyPage:
+        transactions = paginator.page(paginator.num_pages)
 
     context = {
         'folder': folder,
         'transactions': transactions,
+        'total_amount': total_amount,
     }
 
     return render(request, 'Inventory/site_folder_contents.html', context)
@@ -1008,14 +1195,26 @@ def client_inventory_folder_list(request):
     return render(request, 'Inventory/client_inventory_folder_list.html', context)
 
 
-
 def view_client_inventory_folder_contents(request, folder_id):
     folder = get_object_or_404(ClientInventoryFolder, id=folder_id)
-    transactions = InventoryHistory.objects.filter(client_inventory_folder=folder)
+    transactions_list = InventoryHistory.objects.filter(client_inventory_folder=folder)
+
+    total_amount = transactions_list.aggregate(total_amount_sum=Sum('total_amount'))['total_amount_sum'] or 0
+
+    # Pagination
+    paginator = Paginator(transactions_list, 20)  # Show 20 transactions per page
+    page_number = request.GET.get('page')
+    try:
+        transactions = paginator.page(page_number)
+    except PageNotAnInteger:
+        transactions = paginator.page(1)
+    except EmptyPage:
+        transactions = paginator.page(paginator.num_pages)
 
     context = {
         'folder': folder,
         'transactions': transactions,
+        'total_amount': total_amount,
     }
 
     return render(request, 'Inventory/client_folder_contents.html', context)

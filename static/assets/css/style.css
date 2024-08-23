@@ -616,7 +616,8 @@ select.form-control:not([size]):not([multiple]) {
     position: static; }
   .card .card-body {
     padding-top: 20px;
-    padding-bottom: 20px; }
+    padding-bottom: 20px;
+    background-color: #f1f1f1;}
     .card .card-body .section-title {
       margin: 30px 0 10px 0;
       font-size: 16px; }
@@ -2894,6 +2895,11 @@ body:not(.sidebar-mini) .sidebar-style-2 .sidebar-menu li.active ul.dropdown-men
     color: white !important;
 }
 
+.black-background{
+    background-color: #151515;
+    color: white !important;
+}
+
 .archive-background {
     background-color: #6c757d;
     color: white !important;
@@ -2930,4 +2936,11 @@ body:not(.sidebar-mini) .sidebar-style-2 .sidebar-menu li.active ul.dropdown-men
 /* Optional: Add some space between the select input and the button */
 .ml-2 {
     margin-left: 8px; /* Adjust the space as needed */
+}
+
+.blue-line {
+    border: none; /* Remove default border */
+    height: 2px; /* Set the height of the line */
+    background-color: blue; /* Set the color of the line */
+    margin: 20px 0; /* Adjust spacing above and below the line */
 }

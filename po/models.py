@@ -25,6 +25,18 @@ class ItemInventory(models.Model):
         ('client', 'Client'),
     )
 
+    DELIVERY_REF_CHOICES = [
+        ('PL', 'PL'),
+        ('DR', 'DR'),
+        ('TR', 'TR')
+    ]
+
+    INVOICE_CHOICES = [
+        ('SI', 'SI'),
+        ('Invoice', 'Invoice'),
+        ('CI', 'CI')
+    ]
+
     date = models.DateField(verbose_name='Date', null=True)
     item_code = models.CharField(max_length=100, blank=True, null=True)
     supplier = models.CharField(max_length=100, blank=True, null=True)
@@ -41,6 +53,12 @@ class ItemInventory(models.Model):
     client = models.CharField(max_length=255, verbose_name='Client', null=True, blank=True)
     site_inventory_folder = models.ForeignKey(SiteInventoryFolder, on_delete=models.CASCADE, null=True, blank=True)
     client_inventory_folder = models.ForeignKey(ClientInventoryFolder, on_delete=models.CASCADE, null=True, blank=True)
+    delivery_ref = models.CharField(max_length=2, choices=DELIVERY_REF_CHOICES, verbose_name='Delivery Ref#', null=True)
+    delivery_no = models.CharField(max_length=255, verbose_name='Delivery No.', null=True)
+    invoice_type = models.CharField(max_length=10, choices=INVOICE_CHOICES, verbose_name='Invoice#', null=True,
+                                    blank=True)
+    invoice_no = models.CharField(max_length=255, verbose_name='Invoice No.', null=True, blank=True)
+
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -58,7 +76,7 @@ class ItemInventory(models.Model):
             new_quantity_out = previous.quantity_out + quantity_out_delta
             self.quantity_out = new_quantity_out
             self.stock = self.quantity_in - new_quantity_out
-            self.total_amount = self.stock * self.price
+            self.total_amount = self.quantity_out * self.price  # Updated calculation
 
             # Create a history entry with the current quantity_out input (delta), not the cumulative
             InventoryHistory.objects.create(
@@ -73,14 +91,18 @@ class ItemInventory(models.Model):
                 quantity_out=quantity_out_delta,  # Log the delta/change, not the cumulative
                 stock=self.stock,
                 price=self.price,
-                total_amount=self.total_amount,
+                total_amount=quantity_out_delta * self.price,  # Correctly log the delta amount
                 site_delivered=self.site_delivered if self.site_or_client_choice == 'site' else None,
                 client=self.client if self.site_or_client_choice == 'client' else None,
+                delivery_ref=self.delivery_ref,
+                delivery_no=self.delivery_no,
+                invoice_type=self.invoice_type,
+                invoice_no=self.invoice_no,
             )
         else:
             # For new records, set initial stock and total_amount
             self.stock = self.quantity_in - self.quantity_out
-            self.total_amount = self.stock * self.price
+            self.total_amount = self.quantity_out * self.price  # Updated calculation
 
         if self.site_or_client_choice == 'site':
             self.site_delivered = self.site_delivered
@@ -100,6 +122,18 @@ class ItemInventory(models.Model):
 
 
 class InventoryHistory(models.Model):
+    DELIVERY_REF_CHOICES = [
+        ('PL', 'PL'),
+        ('DR', 'DR'),
+        ('TR', 'TR')
+    ]
+
+    INVOICE_CHOICES = [
+        ('SI', 'SI'),
+        ('Invoice', 'Invoice'),
+        ('CI', 'CI')
+    ]
+
     item = models.ForeignKey(ItemInventory, on_delete=models.CASCADE)
     date = models.DateField(null=True)
     item_code = models.CharField(max_length=100, blank=True, null=True)
@@ -116,6 +150,11 @@ class InventoryHistory(models.Model):
     site_inventory_folder = models.ForeignKey(SiteInventoryFolder, on_delete=models.SET_NULL, null=True, blank=True)
     client = models.CharField(max_length=255, verbose_name='Client', null=True, blank=True)
     client_inventory_folder = models.ForeignKey(ClientInventoryFolder, on_delete=models.SET_NULL, null=True, blank=True)
+    delivery_ref = models.CharField(max_length=2, choices=DELIVERY_REF_CHOICES, verbose_name='Delivery Ref#', null=True)
+    delivery_no = models.CharField(max_length=255, verbose_name='Delivery No.', null=True)
+    invoice_type = models.CharField(max_length=10, choices=INVOICE_CHOICES, verbose_name='Invoice#', null=True,
+                                    blank=True)
+    invoice_no = models.CharField(max_length=255, verbose_name='Invoice No.', null=True, blank=True)
 
     def __str__(self):
         return f"{self.po_product_name} ({self.item_code}) - {self.quantity_out}"
