@@ -1,5 +1,9 @@
 from django.db import models
 from django.utils import timezone
+
+
+
+
 class SiteInventoryFolder(models.Model):
     name = models.CharField(max_length=255, unique=True)
 
@@ -159,6 +163,16 @@ class InventoryHistory(models.Model):
     def __str__(self):
         return f"{self.po_product_name} ({self.item_code}) - {self.quantity_out}"
 
+
+
+class Cart(models.Model):
+    item = models.ForeignKey(ItemInventory, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField()
+
+    def __str__(self):
+        return f"{self.item} - {self.quantity}"
+
+
 class ArchiveFolder(models.Model):
     name = models.CharField(max_length=100)
     created_at = models.DateTimeField(default=timezone.now)
@@ -232,7 +246,3 @@ class PurchaseOrder(models.Model):
 
     def __str__(self):
         return self.po_number
-
-
-
-

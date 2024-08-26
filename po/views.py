@@ -1,7 +1,9 @@
 import pandas as pd
 import openpyxl
+from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.db.models import Q
+from django.forms import modelformset_factory
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -9,9 +11,9 @@ from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
 from openpyxl.workbook import Workbook
 
-from .forms import PurchaseOrderForm, UploadFileForm, ItemInventoryForm
+from .forms import PurchaseOrderForm, UploadFileForm, ItemInventoryForm, ItemInventoryBulkForm
 from .models import PurchaseOrder, ArchiveFolder, ItemInventory, SupplierFolder, InventoryHistory, SiteInventoryFolder, \
-    ClientInventoryFolder
+    ClientInventoryFolder, Cart
 from datetime import datetime
 from openpyxl.styles import Font, PatternFill
 from io import BytesIO
@@ -742,6 +744,8 @@ def inventory_edit(request, id):
     return render(request, 'inventory/inventory_edit.html', {'form': form, 'item': inventory_item})
 
 
+
+
 def export_inventory_to_excel(request):
     query = request.GET.get('q')  # Search query parameter
 
@@ -1266,4 +1270,135 @@ def view_folder_contents(request, folder_id):
     }
 
     return render(request, 'supplier/view_folder_contents.html', context)
+
+
+
+#-----------------------------SHOP----------------------------------------------
+
+def bulk_edit_inventory(request):
+    if request.method == 'POST':
+        if 'add_to_cart' in request.POST:
+            # Handle adding items to the cart
+            item_ids = request.POST.getlist('item_ids')
+            success = True
+            errors = []
+
+            for item_id in item_ids:
+                quantity_out = request.POST.get(f'quantity_out_{item_id}', '0')
+                quantity_out = int(quantity_out) if quantity_out.strip() != '' else 0
+
+                if quantity_out > 0:
+                    try:
+                        item = ItemInventory.objects.get(id=item_id)
+                        cart_item, created = Cart.objects.get_or_create(
+                            item=item,
+                            defaults={'quantity': quantity_out}
+                        )
+                        if not created:
+                            cart_item.quantity += quantity_out
+                            cart_item.save()
+                    except ItemInventory.DoesNotExist:
+                        success = False
+                        errors.append(f"Item with ID {item_id} does not exist.")
+                    except Exception as e:
+                        success = False
+                        errors.append(f"An error occurred for item ID {item_id}: {str(e)}")
+
+            if success:
+                messages.success(request, 'Items added to cart successfully.')
+            else:
+                messages.error(request, 'Some errors occurred: ' + ', '.join(errors))
+            return redirect('bulk_edit_inventory')
+
+        elif 'finalize_changes' in request.POST:
+            # Ensure form is valid for finalization
+            form = ItemInventoryBulkForm(request.POST)
+            if form.is_valid():
+                date = form.cleaned_data['date']
+                location_type = form.cleaned_data['location_type']
+                location_name = form.cleaned_data['location_name']
+                delivery_ref = form.cleaned_data['delivery_ref']
+                delivery_no = form.cleaned_data['delivery_no']
+                invoice_type = form.cleaned_data['invoice_type']
+                invoice_no = form.cleaned_data['invoice_no']
+
+                cart_items = Cart.objects.all()
+                success = True
+                errors = []
+
+                for cart_item in cart_items:
+                    try:
+                        item = cart_item.item
+                        quantity_in = item.quantity_in
+                        quantity_out = cart_item.quantity
+                        price = item.price
+                        total_amount = quantity_out * price  # Calculate total amount correctly
+
+                        item.date = date
+                        item.quantity_in = quantity_in
+                        item.quantity_out = quantity_out
+                        item.price = price
+                        item.total_amount = total_amount
+                        item.stock = item.stock + quantity_in - quantity_out
+                        item.delivery_ref = delivery_ref
+                        item.delivery_no = delivery_no
+                        item.invoice_type = invoice_type
+                        item.invoice_no = invoice_no
+
+                        if location_type == 'site':
+                            # Create or get the site folder
+                            folder, created = SiteInventoryFolder.objects.get_or_create(name=location_name)
+                            item.site_inventory_folder = folder
+                            item.site_delivered = location_name
+                            item.client = None
+                            InventoryHistory.objects.filter(site_delivered=location_name).update(site_inventory_folder=folder)
+
+                        elif location_type == 'client':
+                            # Create or get the client folder
+                            client_folder, created = ClientInventoryFolder.objects.get_or_create(name=location_name)
+                            item.client_inventory_folder = client_folder
+                            item.client = location_name
+                            item.site_delivered = None
+                            InventoryHistory.objects.filter(client=location_name).update(client_inventory_folder=client_folder)
+
+                        item.save()
+                        cart_item.delete()
+                    except ItemInventory.DoesNotExist:
+                        success = False
+                        errors.append(f"Item with ID {cart_item.item.id} does not exist.")
+                    except ValidationError as e:
+                        success = False
+                        errors.append(f"Validation error for item ID {cart_item.item.id}: {str(e)}")
+                    except Exception as e:
+                        success = False
+                        errors.append(f"An error occurred for item ID {cart_item.item.id}: {str(e)}")
+
+                if success:
+                    messages.success(request, 'Items updated successfully.')
+                else:
+                    messages.error(request, 'Some errors occurred: ' + ', '.join(errors))
+                return redirect('bulk_edit_inventory')
+
+    else:
+        form = ItemInventoryBulkForm()
+        items = ItemInventory.objects.all()
+        cart_items = Cart.objects.all()
+
+        # Calculate total amount for cart items
+        for cart_item in cart_items:
+            cart_item.total_amount = cart_item.quantity * cart_item.item.price
+
+        return render(request, 'Inventory/bulk_edit_inventory.html', {
+            'form': form,
+            'items': items,
+            'cart_items': cart_items
+        })
+
+
+
+
+
+
+
+
 

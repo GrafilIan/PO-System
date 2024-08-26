@@ -11,12 +11,9 @@
           href="{% static 'assets/modules/datatables/DataTables-1.10.16/css/dataTables.bootstrap4.min.css' %}">
     <link rel="stylesheet" href="{% static 'assets/modules/datatables/Select-1.2.4/css/select.bootstrap4.min.css' %}">
     <script src="{% static 'assets/js/cleave.min.js' %}"></script>
-
 {% endblock %}
 
 {% block content %}
-
-
     <div class="row">
     <div class="col-12 col-sm-10 offset-sm-1 col-md-8 offset-md-2 col-lg-8 offset-lg-2 col-xl-8 offset-xl-2">
 
@@ -35,7 +32,8 @@
                 <h2>Create Purchase Order</h2>
             </div>
             <div class="card-body">
-                <form id="purchaseOrderForm" method="post" action="{% url 'purchase_order_create' %}" enctype="multipart/form-data">
+                <form id="purchaseOrderForm" method="post" action="{% url 'purchase_order_create' %}"
+                      enctype="multipart/form-data">
                     {% csrf_token %}
 
                     <div class="row">
@@ -54,40 +52,10 @@
                             {{ form.purchaser }}
                         </div>
 
-                        <div class="form-group col-6 col-sm-3">
+                       <!-- <div class="form-group col-6 col-sm-3">
                             <label for="brand">Brand</label>
                             {{ form.brand }}
-                        </div>
-
-                        <div class="form-group col-6 col-sm-3">
-                            <label for="item_code">Item Code</label>
-                            {{ form.item_code }}
-                        </div>
-
-                        <div class="form-group col-12 col-sm-6">
-                            <label for="particulars">Particulars</label>
-                            {{ form.particulars }}
-                        </div>
-
-                        <div class="form-group col-6">
-                            <label for="quantity">Quantity</label>
-                            {{ form.quantity }}
-                        </div>
-
-                        <div class="form-group col-6">
-                            <label for="unit">Unit</label>
-                            {{ form.unit }}
-                        </div>
-
-                        <div class="form-group col-6">
-                            <label for="price">Price</label>
-                            {{ form.price }}
-                        </div>
-
-                        <div class="form-group col-6">
-                            <label for="total_amount">Total Amount</label>
-                            {{ form.total_amount }}
-                        </div>
+                        </div> -->
 
                         <div class="form-group col-12 col-sm-6">
                             <label for="site_delivered">Site Delivered</label>
@@ -102,6 +70,11 @@
                         <div class="form-group col-6 col-sm-3">
                             <label for="remarks">Remarks</label>
                             {{ form.remarks }}
+                        </div>
+
+                        <div class="col-12">
+                            <div style="border-top: 1px solid #0026e5; margin: 20px 0; text-align: center;">
+                            </div>
                         </div>
 
                         <div class="form-group col-12 col-sm-12">
@@ -130,13 +103,13 @@
                         </div>
 
                         <div class="form-group col-6">
-                            <label for="payment_req_ref">Payment Req Ref#</label>
-                            {{ form.payment_req_ref }}
+                            <label for="payment_details">Payment Details</label>
+                            {{ form.payment_details }}
                         </div>
 
                         <div class="form-group col-6">
-                            <label for="payment_details">Payment Details</label>
-                            {{ form.payment_details }}
+                            <label for="payment_req_ref">Payment Req Ref#</label>
+                            {{ form.payment_req_ref }}
                         </div>
 
                         <div class="form-group col-6">
@@ -144,22 +117,58 @@
                             {{ form.remarks2 }}
                         </div>
 
+                        <div class="col-12">
+                            <div style="border-top: 1px solid #0026e5; margin: 20px 0; text-align: center;">
+                            </div>
+                        </div>
+
+                        <div class="form-group col-6 col-sm-6">
+                            <label for="item_code">Item Code</label>
+                            {{ form.item_code }}
+                        </div>
+
+                        <div class="form-group col-12 col-sm-6">
+                            <label for="particulars">Particulars</label>
+                            {{ form.particulars }}
+                        </div>
+
+                        <div class="form-group col-3">
+                            <label for="unit">Unit</label>
+                            {{ form.unit }}
+                        </div>
+
+                        <div class="form-group col-3">
+                            <label for="quantity">Quantity</label>
+                            {{ form.quantity }}
+                        </div>
+
+                        <div class="form-group col-3">
+                            <label for="price">Price</label>
+                            {{ form.price }}
+                        </div>
+
+                        <div class="form-group col-3">
+                            <label for="total_amount">Total Amount</label>
+                            {{ form.total_amount }}
+                        </div>
                     </div>
 
+
                     <div class="form-divider align-center">
-                    <div class="form-group">
-                        <button type="submit" class="btn btn-primary btn-block">
-                            SUBMIT
-                        </button>
-                    </div>
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary btn-block">
+                                SUBMIT
+                            </button>
+                        </div>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
-     <!-- Success Modal -->
- <div class="modal fade" id="successModal" tabindex="-1" role="dialog" aria-labelledby="successModalLabel" aria-hidden="true">
+    <!-- Success Modal -->
+    <div class="modal fade" id="successModal" tabindex="-1" role="dialog" aria-labelledby="successModalLabel"
+         aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -179,7 +188,8 @@
     </div>
 
     <!-- Error Modal -->
-    <div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel" aria-hidden="true">
+    <div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel"
+         aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -206,67 +216,99 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
-    $(document).ready(function() {
-        console.log("jQuery is ready");  // Ensure jQuery is loaded
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const quantityInput = document.querySelector('#id_quantity');
+            const priceInput = document.querySelector('#id_price');
+            const totalAmountInput = document.querySelector('#id_total_amount');
 
-        $('#purchaseOrderForm').on('submit', function(event) {
-            event.preventDefault();  // Prevent default form submission
-            console.log("Form submission intercepted");  // Debugging line
+            function calculateTotalAmount() {
+                const quantity = parseFloat(quantityInput.value) || 0;
+                const price = parseFloat(priceInput.value) || 0;
+                const totalAmount = quantity * price;
+                totalAmountInput.value = totalAmount.toFixed(2);
+            }
 
-            var form = $(this);
-            var formData = new FormData(form[0]);
+            quantityInput.addEventListener('input', calculateTotalAmount);
+            priceInput.addEventListener('input', calculateTotalAmount);
+        });
 
-            $.ajax({
-                url: form.attr('action'),
-                type: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function(data) {
-                    console.log("Form submitted successfully:", data);  // Debugging line
-                    if (data.status === 'success') {
-                        $('#successModal').modal('show');  // Show success modal
-                    } else {
-                        $('#errorModal').modal('show');  // Show error modal
+        $(document).ready(function () {
+            console.log("jQuery is ready");  // Ensure jQuery is loaded
+
+            $('#purchaseOrderForm').on('submit', function (event) {
+                event.preventDefault();  // Prevent default form submission
+                console.log("Form submission intercepted");  // Debugging line
+
+                var form = $(this);
+                var formData = new FormData(form[0]);
+
+                $.ajax({
+                    url: form.attr('action'),
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (data) {
+                        console.log("Form submitted successfully:", data);  // Debugging line
+                        if (data.status === 'success') {
+                            Swal.fire({
+                                title: 'Success!',
+                                text: 'Your record has been saved successfully.',
+                                icon: 'success',
+                                confirmButtonText: 'OK'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    // Clear only specified fields
+                                    $('#id_item_code').val('');
+                                    $('#id_particulars').val('');
+                                    $('#id_quantity').val('');
+                                    $('#id_price').val('');
+                                    $('#id_total_amount').val('');  // Optionally clear total_amount if needed
+                                }
+                            });
+                        } else {
+                            Swal.fire({
+                                title: 'Error!',
+                                text: 'There was an error saving the record.',
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("Ajax error:", status, error);  // Debugging line
+                        Swal.fire({
+                            title: 'Error!',
+                            text: 'There was an error saving the record.',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
                     }
-                },
-                error: function(xhr, status, error) {
-                    console.error("Ajax error:", status, error);  // Debugging line
-                    $('#errorModal').modal('show');  // Show error modal on error
-                }
+                });
             });
         });
+    </script>
 
-        $('#successModal').on('hidden.bs.modal', function () {
-            location.reload();  // Reload the page
-        });
-    });
-</script>
+
 
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-    const quantityInput = document.querySelector('#id_quantity');
-    const priceInput = document.querySelector('#id_price');
-    const totalAmountInput = document.querySelector('#id_total_amount');
+        document.addEventListener('DOMContentLoaded', function () {
+            const quantityInput = document.querySelector('#id_quantity');
+            const priceInput = document.querySelector('#id_price');
+            const totalAmountInput = document.querySelector('#id_total_amount');
 
-    function calculateTotalAmount() {
-        const quantity = parseFloat(quantityInput.value) || 0;
-        const price = parseFloat(priceInput.value) || 0;
-        const totalAmount = quantity * price;
-        totalAmountInput.value = totalAmount.toFixed(2);
-    }
+            function calculateTotalAmount() {
+                const quantity = parseFloat(quantityInput.value) || 0;
+                const price = parseFloat(priceInput.value) || 0;
+                const totalAmount = quantity * price;
+                totalAmountInput.value = totalAmount.toFixed(2);
+            }
 
-    quantityInput.addEventListener('input', calculateTotalAmount);
-    priceInput.addEventListener('input', calculateTotalAmount);
-});
-</script>
+            quantityInput.addEventListener('input', calculateTotalAmount);
+            priceInput.addEventListener('input', calculateTotalAmount);
+        });
+    </script>
 
 
 {% endblock %}
-
-
-
-
-
-

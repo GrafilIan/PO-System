@@ -21,6 +21,7 @@ urlpatterns = [
     path('upload/', views.upload_file, name='upload_file'),
     path('inventory/', views.inventory_table, name='inventory_table'),
     path('inventory/edit/<int:id>/', views.inventory_edit, name='inventory_edit'),
+
     path('transaction-history/', views.transaction_history, name='transaction_history'),
 
     path('export-inventory/', views.export_inventory_to_excel, name='export_inventory_to_excel'),
@@ -37,7 +38,8 @@ urlpatterns = [
     path('site-inventory/folders/', views.site_inventory_folder_list, name='site_inventory_folder_list'),
     path('site-inventory/folder/<int:folder_id>/', views.view_site_inventory_folder_contents,
          name='view_site_inventory_folder_contents'),
-    path('export-site-folder-contents/<int:folder_id>/', views.export_site_folder_contents, name='export_site_folder_contents'),
+    path('export-site-folder-contents/<int:folder_id>/', views.export_site_folder_contents,
+         name='export_site_folder_contents'),
 
     path('create-client-folder/', views.create_client_inventory_folder, name='create_client_inventory_folder'),
     path('delete-client-folder/<int:folder_id>/', views.delete_client_inventory_folder,
@@ -45,6 +47,8 @@ urlpatterns = [
     path('client-folder-list/', views.client_inventory_folder_list, name='client_inventory_folder_list'),
     path('client-folder-contents/<int:folder_id>/', views.view_client_inventory_folder_contents,
          name='view_client_inventory_folder_contents'),
-    path('client-folder/export/<int:folder_id>/', views.export_client_folder_contents, name='export_client_folder_contents'),
+    path('client-folder/export/<int:folder_id>/', views.export_client_folder_contents,
+         name='export_client_folder_contents'),
+    path('bulk_edit_inventory/', views.bulk_edit_inventory, name='bulk_edit_inventory'),
 
 ]
