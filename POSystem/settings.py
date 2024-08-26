@@ -89,7 +89,7 @@ WSGI_APPLICATION = 'POSystem.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'newposystemdb',  # The name of your MySQL database
+        'NAME': 'posystemnewdb',  # The name of your MySQL database
         'USER': 'root',           # Your MySQL username
         'PASSWORD': 'Grafilmysql2002',   # Your MySQL password
         'HOST': 'localhost',                 # Or the IP address of your MySQL server

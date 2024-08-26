@@ -93,9 +93,7 @@
                                     <ul class="pagination justify-content-center">
                                         {% if transactions.has_previous %}
                                             <li class="page-item">
-                                                <a class="page-link" href="?page=
-
-                                                        {{ transactions.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}"
+                                                <a class="page-link" href="?page={{ transactions.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}"
                                                    aria-label="Previous">
                                                     <span aria-hidden="true">&laquo;</span>
                                                 </a>
@@ -103,16 +101,12 @@
                                         {% endif %}
                                         {% for num in transactions.paginator.page_range %}
                                             <li class="page-item {% if transactions.number == num %}active{% endif %}">
-                                                <a class="page-link" href="?page=
-
-                                                        {{ num }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}">{{ num }}</a>
+                                                <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}">{{ num }}</a>
                                             </li>
                                         {% endfor %}
                                         {% if transactions.has_next %}
                                             <li class="page-item">
-                                                <a class="page-link" href="?page=
-
-                                                        {{ transactions.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}"
+                                                <a class="page-link" href="?page={{ transactions.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}"
                                                    aria-label="Next">
                                                     <span aria-hidden="true">&raquo;</span>
                                                 </a>

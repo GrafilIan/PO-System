@@ -173,12 +173,10 @@ class ItemInventoryBulkForm(forms.ModelForm):
         choices=LOCATION_CHOICES,
         widget=forms.Select(attrs={'class': 'form-control'}),
         label='Location Type',
-
     )
     location_name = forms.CharField(
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter Site or Client Name'}),
         label='Location Name',
-
     )
 
     class Meta:
@@ -225,7 +223,6 @@ class ItemInventoryBulkForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ItemInventoryBulkForm, self).__init__(*args, **kwargs)
-        # Set widget attributes in init to ensure all fields have the correct attributes
         for field_name, field in self.fields.items():
             if field_name in ['quantity_in', 'quantity_out', 'stock', 'price', 'total_amount']:
                 field.required = False
@@ -243,9 +240,7 @@ class ItemInventoryBulkForm(forms.ModelForm):
             cleaned_data['client'] = location_name
             cleaned_data['site_delivered'] = None
 
-        # Ensure site_or_client_choice is set
-        cleaned_data['site_or_client_choice'] = location_type
-
         return cleaned_data
+
 
 

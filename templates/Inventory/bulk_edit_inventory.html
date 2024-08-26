@@ -30,6 +30,7 @@
                             </div>
                         {% endif %}
 
+                        <!-- Add to Cart Form -->
                         <form method="post" action="{% url 'bulk_edit_inventory' %}">
                             {% csrf_token %}
 
@@ -47,7 +48,6 @@
                                                     Unit: {{ item.unit }}<br>
                                                     Current Stock: {{ item.stock }}<br>
                                                     Price: ₱<span id="price_{{ item.id }}">{{ item.price }}</span><br>
-                                                    Stock: {{ item.quantity_in }}
                                                 </p>
                                                 <input type="hidden" name="item_ids" value="{{ item.id }}">
                                                 <div class="form-group">
@@ -69,34 +69,38 @@
                                     </div>
                                 {% endfor %}
                             </div>
-                            <button type="submit" name="add_to_cart">Add to Cart</button>
+                            <button type="submit" name="add_to_cart" class="btn btn-primary">Add to Cart</button>
                         </form>
 
                         <!-- Cart Items Section -->
                         <h3>Cart Items</h3>
                         <div class="row">
-                            {% for cart_item in cart_items %}
-                                <div class="col-md-4">
-                                    <div class="card mb-4">
-                                        <div class="card-body">
-                                            <h5 class="card-title">{{ cart_item.item.po_product_name }}
-                                                ({{ cart_item.item.item_code }})</h5>
-                                            <p class="card-text">
-                                                Quantity: {{ cart_item.quantity }}<br>
-                                                Price: ₱{{ cart_item.item.price }}<br>
-                                                Total Amount: ₱{{ cart_item.total_amount }}
-                                            </p>
-                                            <input type="hidden" name="cart_item_ids" value="{{ cart_item.id }}">
+                            {% if cart_items %}
+                                {% for cart_item in cart_items %}
+                                    <div class="col-md-4">
+                                        <div class="card mb-4">
+                                            <div class="card-body">
+                                                <h5 class="card-title">{{ cart_item.item.po_product_name }}
+                                                    ({{ cart_item.item.item_code }})</h5>
+                                                <p class="card-text">
+                                                    Quantity: {{ cart_item.quantity }}<br>
+                                                    Price: ₱{{ cart_item.item.price }}<br>
+                                                    Total Amount: ₱{{ cart_item.total_amount }}
+                                                </p>
+                                                <input type="hidden" name="cart_item_ids" value="{{ cart_item.id }}">
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            {% endfor %}
+                                {% endfor %}
+                            {% else %}
+                                <p>No items in cart.</p>
+                            {% endif %}
                         </div>
 
-
-                        <!-- Finalization Fields -->
+                        <!-- Finalize Changes Form -->
                         <form method="post" action="{% url 'bulk_edit_inventory' %}">
                             {% csrf_token %}
+                            <h3>Finalize Changes</h3>
                             <div class="row">
                                 <div class="col-md-3">
                                     <div class="form-group">
@@ -145,18 +149,13 @@
                                     </div>
                                 </div>
                             </div>
-
-                            <div class="form-group">
-                                <button type="submit" name="finalize_changes">Finalize Changes</button>
-                            </div>
+                            <button type="submit" name="finalize_changes" class="btn btn-primary">Finalize Changes</button>
                         </form>
-
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {

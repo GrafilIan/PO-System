@@ -19,6 +19,8 @@ from openpyxl.styles import Font, PatternFill
 from io import BytesIO
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Sum
+
+
 # Create your views here.
 
 def login_view(request):
@@ -52,6 +54,7 @@ def dashboard_view(request):
 def logout_view(request):
     logout(request)
     return redirect('login')
+
 
 # For Creating or Adding Records
 
@@ -158,7 +161,6 @@ def purchase_order_edit(request, id):
     return render(request, 'records/purchase_order_edit.html', {'form': form, 'order': order})
 
 
-
 def purchase_order_list(request):
     query = request.GET.get('q')  # Single search input
     page_number = request.GET.get('page', 1)
@@ -227,8 +229,6 @@ def purchase_order_list(request):
         'page_number': page_number,
         'folders': folders
     })
-
-
 
 
 # --------------------------------------For Exporting Records----------------------------------------------
@@ -316,7 +316,8 @@ def export_orders_to_excel(request):
     # Populate the sheet with data
     for order in orders_list:
         sheet.append([
-            order.date.strftime('%Y-%m-%d') if order.date else 'N/A', order.po_number, order.purchaser, order.brand, order.item_code,
+            order.date.strftime('%Y-%m-%d') if order.date else 'N/A', order.po_number, order.purchaser, order.brand,
+            order.item_code,
             order.particulars, order.quantity, order.unit, order.price, order.total_amount, order.site_delivered,
             order.fbbd_ref_number, order.remarks, order.supplier, order.delivery_ref, order.delivery_no,
             order.invoice_type, order.invoice_no, order.payment_req_ref, order.payment_details, order.remarks2
@@ -584,7 +585,6 @@ def move_orders_to_folder(request):
     return redirect('purchase_order_list')
 
 
-
 # For Uploading Files
 def handle_uploaded_file(f):
     df = pd.read_excel(f, engine='openpyxl')
@@ -742,8 +742,6 @@ def inventory_edit(request, id):
         form = ItemInventoryForm(instance=inventory_item)
 
     return render(request, 'inventory/inventory_edit.html', {'form': form, 'item': inventory_item})
-
-
 
 
 def export_inventory_to_excel(request):
@@ -912,7 +910,6 @@ def export_site_folder_contents(request, folder_id):
         return HttpResponse("Site Inventory Folder not found", status=404)
 
 
-
 def export_client_folder_contents(request, folder_id):
     try:
         # Get the client inventory folder by ID
@@ -997,7 +994,7 @@ def export_client_folder_contents(request, folder_id):
         return HttpResponse("Client Inventory Folder not found", status=404)
 
 
-#----------------------------Transaction History----------------------------------------------
+# ----------------------------Transaction History----------------------------------------------
 def transaction_history(request):
     query = request.GET.get('q')  # Get search query from request
     page_number = request.GET.get('page', 1)  # Get page number from request
@@ -1078,7 +1075,6 @@ def create_site_inventory_folder(request):
     return JsonResponse({'success': False, 'error': 'Invalid request method.'})
 
 
-
 def delete_site_inventory_folder(request, folder_id):
     if request.method == 'POST':
         folder = get_object_or_404(SiteInventoryFolder, id=folder_id)
@@ -1086,7 +1082,6 @@ def delete_site_inventory_folder(request, folder_id):
         return JsonResponse({'success': True})
 
     return JsonResponse({'success': False, 'error': 'Invalid request method.'})
-
 
 
 def site_inventory_folder_list(request):
@@ -1156,7 +1151,8 @@ def create_client_inventory_folder(request):
                     transaction.client_inventory_folder = new_folder
                     transaction.save()
 
-                return JsonResponse({'success': True, 'message': 'Client folder created and transactions updated successfully.'})
+                return JsonResponse(
+                    {'success': True, 'message': 'Client folder created and transactions updated successfully.'})
             else:
                 return JsonResponse({'success': False, 'message': 'Client folder with this name already exists.'})
 
@@ -1223,6 +1219,7 @@ def view_client_inventory_folder_contents(request, folder_id):
 
     return render(request, 'Inventory/client_folder_contents.html', context)
 
+
 # ----------------------------SUPPLIER----------------------------------------------
 
 def delete_supplier_folder(request, folder_id):
@@ -1272,8 +1269,7 @@ def view_folder_contents(request, folder_id):
     return render(request, 'supplier/view_folder_contents.html', context)
 
 
-
-#-----------------------------SHOP----------------------------------------------
+# -----------------------------SHOP----------------------------------------------
 
 def bulk_edit_inventory(request):
     if request.method == 'POST':
@@ -1311,7 +1307,6 @@ def bulk_edit_inventory(request):
             return redirect('bulk_edit_inventory')
 
         elif 'finalize_changes' in request.POST:
-            # Ensure form is valid for finalization
             form = ItemInventoryBulkForm(request.POST)
             if form.is_valid():
                 date = form.cleaned_data['date']
@@ -1322,47 +1317,94 @@ def bulk_edit_inventory(request):
                 invoice_type = form.cleaned_data['invoice_type']
                 invoice_no = form.cleaned_data['invoice_no']
 
-                cart_items = Cart.objects.all()
                 success = True
                 errors = []
+
+                cart_items = Cart.objects.all()
 
                 for cart_item in cart_items:
                     try:
                         item = cart_item.item
-                        quantity_in = item.quantity_in
                         quantity_out = cart_item.quantity
                         price = item.price
                         total_amount = quantity_out * price  # Calculate total amount correctly
 
+                        # Determine folder and client values
+                        site_delivered = None
+                        site_inventory_folder = None
+                        client = None
+                        client_inventory_folder = None
+
+                        if location_type == 'site':
+                            site_inventory_folder, created = SiteInventoryFolder.objects.get_or_create(
+                                name=location_name)
+                            site_delivered = location_name
+
+                        elif location_type == 'client':
+                            client_inventory_folder, created = ClientInventoryFolder.objects.get_or_create(
+                                name=location_name)
+                            client = location_name
+
+                        # Ensure no duplicate or unwanted records
+                        InventoryHistory.objects.filter(
+                            item=item,
+                            date=date,
+                            site_delivered=site_delivered,
+                            client=client
+                        ).delete()
+
+                        # Only create InventoryHistory if we have valid location information
+                        if site_delivered or client:
+                            InventoryHistory.objects.create(
+                                item=item,
+                                date=date,
+                                item_code=item.item_code,
+                                supplier=item.supplier,
+                                po_product_name=item.po_product_name,
+                                new_product_name=item.new_product_name,
+                                unit=item.unit,
+                                quantity_in=item.quantity_in,
+                                quantity_out=quantity_out,
+                                stock=item.stock,
+                                price=price,
+                                total_amount=total_amount,
+                                site_delivered=site_delivered,
+                                site_inventory_folder=site_inventory_folder,
+                                client=client,
+                                client_inventory_folder=client_inventory_folder,
+                                delivery_ref=delivery_ref,
+                                delivery_no=delivery_no,
+                                invoice_type=invoice_type,
+                                invoice_no=invoice_no
+                            )
+
+                        # Update item details
                         item.date = date
-                        item.quantity_in = quantity_in
+                        item.quantity_in = item.quantity_in
                         item.quantity_out = quantity_out
                         item.price = price
                         item.total_amount = total_amount
-                        item.stock = item.stock + quantity_in - quantity_out
+                        item.stock = item.stock + item.quantity_in - quantity_out
                         item.delivery_ref = delivery_ref
                         item.delivery_no = delivery_no
                         item.invoice_type = invoice_type
                         item.invoice_no = invoice_no
 
                         if location_type == 'site':
-                            # Create or get the site folder
-                            folder, created = SiteInventoryFolder.objects.get_or_create(name=location_name)
-                            item.site_inventory_folder = folder
-                            item.site_delivered = location_name
+                            item.site_inventory_folder = site_inventory_folder
+                            item.site_delivered = site_delivered
+                            item.client_inventory_folder = None
                             item.client = None
-                            InventoryHistory.objects.filter(site_delivered=location_name).update(site_inventory_folder=folder)
-
                         elif location_type == 'client':
-                            # Create or get the client folder
-                            client_folder, created = ClientInventoryFolder.objects.get_or_create(name=location_name)
-                            item.client_inventory_folder = client_folder
-                            item.client = location_name
+                            item.client_inventory_folder = client_inventory_folder
+                            item.client = client
+                            item.site_inventory_folder = None
                             item.site_delivered = None
-                            InventoryHistory.objects.filter(client=location_name).update(client_inventory_folder=client_folder)
 
                         item.save()
+
                         cart_item.delete()
+
                     except ItemInventory.DoesNotExist:
                         success = False
                         errors.append(f"Item with ID {cart_item.item.id} does not exist.")
@@ -1393,7 +1435,6 @@ def bulk_edit_inventory(request):
             'items': items,
             'cart_items': cart_items
         })
-
 
 
 
