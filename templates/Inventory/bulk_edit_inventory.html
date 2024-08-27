@@ -11,155 +11,193 @@
           href="{% static 'assets/modules/datatables/DataTables-1.10.16/css/dataTables.bootstrap4.min.css' %}">
     <link rel="stylesheet" href="{% static 'assets/modules/datatables/Select-1.2.4/css/select.bootstrap4.min.css' %}">
     <script src="{% static 'assets/js/cleave.min.js' %}"></script>
+    <style>
+        .glow-on-hover {
+            transition: box-shadow 0.3s ease-in-out;
+        }
+
+        .glow-on-hover:hover {
+            box-shadow: 0 0 10px rgba(0, 90, 154, 0.8), 0 0 20px rgba(255, 255, 255, 0.6), 0 0 30px rgba(255, 255, 255, 0.4);
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
     <div class="main-wrapper container-fluid">
         <div class="main-content">
             <section class="section container-fluid">
-    <div class="section-body">
-        <div class="card card-custom">
-            <div class="card-header card-header-custom">
-                <h4>SHOP</h4>
-            </div>
-            <div class="card-body">
-                {% if messages %}
-                    <div class="alert alert-{{ messages.tags }}">
-                        {% for message in messages %}
-                            {{ message }}
-                        {% endfor %}
-                    </div>
-                {% endif %}
+                <div class="section-body">
+                    <div class="card card-primary">
 
-                <!-- Add to Cart Form -->
-                <form method="post" action="{% url 'bulk_edit_inventory' %}">
-                    {% csrf_token %}
+                            <h2 style="text-align: center; margin-top: 10px;"><strong>BTCS SHOP</strong></h2>
 
-                    <!-- Items Section -->
-                    <h3>Items</h3>
-                    <div class="d-flex flex-wrap">
-                        {% for item in items %}
-                            <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2 mb-4">
-                                <div class="productCard">
-                                    <div class="productCard-body">
-                                        <h5 class="card-title">{{ item.po_product_name }}</h5>
-                                        <p class="card-text">
-                                            Supplier: {{ item.supplier }}<br>
-                                            Unit: {{ item.unit }}<br>
-                                            Current Stock: {{ item.stock }}<br>
-                                            Price: ₱<span id="price_{{ item.id }}">{{ item.price }}</span>
-                                        </p>
-                                        <div class="row">
-                                            <div class="col-12 col-md-6 mb-3">
-                                                <div class="form-group">
-                                                    <label for="quantity_out_{{ item.id }}">Quantity Out:</label>
-                                                    <input type="number" id="quantity_out_{{ item.id }}"
-                                                           name="quantity_out_{{ item.id }}"
-                                                           class="form-control"
-                                                           step="0.01" placeholder="Quantity Out">
-                                                </div>
-                                            </div>
-                                            <div class="col-12 col-md-6 mb-3">
-                                                <div class="form-group">
-                                                    <label for="total_amount_{{ item.id }}">Total Amount:</label>
-                                                    <input type="number" id="total_amount_{{ item.id }}"
-                                                           name="total_amount_{{ item.id }}"
-                                                           value="0.00"
-                                                           class="form-control" readonly>
+                        <div class="card-body">
+                            {% if messages %}
+                                <div class="alert alert-{{ messages.tags }} alert-dismissible fade show text-center" role="alert"
+                                     style="border: 1px solid #0026e5; background-color: #e0f7fa; color: #000000;">
+                                    {% for message in messages %}
+                                        <strong>{{ message }}</strong>
+                                    {% endfor %}
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"
+                                            style="color: #004085;">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                            {% endif %}
+
+                            <!-- Add to Cart Form -->
+                            <form method="post" action="{% url 'bulk_edit_inventory' %}">
+                                {% csrf_token %}
+
+                                <!-- Items Section -->
+                                <h3 style="text-align: center"><strong>PARTICULARS</strong></h3>
+                                <div class="row">
+                                    {% for item in items %}
+                                        <div class="col-12 col-md-3 mb-3">
+                                            <div class="card card-primary glow-on-hover">
+                                                <div class="card-body" style="background-color: #ffffff;">
+                                                    <h5 class="card-title text-center"
+                                                        style="margin-bottom: 0.1rem;">{{ item.po_product_name }}</h5>
+                                                    <div class="col-12">
+                                                        <div style="border-top: 1px solid #0026e5; margin: 4px 0; text-align: center;">
+                                                        </div>
+                                                    </div>
+                                                    <p class="card-text" style="margin-bottom: 0.1rem;">
+                                                        <strong style="color: blue;">Current
+                                                            Stock: {{ item.stock }}</strong><br>
+                                                        Price: ₱<span id="price_{{ item.id }}">{{ item.price }}</span>
+                                                    </p>
+
+                                                    <div class="row">
+                                                        <div class="col-12 col-md-12 mb-3">
+                                                            <div class="form-group">
+                                                                <label for="quantity_out_{{ item.id }}">Quantity
+                                                                    Out:</label>
+                                                                <input type="number" id="quantity_out_{{ item.id }}"
+                                                                       name="quantity_out_{{ item.id }}"
+                                                                       class="form-control"
+                                                                       step="0.01" placeholder="Quantity Out">
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label for="total_amount_{{ item.id }}">Total
+                                                                    Amount:</label>
+                                                                <input type="number" id="total_amount_{{ item.id }}"
+                                                                       name="total_amount_{{ item.id }}"
+                                                                       value="0.00"
+                                                                       class="form-control" readonly>
+                                                            </div>
+                                                        </div>
+
+                                                    </div>
+                                                    <input type="hidden" name="item_ids" value="{{ item.id }}">
                                                 </div>
                                             </div>
                                         </div>
-                                        <input type="hidden" name="item_ids" value="{{ item.id }}">
-                                    </div>
+                                    {% endfor %}
                                 </div>
-                            </div>
-                        {% endfor %}
-                    </div>
-                    <button type="submit" name="add_to_cart" class="btn btn-primary">Add to Cart</button>
-                </form>
+                                <div class="d-flex justify-content-center align-items-center">
+                                    <button type="submit" name="add_to_cart" class="btn btn-primary col-4">Add to Cart
+                                    </button>
+                                </div>
+                            </form>
 
-                <!-- Cart Items Section -->
-                <h3>Cart Items</h3>
-                <div class="d-flex flex-wrap">
-                    {% if cart_items %}
-                        {% for cart_item in cart_items %}
-                            <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2 mb-4">
-                                <div class="card mb-4">
-                                    <div class="card-body">
-                                        <h5 class="card-title">{{ cart_item.item.po_product_name }} ({{ cart_item.item.item_code }})</h5>
-                                        <p class="card-text">
-                                            Quantity: {{ cart_item.quantity }}<br>
-                                            Price: ₱{{ cart_item.item.price }}<br>
-                                            Total Amount: ₱{{ cart_item.total_amount }}
-                                        </p>
-                                        <input type="hidden" name="cart_item_ids" value="{{ cart_item.id }}">
+                            <!-- Cart Items Section -->
+                         <div class="col-12">
+                                                        <div style="border-top: 1px solid #8f8f8f; margin: 20px 0; text-align: center;">
+                                                        </div>
+                                                    </div>
+                            <h3 style="text-align: center">Cart Items</h3>
+                            <div class="row">
+                                {% if cart_items %}
+                                    {% for cart_item in cart_items %}
+                                        <div class="col-12 col-md-3 mb-3">
+                                            <div class="card card-primary glow-on-hover">
+                                                <div class="card-body" style="background-color: #ffffff;">
+                                                    <h5 class="card-title text-center">{{ cart_item.item.po_product_name }}</h5>
+                                                    <div class="col-12">
+                                                        <div style="border-top: 1px solid #0026e5; margin: 4px 0; text-align: center;">
+                                                        </div>
+                                                    </div>
+                                                    <p class="card-text">
+                                                        Quantity: <strong>{{ cart_item.quantity }}</strong><br>
+                                                        Price: ₱{{ cart_item.item.price }}<br>
+                                                        Total Amount: ₱{{ cart_item.total_amount }}
+                                                    </p>
+                                                    <input type="hidden" name="cart_item_ids"
+                                                           value="{{ cart_item.id }}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <p>No items in cart.</p>
+                                {% endif %}
+                            </div>
+
+                            <!-- Finalize Changes Form -->
+                            <form method="post" action="{% url 'bulk_edit_inventory' %}">
+                                {% csrf_token %}
+                                <h3>Finalize Changes</h3>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="date">Date:</label>
+                                            {{ form.date }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label for="location_type">Type:</label>
+                                            {{ form.location_type }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <div class="form-group">
+                                            <label for="location_name">Name:</label>
+                                            {{ form.location_name }}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        {% endfor %}
-                    {% else %}
-                        <p>No items in cart.</p>
-                    {% endif %}
+
+                                <!-- Delivery Ref, Delivery No, Invoice Type, Invoice No -->
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="delivery_ref">Delivery Ref#:</label>
+                                            {{ form.delivery_ref }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="delivery_no">Delivery No.:</label>
+                                            {{ form.delivery_no }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="invoice_type">Invoice Type:</label>
+                                            {{ form.invoice_type }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="invoice_no">Invoice No.:</label>
+                                            {{ form.invoice_no }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-center align-items-center">
+                                    <button type="submit" name="finalize_changes" class="btn btn-primary col-4">Finalize
+                                        Changes
+                                    </button>
+                                </div>
+
+                            </form>
+                        </div>
+                    </div>
                 </div>
+            </section>
 
-                <!-- Finalize Changes Form -->
-                <form method="post" action="{% url 'bulk_edit_inventory' %}">
-                    {% csrf_token %}
-                    <h3>Finalize Changes</h3>
-                    <div class="row">
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label for="date">Date:</label>
-                                {{ form.date }}
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label for="location_type">Type:</label>
-                                {{ form.location_type }}
-                            </div>
-                        </div>
-                        <div class="col-md-5">
-                            <div class="form-group">
-                                <label for="location_name">Name:</label>
-                                {{ form.location_name }}
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Delivery Ref, Delivery No, Invoice Type, Invoice No -->
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="delivery_ref">Delivery Ref#:</label>
-                                {{ form.delivery_ref }}
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="delivery_no">Delivery No.:</label>
-                                {{ form.delivery_no }}
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="invoice_type">Invoice Type:</label>
-                                {{ form.invoice_type }}
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="invoice_no">Invoice No.:</label>
-                                {{ form.invoice_no }}
-                            </div>
-                        </div>
-                    </div>
-                    <button type="submit" name="finalize_changes" class="btn btn-primary">Finalize Changes</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</section>
         </div>
     </div>
 
