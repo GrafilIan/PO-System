@@ -1113,7 +1113,7 @@ def site_inventory_folder_list(request):
 
 def view_site_inventory_folder_contents(request, folder_id):
     folder = get_object_or_404(SiteInventoryFolder, id=folder_id)
-    transactions_list = InventoryHistory.objects.filter(site_inventory_folder=folder)
+    transactions_list = ItemInventory.objects.filter(site_inventory_folder=folder)
 
     # Calculate total_amount
     total_amount = transactions_list.aggregate(total_amount_sum=Sum('total_amount'))['total_amount_sum'] or 0
@@ -1197,7 +1197,7 @@ def client_inventory_folder_list(request):
 
 def view_client_inventory_folder_contents(request, folder_id):
     folder = get_object_or_404(ClientInventoryFolder, id=folder_id)
-    transactions_list = InventoryHistory.objects.filter(client_inventory_folder=folder)
+    transactions_list = ItemInventory.objects.filter(client_inventory_folder=folder)
 
     total_amount = transactions_list.aggregate(total_amount_sum=Sum('total_amount'))['total_amount_sum'] or 0
 
@@ -1293,6 +1293,7 @@ def bulk_edit_inventory(request):
                         if not created:
                             cart_item.quantity += quantity_out
                             cart_item.save()
+
                     except ItemInventory.DoesNotExist:
                         success = False
                         errors.append(f"Item with ID {item_id} does not exist.")
@@ -1327,82 +1328,36 @@ def bulk_edit_inventory(request):
                         item = cart_item.item
                         quantity_out = cart_item.quantity
                         price = item.price
-                        total_amount = quantity_out * price  # Calculate total amount correctly
+                        total_amount = quantity_out * price
 
-                        # Determine folder and client values
-                        site_delivered = None
-                        site_inventory_folder = None
-                        client = None
-                        client_inventory_folder = None
-
+                        # Determine and set folder based on location_type
                         if location_type == 'site':
-                            site_inventory_folder, created = SiteInventoryFolder.objects.get_or_create(
-                                name=location_name)
-                            site_delivered = location_name
+                            folder, created = SiteInventoryFolder.objects.get_or_create(name=location_name)
+                            if created:
+                                folder.save()
+                            item.site_inventory_folder = folder
+                            item.site_delivered = location_name
 
                         elif location_type == 'client':
-                            client_inventory_folder, created = ClientInventoryFolder.objects.get_or_create(
-                                name=location_name)
-                            client = location_name
+                            client_folder, created = ClientInventoryFolder.objects.get_or_create(name=location_name)
+                            if created:
+                                client_folder.save()
+                            item.client_inventory_folder = client_folder
+                            item.client = location_name
 
-                        # Ensure no duplicate or unwanted records
-                        InventoryHistory.objects.filter(
-                            item=item,
-                            date=date,
-                            site_delivered=site_delivered,
-                            client=client
-                        ).delete()
-
-                        # Only create InventoryHistory if we have valid location information
-                        if site_delivered or client:
-                            InventoryHistory.objects.create(
-                                item=item,
-                                date=date,
-                                item_code=item.item_code,
-                                supplier=item.supplier,
-                                po_product_name=item.po_product_name,
-                                new_product_name=item.new_product_name,
-                                unit=item.unit,
-                                quantity_in=item.quantity_in,
-                                quantity_out=quantity_out,
-                                stock=item.stock,
-                                price=price,
-                                total_amount=total_amount,
-                                site_delivered=site_delivered,
-                                site_inventory_folder=site_inventory_folder,
-                                client=client,
-                                client_inventory_folder=client_inventory_folder,
-                                delivery_ref=delivery_ref,
-                                delivery_no=delivery_no,
-                                invoice_type=invoice_type,
-                                invoice_no=invoice_no
-                            )
-
-                        # Update item details
+                        # Update ItemInventory details
                         item.date = date
-                        item.quantity_in = item.quantity_in
                         item.quantity_out = quantity_out
-                        item.price = price
                         item.total_amount = total_amount
                         item.stock = item.stock + item.quantity_in - quantity_out
                         item.delivery_ref = delivery_ref
                         item.delivery_no = delivery_no
                         item.invoice_type = invoice_type
                         item.invoice_no = invoice_no
+                        item.site_or_client_choice = location_type
 
-                        if location_type == 'site':
-                            item.site_inventory_folder = site_inventory_folder
-                            item.site_delivered = site_delivered
-                            item.client_inventory_folder = None
-                            item.client = None
-                        elif location_type == 'client':
-                            item.client_inventory_folder = client_inventory_folder
-                            item.client = client
-                            item.site_inventory_folder = None
-                            item.site_delivered = None
-
+                        # Save updated item
                         item.save()
-
                         cart_item.delete()
 
                     except ItemInventory.DoesNotExist:
@@ -1415,6 +1370,8 @@ def bulk_edit_inventory(request):
                         success = False
                         errors.append(f"An error occurred for item ID {cart_item.item.id}: {str(e)}")
 
+                # Clear the cart after processing
+                Cart.objects.all().delete()
                 if success:
                     messages.success(request, 'Items updated successfully.')
                 else:
