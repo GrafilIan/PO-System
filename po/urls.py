@@ -50,5 +50,6 @@ urlpatterns = [
     path('client-folder/export/<int:folder_id>/', views.export_client_folder_contents,
          name='export_client_folder_contents'),
     path('bulk_edit_inventory/', views.bulk_edit_inventory, name='bulk_edit_inventory'),
+    path('remove-cart-item/<int:cart_item_id>/', views.remove_cart_item, name='remove_cart_item'),
 
 ]

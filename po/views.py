@@ -82,31 +82,33 @@ def purchase_order_create(request):
                     order.supplier_folder = folder
                     order.save()
 
-            # Check if an inventory record for the item exists
-            inventory_item = ItemInventory.objects.filter(
-                supplier=purchase_order.supplier,
-                po_product_name=purchase_order.particulars,
-                unit=purchase_order.unit,
-                price=purchase_order.price,
-            ).first()
-
-            if inventory_item:
-                # Update existing inventory record
-                inventory_item.quantity_in += purchase_order.quantity
-            else:
-                # Create a new inventory record
-                inventory_item = ItemInventory(
+            purchase_order.site_delivered = purchase_order.site_delivered.strip().upper()
+            if purchase_order.site_delivered in ['BTCS', 'BTCS WH']:
+                # Check if an inventory record for the item exists
+                inventory_item = ItemInventory.objects.filter(
                     supplier=purchase_order.supplier,
                     po_product_name=purchase_order.particulars,
                     unit=purchase_order.unit,
-                    quantity_in=purchase_order.quantity,
                     price=purchase_order.price,
-                    delivery_ref=purchase_order.delivery_ref,
-                    delivery_no=purchase_order.delivery_no,
-                    invoice_type=purchase_order.invoice_type,
-                    invoice_no=purchase_order.invoice_no,
-                )
-            inventory_item.save()
+                ).first()
+
+                if inventory_item:
+                    # Update existing inventory record
+                    inventory_item.quantity_in += purchase_order.quantity
+                else:
+                    # Create a new inventory record
+                    inventory_item = ItemInventory(
+                        supplier=purchase_order.supplier,
+                        po_product_name=purchase_order.particulars,
+                        unit=purchase_order.unit,
+                        quantity_in=purchase_order.quantity,
+                        price=purchase_order.price,
+                        delivery_ref=purchase_order.delivery_ref,
+                        delivery_no=purchase_order.delivery_no,
+                        invoice_type=purchase_order.invoice_type,
+                        invoice_no=purchase_order.invoice_no,
+                    )
+                inventory_item.save()
 
             return JsonResponse({'status': 'success'})
         else:
@@ -125,29 +127,31 @@ def purchase_order_edit(request, id):
         if form.is_valid():
             purchase_order = form.save()
 
-            # Update or create inventory item
-            inventory_item = ItemInventory.objects.filter(
-                supplier=purchase_order.supplier,
-                po_product_name=purchase_order.particulars,
-                unit=purchase_order.unit,
-                price=purchase_order.price,
-            ).first()
-
-            if inventory_item:
-                # Update existing inventory record
-                inventory_item.quantity_in += purchase_order.quantity
-            else:
-                # Create a new inventory record
-                inventory_item = ItemInventory(
+            purchase_order.site_delivered = purchase_order.site_delivered.strip().upper()
+            if purchase_order.site_delivered in ['BTCS', 'BTCS WH']:
+                # Update or create inventory item
+                inventory_item = ItemInventory.objects.filter(
                     supplier=purchase_order.supplier,
                     po_product_name=purchase_order.particulars,
                     unit=purchase_order.unit,
-                    quantity_in=purchase_order.quantity,
                     price=purchase_order.price,
-                )
+                ).first()
 
-            # Save the inventory item
-            inventory_item.save()
+                if inventory_item:
+                    # Update existing inventory record
+                    inventory_item.quantity_in += purchase_order.quantity
+                else:
+                    # Create a new inventory record
+                    inventory_item = ItemInventory(
+                        supplier=purchase_order.supplier,
+                        po_product_name=purchase_order.particulars,
+                        unit=purchase_order.unit,
+                        quantity_in=purchase_order.quantity,
+                        price=purchase_order.price,
+                    )
+
+                # Save the inventory item
+                inventory_item.save()
 
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({'status': 'success'})
@@ -628,33 +632,35 @@ def handle_uploaded_file(f):
         # Save the purchase order
         purchase_order.save()
 
-        # Check if an inventory record for the item exists
-        inventory_item = ItemInventory.objects.filter(
-            supplier=purchase_order.supplier,
-            po_product_name=purchase_order.particulars,
-            unit=purchase_order.unit,
-            price=purchase_order.price,
-        ).first()
-
-        if inventory_item:
-            # Update existing inventory record
-            inventory_item.quantity_in += purchase_order.quantity
-        else:
-            # Create a new inventory record
-            inventory_item = ItemInventory(
+        purchase_order.site_delivered = purchase_order.site_delivered.strip().upper()
+        if purchase_order.site_delivered in ['BTCS', 'BTCS WH']:
+            # Check if an inventory record for the item exists
+            inventory_item = ItemInventory.objects.filter(
                 supplier=purchase_order.supplier,
                 po_product_name=purchase_order.particulars,
                 unit=purchase_order.unit,
-                quantity_in=purchase_order.quantity,
                 price=purchase_order.price,
-                delivery_ref=purchase_order.delivery_ref,
-                delivery_no=purchase_order.delivery_no,
-                invoice_type=purchase_order.invoice_type,
-                invoice_no=purchase_order.invoice_no,
-            )
+            ).first()
 
-        # Save the inventory item
-        inventory_item.save()
+            if inventory_item:
+                # Update existing inventory record
+                inventory_item.quantity_in += purchase_order.quantity
+            else:
+                # Create a new inventory record
+                inventory_item = ItemInventory(
+                    supplier=purchase_order.supplier,
+                    po_product_name=purchase_order.particulars,
+                    unit=purchase_order.unit,
+                    quantity_in=purchase_order.quantity,
+                    price=purchase_order.price,
+                    delivery_ref=purchase_order.delivery_ref,
+                    delivery_no=purchase_order.delivery_no,
+                    invoice_type=purchase_order.invoice_type,
+                    invoice_no=purchase_order.invoice_no,
+                )
+
+            # Save the inventory item
+            inventory_item.save()
 
 
 def upload_file(request):
@@ -1378,20 +1384,36 @@ def bulk_edit_inventory(request):
                     messages.error(request, 'Some errors occurred: ' + ', '.join(errors))
                 return redirect('bulk_edit_inventory')
 
+
     else:
-        form = ItemInventoryBulkForm()
-        items = ItemInventory.objects.all()
+        # Handle GET requests (including search functionality)
+        query = request.GET.get('q', '')  # Get the search query from the GET request
+        if query:
+            items = ItemInventory.objects.filter(po_product_name__icontains=query)
+        else:
+            items = ItemInventory.objects.all()
+
         cart_items = Cart.objects.all()
 
         # Calculate total amount for cart items
         for cart_item in cart_items:
             cart_item.total_amount = cart_item.quantity * cart_item.item.price
 
+        form = ItemInventoryBulkForm()
+
         return render(request, 'Inventory/bulk_edit_inventory.html', {
             'form': form,
             'items': items,
-            'cart_items': cart_items
+            'cart_items': cart_items,
+            'query': query,  # Pass the query back to the template
+
         })
+
+def remove_cart_item(request, cart_item_id):
+    cart_item = get_object_or_404(Cart, id=cart_item_id)
+    cart_item.delete()
+    messages.success(request, 'Item removed from cart successfully.')
+    return redirect('bulk_edit_inventory')
 
 
 

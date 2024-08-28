@@ -29,11 +29,12 @@
                 <div class="section-body">
                     <div class="card card-primary">
 
-                            <h2 style="text-align: center; margin-top: 10px;"><strong>BTCS SHOP</strong></h2>
+                        <h2 style="text-align: center; margin-top: 10px;"><strong>BTCS SHOP</strong></h2>
 
                         <div class="card-body">
                             {% if messages %}
-                                <div class="alert alert-{{ messages.tags }} alert-dismissible fade show text-center" role="alert"
+                                <div class="alert alert-{{ messages.tags }} alert-dismissible fade show text-center"
+                                     role="alert"
                                      style="border: 1px solid #0026e5; background-color: #e0f7fa; color: #000000;">
                                     {% for message in messages %}
                                         <strong>{{ message }}</strong>
@@ -45,6 +46,26 @@
                                 </div>
                             {% endif %}
 
+                            <form method="get" action="" class="form-inline justify-content-center col-12 mb-4">
+                                <div class="input-group">
+                                    <!-- Single Search Input -->
+                                    <input type="text" name="q" class="form-control"
+                                           placeholder="Search by text or date"
+                                           value="{{ request.GET.q }}">
+                                    <div class="input-group-btn">
+                                        <button class="btn btn-primary" type="submit">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    {% if request.GET.q %}
+                                        <a href="{% url 'bulk_edit_inventory' %}" class="btn btn-outline-primary">Clear
+                                            Filter</a>
+                                    {% endif %}
+                                </div>
+                            </form>
+
                             <!-- Add to Cart Form -->
                             <form method="post" action="{% url 'bulk_edit_inventory' %}">
                                 {% csrf_token %}
@@ -54,8 +75,10 @@
                                 <div class="row">
                                     {% for item in items %}
                                         <div class="col-12 col-md-3 mb-3">
-                                            <div class="card card-primary glow-on-hover">
-                                                <div class="card-body" style="background-color: #ffffff;">
+                                            <div class="card card-primary glow-on-hover"
+                                                 style="border: 2px solid #87a8fa; border-radius: 8px;">
+                                                <div class="card-body"
+                                                     style="background-color: #ffffff; border-radius: 6px;">
                                                     <h5 class="card-title text-center"
                                                         style="margin-bottom: 0.1rem;">{{ item.po_product_name }}</h5>
                                                     <div class="col-12">
@@ -102,21 +125,22 @@
                             </form>
 
                             <!-- Cart Items Section -->
-                         <div class="col-12">
-                                                        <div style="border-top: 1px solid #8f8f8f; margin: 20px 0; text-align: center;">
-                                                        </div>
-                                                    </div>
+                            <div class="col-12">
+                                <div style="border-top: 1px solid #8f8f8f; margin: 20px 0; text-align: center;">
+                                </div>
+                            </div>
                             <h3 style="text-align: center">Cart Items</h3>
                             <div class="row">
                                 {% if cart_items %}
                                     {% for cart_item in cart_items %}
                                         <div class="col-12 col-md-3 mb-3">
-                                            <div class="card card-primary glow-on-hover">
-                                                <div class="card-body" style="background-color: #ffffff;">
+                                            <div class="card card-primary glow-on-hover"
+                                                 style="border: 2px solid #87a8fa; border-radius: 8px;">
+                                                <div class="card-body"
+                                                     style="background-color: #ffffff; border-radius: 6px;">
                                                     <h5 class="card-title text-center">{{ cart_item.item.po_product_name }}</h5>
                                                     <div class="col-12">
-                                                        <div style="border-top: 1px solid #0026e5; margin: 4px 0; text-align: center;">
-                                                        </div>
+                                                        <div style="border-top: 1px solid #0026e5; margin: 4px 0; text-align: center;"></div>
                                                     </div>
                                                     <p class="card-text">
                                                         Quantity: <strong>{{ cart_item.quantity }}</strong><br>
@@ -125,19 +149,31 @@
                                                     </p>
                                                     <input type="hidden" name="cart_item_ids"
                                                            value="{{ cart_item.id }}">
+                                                    <form method="POST"
+                                                          action="{% url 'remove_cart_item' cart_item.id %}">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-danger">Remove</button>
+                                                    </form>
                                                 </div>
                                             </div>
                                         </div>
                                     {% endfor %}
                                 {% else %}
-                                    <p>No items in cart.</p>
+                                    <div class="col-12 d-flex justify-content-center align-items-center"
+                                         style="height: 30px;">
+                                        <p class="text-center">No items in cart.</p>
+                                    </div>
                                 {% endif %}
+                            </div>
+                            <div class="col-12">
+                                <div style="border-top: 1px solid #8f8f8f; margin: 20px 0; text-align: center;">
+                                </div>
                             </div>
 
                             <!-- Finalize Changes Form -->
                             <form method="post" action="{% url 'bulk_edit_inventory' %}">
                                 {% csrf_token %}
-                                <h3>Finalize Changes</h3>
+                                <h3 style="text-align: center">Finalize Changes</h3>
                                 <div class="row">
                                     <div class="col-md-3">
                                         <div class="form-group">
