@@ -7,7 +7,8 @@
 {% block head %}
     <link rel="stylesheet" href="{% static 'assets/modules/bootstrap-social/bootstrap-social.css' %}">
     <link rel="stylesheet" href="{% static 'assets/modules/datatables/datatables.min.css' %}">
-    <link rel="stylesheet" href="{% static 'assets/modules/datatables/DataTables-1.10.16/css/dataTables.bootstrap4.min.css' %}">
+    <link rel="stylesheet"
+          href="{% static 'assets/modules/datatables/DataTables-1.10.16/css/dataTables.bootstrap4.min.css' %}">
     <link rel="stylesheet" href="{% static 'assets/modules/datatables/Select-1.2.4/css/select.bootstrap4.min.css' %}">
     <link rel="stylesheet" href="{% static 'assets/css/custom.css' %}">
     <script src="{% static 'assets/js/cleave.min.js' %}"></script>
@@ -58,37 +59,48 @@
                                     </div>
                                 </form>
                             </div>
+                            <!-- Finalize Changes Form -->
+                            <div class="row justify-content-center">
+                                <div class="col-12 col-md-4">
+                                    <form method="post" action="{% url 'bulk_edit_purchase_order' %}" class="mb-4">
+                                        {% csrf_token %}
+                                        <h3 class="text-center"><strong>Finalize Changes</strong></h3>
 
-                            <!-- Add to Cart Form -->
-                            <form method="post" action="{% url 'bulk_edit_purchase_order' %}" class="mb-4">
-                                {% csrf_token %}
-                                <h3 style="text-align: center"><strong>Purchase Orders</strong></h3>
-                                <div class="row">
-                                    {% for order in orders %}
-                                        <div class="col-12 col-md-3 mb-2">
-                                            <div class="card card-primary glow-on-hover"
-                                                 style="border: 1px solid #336dff; border-radius: 5px;">
-                                                <div class="card-body"
-                                                     style="background-color: #ffffff; border-radius: 6px;">
-                                                    <h5 class="card-title text-center">{{ order.particulars }}</h5>
-                                                    <p class="card-text" style="margin-bottom: 0.1rem;">
-                                                        PO Number: <strong>{{ order.po_number }}</strong><br>
-                                                        <strong>Current Stock: {{ order.quantity }}</strong><br>
-                                                        Price: ₱{{ order.price }}
-                                                    </p>
-                                                    <div class="form-group">
-                                                        <input type="checkbox" name="po_ids" value="{{ order.id }}" id="select_{{ order.id }}">
-                                                        <label for="select_{{ order.id }}">Add to Cart</label>
-                                                    </div>
+                                        <div class="form-row">
+                                            <!-- FBBD Ref# Field -->
+                                            <div class="col-12 col-md-6 mb-3">
+                                                <div class="form-group">
+                                                    <label for="fbbd_ref_number">FBBD Ref#:</label>
+                                                    <input type="text" id="fbbd_ref_number" name="fbbd_ref_number"
+                                                           class="form-control">
                                                 </div>
                                             </div>
+
+                                            <!-- Remarks2 Field -->
+                                            <div class="col-12 col-md-6 mb-3">
+                                                <div class="form-group">
+                                                    <label for="remarks2">Remarks2:</label>
+                                                    <select id="remarks2" name="remarks2" class="form-control">
+                                                        <option value="">Select an option</option>
+                                                        {% for value, label in remarks2_choices %}
+                                                            <option value="{{ value }}">{{ label }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <!-- Finalize Changes Button -->
+                                            <div class="col-12 mb-3">
+                                                <button type="submit" name="finalize_changes"
+                                                        class="btn btn-primary btn-block">
+                                                    Finalize Changes
+                                                </button>
+                                            </div>
                                         </div>
-                                    {% endfor %}
+                                    </form>
                                 </div>
-                                <div class="d-flex justify-content-center align-items-center mb-4">
-                                    <button type="submit" name="add_to_cart" class="btn btn-primary col-4">Add to Cart</button>
-                                </div>
-                            </form>
+                            </div>
+
 
                             <!-- Cart Items -->
                             <h3 style="text-align: center">Cart Items</h3>
@@ -126,30 +138,45 @@
                                 {% endif %}
                             </div>
 
-                            <!-- Finalize Changes Form -->
-                            <form method="post" action="{% url 'bulk_edit_purchase_order' %}">
+                            <!-- Add to Cart Form -->
+                            <form method="post" action="{% url 'bulk_edit_purchase_order' %}" class="mb-4">
                                 {% csrf_token %}
-                                <h3 style="text-align: center"><strong>Finalize Changes</strong></h3>
+                                <div class="d-flex justify-content-center align-items-center mb-4">
+                                    <button type="submit" name="add_to_cart" class="btn btn-primary col-4">Add to Cart
+                                    </button>
+                                </div>
+                                <h3 style="text-align: center"><strong>Purchase Orders</strong></h3>
 
-                                <div class="form-group">
-                                    <label for="fbbd_ref_number">FBBD Ref#:</label>
-                                    <input type="text" id="fbbd_ref_number" name="fbbd_ref_number" class="form-control">
+                                <div class="row">
+                                    {% for order in orders %}
+                                        <div class="col-12 col-md-3 mb-2">
+                                            <div class="card card-primary glow-on-hover"
+                                                 style="border: 1px solid #336dff; border-radius: 5px;">
+                                                <div class="card-body"
+                                                     style="background-color: #ffffff; border-radius: 6px;">
+                                                    <h5 class="card-title text-center">{{ order.particulars }}</h5>
+                                                    <p class="card-text" style="margin-bottom: 0.1rem;">
+                                                        PO Number: <strong>{{ order.po_number }}</strong><br>
+                                                        <strong>Current Stock: {{ order.quantity }}</strong><br>
+                                                        Price: ₱{{ order.price }}
+                                                    </p>
+                                                    <div class="d-flex justify-content-center">
+                                                        <div class="custom-control custom-checkbox">
+                                                            <input type="checkbox" class="custom-control-input"
+                                                                   id="select_{{ order.id }}" name="po_ids"
+                                                                   value="{{ order.id }}">
+                                                            <label class="custom-control-label"
+                                                                   for="select_{{ order.id }}">Add to Cart</label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
                                 </div>
 
-                                <div class="form-group">
-                                    <label for="remarks2">Remarks2:</label>
-                                    <select id="remarks2" name="remarks2" class="form-control">
-                                        <option value="">Select an option</option>
-                                        {% for value, label in remarks2_choices %}
-                                            <option value="{{ value }}">{{ label }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-
-                                <div class="d-flex justify-content-center align-items-center mt-4">
-                                    <button type="submit" name="finalize_changes" class="btn btn-success col-4">Finalize Changes</button>
-                                </div>
                             </form>
+
                         </div>
                     </div>
                 </div>
