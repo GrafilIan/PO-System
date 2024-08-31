@@ -88,7 +88,7 @@
                                         </div>
                                         <div class="card-body p-0">
                                             <div class="table-responsive">
-                                                <table class="table table-hover table-striped" id="sortable-table">
+                                                <table class="table table-hover table-striped table-sm" id="sortable-table">
                                                     <thead>
                                                     <tr class="green-background">
                                                         <th style="color: white; width: 10px; text-align: center;">#
@@ -127,7 +127,7 @@
                                                                 <!-- Edit button -->
                                                                 <a href="{% url 'purchase_order_edit' order.id %}"
                                                                    class="btn btn-dark btn-sm"
-                                                                   style="width: 75px;">Edit</a>
+                                                                   style="width: 50px; height: 30px;"><i class="fa fa-wrench" aria-hidden="true"></i></a>
                                                             </td>
                                                             <td class="no-wrap">{{ order.date }}</td>
                                                             <td>{{ order.po_number }}</td>

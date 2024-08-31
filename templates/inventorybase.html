@@ -95,40 +95,55 @@
         </nav>
 
         <nav class="navbar navbar-secondary navbar-expand-lg">
-            <div class="container">
-                <ul class="navbar-nav">
-                    <ul class="navbar-nav">
-                        <li class="nav-item">
-                            <a href="#" class="nav-link"><i
-                                    class="fas fa-truck"></i><span>Products Codes</span></a>
-                        </li>
+    <div class="container">
+        <ul class="navbar-nav">
+            <li class="nav-item {% if request.path == '/products-codes/' %}active{% endif %}">
+                <a href="#" class="nav-link">
+                    <i class="fas fa-truck"></i><span>Products Codes</span>
+                </a>
+            </li>
 
-                        <li class="nav-item">
-                            <a href="{% url 'inventory_table' %}" class="nav-link"><i class="fas fa-boxes"></i><span>Inventory</span></a>
-                        </li>
+            <li class="nav-item {% if request.path == '/inventory/' %}active{% endif %}">
+                <a href="{% url 'inventory_table' %}" class="nav-link">
+                    <i class="fas fa-boxes"></i><span>Inventory</span>
+                </a>
+            </li>
 
-                        <li class="nav-item">
-                            <a href="{% url 'bulk_edit_inventory' %}" class="nav-link"><i class="fa fa-cart-plus"></i><span>Shop</span></a>
-                        </li>
 
-                        <li class="nav-item">
-                            <a href="{% url 'site_inventory_folder_list' %}" class="nav-link"><i
-                                    class="fa fa-building"></i><span>Site Inventory</span></a>
-                        </li>
+            <li class="nav-item {% if request.path == '/bulk_edit_inventory/' %}active{% endif %}">
+                <a href="{% url 'bulk_edit_inventory' %}" class="nav-link">
+                    <i class="fa fa-cart-plus"></i><span>Shop</span>
+                </a>
+            </li>
 
-                        <li class="nav-item">
-                            <a href="{% url 'client_inventory_folder_list' %}" class="nav-link"><i
-                                    class="fas fa-users"></i><span>Client Inventory</span></a>
-                        </li>
+            <li class="nav-item {% if request.path == '/site-inventory/folders/' %}active{% endif %}">
+                <a href="{% url 'site_inventory_folder_list' %}" class="nav-link">
+                    <i class="fa fa-building"></i><span>Site Inventory</span>
+                </a>
+            </li>
 
-                        <li class="nav-item">
-                            <a href="{% url 'transaction_history' %}" class="nav-link"><i
-                                    class="fas fa-receipt"></i><span>Transaction History</span></a>
-                        </li>
-                    </ul>
-                </ul>
-            </div>
-        </nav>
+            <li class="nav-item {% if request.path == '/client-folder-list/' %}active{% endif %}">
+                <a href="{% url 'client_inventory_folder_list' %}" class="nav-link">
+                    <i class="fas fa-users"></i><span>Client Inventory</span>
+                </a>
+            </li>
+
+            <li class="nav-item {% if request.path == '/transaction-history/' %}active{% endif %}">
+                <a href="{% url 'transaction_history' %}" class="nav-link">
+                    <i class="fas fa-receipt"></i><span>Transaction History</span>
+                </a>
+            </li>
+
+            <li class="nav-item {% if request.path == '/new-records/' %}active{% endif %}">
+                <a href="{% url 'new_records' %}" class="nav-link">
+                    <i class="fas fa-receipt"></i><span>New Records</span>
+                </a>
+            </li>
+
+        </ul>
+    </div>
+</nav>
+
 
 
     </div>

@@ -78,6 +78,70 @@ class PurchaseOrderForm(forms.ModelForm):
         self.fields['remarks2'].widget.attrs.update({'class': 'form-control'})
 
 
+
+class PurchaseOrderBulkForm(forms.ModelForm):
+    REMARKS2_CHOICES = [
+        ('On Hold', 'On Hold'),
+        ('For Signature', 'For Signature'),
+        ('Cancelled', 'Cancelled'),
+        ('Paid', 'Paid'),
+    ]
+
+    fbbd_ref_number = forms.CharField(required=False)
+    remarks2 = forms.ChoiceField(choices=REMARKS2_CHOICES, required=False,
+                                 widget=forms.Select(attrs={'class': 'form-control'}))
+
+    class Meta:
+        model = PurchaseOrder
+        fields = [
+            'date',
+            'po_number',
+            'purchaser',
+            'brand',
+            'item_code',
+            'particulars',
+            'quantity',
+            'unit',
+            'price',
+            'total_amount',
+            'site_delivered',
+            'fbbd_ref_number',
+            'remarks',
+            'supplier',
+            'delivery_ref',
+            'delivery_no',
+            'invoice_type',
+            'invoice_no',
+            'payment_req_ref',
+            'payment_details',
+            'remarks2'
+        ]
+
+        widgets = {
+            'date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control', 'placeholder': 'Date'}),
+            'price': forms.NumberInput(attrs={'step': '0.01', 'class': 'form-control', 'placeholder': 'Price'}),
+            'total_amount': forms.NumberInput(
+                attrs={'step': '0.01', 'class': 'form-control', 'placeholder': 'Total Amount'}),
+            'quantity': forms.NumberInput(attrs={'min': 0, 'class': 'form-control', 'placeholder': 'Quantity'}),
+            'remarks': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Remarks'}),
+            'po_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'PO#'}),
+            'purchaser': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Purchaser'}),
+            'brand': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Brand'}),
+            'item_code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Item Code'}),
+            'particulars': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Particulars'}),
+            'unit': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Unit'}),
+            'site_delivered': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Site Delivered'}),
+            'fbbd_ref_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'FBBD Ref#'}),
+            'supplier': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Supplier'}),
+            'delivery_no': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Delivery No.'}),
+            'invoice_type': forms.Select(attrs={'class': 'form-control', 'placeholder': 'Invoice Type'}),
+            'invoice_no': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Invoice No.'}),
+            'payment_req_ref': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Payment Req Ref#'}),
+            'payment_details': forms.Select(attrs={'class': 'form-control', 'placeholder': 'Payment Details'}),
+            'remarks2': forms.Select(attrs={'class': 'form-control'})
+        }
+
+
 class UploadFileForm(forms.Form):
     file = forms.FileField()
 

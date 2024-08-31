@@ -52,4 +52,9 @@ urlpatterns = [
     path('bulk_edit_inventory/', views.bulk_edit_inventory, name='bulk_edit_inventory'),
     path('remove-cart-item/<int:cart_item_id>/', views.remove_cart_item, name='remove_cart_item'),
 
+    path('new-records/', views.new_records_view, name='new_records'),
+    path('export-transaction-history/', views.export_transaction_history_to_excel, name='export_transaction_history_to_excel'),
+    path('bulk_edit_purchase_order/', views.bulk_edit_purchase_order, name='bulk_edit_purchase_order'),
+    path('po_remove_cart_item/<int:item_id>/', views.po_remove_cart_item, name='po_remove_cart_item'),
+
 ]

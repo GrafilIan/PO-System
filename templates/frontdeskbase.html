@@ -45,12 +45,12 @@
 <body class="layout-3">
 
 <div class="wrapper" id="loader">
-        <div class="three-body">
-            <div class="three-body__dot"></div>
-            <div class="three-body__dot"></div>
-            <div class="three-body__dot"></div>
-        </div>
+    <div class="three-body">
+        <div class="three-body__dot"></div>
+        <div class="three-body__dot"></div>
+        <div class="three-body__dot"></div>
     </div>
+</div>
 
 <div id="app">
     <div class="main-wrapper container">
@@ -90,12 +90,19 @@
                 <ul class="navbar-nav">
                     <ul class="navbar-nav">
                         <li class="nav-item">
-                            <a href="{% url 'purchase_order_list' %}" class="nav-link"><i class="fas fa-boxes"></i><span>PO List</span></a>
+                            <a href="{% url 'purchase_order_list' %}" class="nav-link"><i
+                                    class="fas fa-clipboard-list"></i><span>PO List</span></a>
                         </li>
 
                         <li class="nav-item">
                             <a href="{% url 'supplier_list_folders' %}" class="nav-link"><i
-                                    class="fas fa-archive"></i><span>Supplier</span></a>
+                                    class="fas fa-users"></i><span>Supplier</span></a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{% url 'bulk_edit_purchase_order' %}" class="nav-link">
+                                <i class="fas fa-pencil-alt"></i><span>Update Records</span>
+                            </a>
                         </li>
 
 
@@ -146,18 +153,18 @@
     }
 </script>
 
-   <script>
-        window.addEventListener('load', function () {
-            const loader = document.getElementById('loader');
+<script>
+    window.addEventListener('load', function () {
+        const loader = document.getElementById('loader');
 
+        setTimeout(function () {
+            loader.style.opacity = '0'; // Start fading out
             setTimeout(function () {
-                loader.style.opacity = '0'; // Start fading out
-                setTimeout(function () {
-                    loader.style.display = 'none';
-                }, 300); // Hide the loader 300ms after fading out
-            }, 500); // Start fading out after 0.5 seconds
-        });
-    </script>
+                loader.style.display = 'none';
+            }, 300); // Hide the loader 300ms after fading out
+        }, 500); // Start fading out after 0.5 seconds
+    });
+</script>
 
 
 <script src="{% static 'assets/modules/jquery.min.js' %}"></script>
@@ -167,7 +174,6 @@
 <script src="{% static 'assets/modules/nicescroll/jquery.nicescroll.min.js' %}"></script>
 <script src="{% static 'assets/modules/moment.min.js' %}"></script>
 <script src="{% static 'assets/js/stisla.js' %}"></script>
-
 
 
 <!-- JS Libraries -->

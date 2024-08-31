@@ -7,10 +7,11 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
+from django.utils import timezone
 from openpyxl.workbook import Workbook
-from .forms import PurchaseOrderForm, UploadFileForm, ItemInventoryForm, ItemInventoryBulkForm
+from .forms import PurchaseOrderForm, UploadFileForm, ItemInventoryForm, ItemInventoryBulkForm, PurchaseOrderBulkForm
 from .models import PurchaseOrder, ArchiveFolder, ItemInventory, SupplierFolder, InventoryHistory, SiteInventoryFolder, \
-    ClientInventoryFolder, Cart
+    ClientInventoryFolder, Cart, poCart
 from datetime import datetime
 from openpyxl.styles import Font, PatternFill
 from io import BytesIO
@@ -230,6 +231,8 @@ def purchase_order_list(request):
         'page_number': page_number,
         'folders': folders
     })
+
+
 
 
 # --------------------------------------For Exporting Records----------------------------------------------
@@ -514,6 +517,126 @@ def export_supplier_contents(request, folder_id):
         return HttpResponse("Supplier Folder not found", status=404)
 
 
+def export_transaction_history_to_excel(request):
+    query = request.GET.get('q')  # Search query parameter
+    date_query = request.GET.get('date')  # Date query parameter
+
+    # Start with all transactions
+    transactions = InventoryHistory.objects.all().order_by('-date')
+
+    # Apply search filter
+    if query:
+        transactions = transactions.filter(
+            Q(date__icontains=query) |
+            Q(item_code__icontains=query) |
+            Q(supplier__icontains=query) |
+            Q(po_product_name__icontains=query) |
+            Q(new_product_name__icontains=query) |
+            Q(unit__icontains=query) |
+            Q(quantity_out__icontains=query) |
+            Q(price__icontains=query) |
+            Q(total_amount__icontains=query) |
+            Q(site_delivered__icontains=query) |
+            Q(client__icontains=query) |
+            Q(delivery_ref__icontains=query) |
+            Q(delivery_no__icontains=query) |
+            Q(invoice_type__icontains=query) |
+            Q(invoice_no__icontains=query)
+        )
+
+    # Apply date filter
+    if date_query:
+        try:
+            date_obj = datetime.strptime(date_query, '%b %d, %Y').date()
+            transactions = transactions.filter(date=date_obj)
+        except ValueError:
+            try:
+                date_obj = datetime.strptime(date_query, '%b %Y')
+                transactions = transactions.filter(date__year=date_obj.year, date__month=date_obj.month)
+            except ValueError:
+                try:
+                    date_obj = datetime.strptime(date_query, '%B %Y')
+                    transactions = transactions.filter(date__year=date_obj.year, date__month=date_obj.month)
+                except ValueError:
+                    try:
+                        month_number = int(date_query)
+                        transactions = transactions.filter(date__month=month_number)
+                    except ValueError:
+                        try:
+                            date_obj = datetime.strptime(date_query, '%B')
+                            transactions = transactions.filter(date__month=date_obj.month)
+                        except ValueError:
+                            pass
+
+    # Create a workbook and a sheet
+    workbook = openpyxl.Workbook()
+    sheet = workbook.active
+    sheet.title = 'Transaction History'
+
+    header_font = Font(color='FFFFFF', bold=True)
+    black_fill = PatternFill(start_color='000000', end_color='000000', fill_type='solid')
+    currency_format = '#,##0.00'
+
+    # Define the headers
+    headers = [
+        'Date', 'Item Code', 'Supplier', 'PO Product Name', 'New Product Name',
+        'Unit', 'Quantity Out', 'Price', 'Total Amount', 'Site Delivered',
+        'Client', 'Delivery Ref#', 'Delivery No.', 'Invoice Type', 'Invoice#'
+    ]
+    sheet.append(headers)
+
+    for cell in sheet[1]:
+        cell.font = header_font
+        cell.fill = black_fill
+        cell.value = cell.value.upper() if cell.value is not None else cell.value
+
+    # Populate the sheet with data
+    for transaction in transactions:
+        sheet.append([
+            transaction.date.strftime('%Y-%m-%d') if transaction.date else 'N/A',
+            transaction.item_code, transaction.supplier, transaction.po_product_name,
+            transaction.new_product_name, transaction.unit, transaction.quantity_out,
+            transaction.price, transaction.total_amount, transaction.site_delivered,
+            transaction.client, transaction.delivery_ref, transaction.delivery_no,
+            transaction.invoice_type, transaction.invoice_no
+        ])
+
+    # Apply currency format to Price and Total Amount columns
+    for cell in sheet['H']:  # Assuming price is in column H (index 8)
+        if cell.row > 1:  # Skip header row
+            cell.number_format = currency_format
+
+    for cell in sheet['I']:  # Assuming total_amount is in column I (index 9)
+        if cell.row > 1:  # Skip header row
+            cell.number_format = currency_format
+
+    # Auto-size columns for better visibility
+    for column in sheet.columns:
+        max_length = 0
+        column_letter = column[0].column_letter
+        for cell in column:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except:
+                pass
+        adjusted_width = (max_length + 2)
+        sheet.column_dimensions[column_letter].width = adjusted_width
+
+    # Create an in-memory buffer
+    buffer = BytesIO()
+    workbook.save(buffer)
+    buffer.seek(0)
+
+    # Set the response to return the Excel file
+    response = HttpResponse(
+        buffer,
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename=TransactionHistory.xlsx'
+    return response
+
+
 # For Archiving Methods
 def create_folder(request):
     if request.method == 'POST':
@@ -702,6 +825,18 @@ def inventory_table(request):
 
     return render(request, 'dashboards/inventory_clerk_dashboard.html', {
         'page_obj': page_obj
+    })
+
+
+def new_records_view(request):
+    # Define the timeframe for what constitutes a "new" record (e.g., last 24 hours)
+    timeframe = timezone.now() - timezone.timedelta(hours=24)
+
+    # Get all records created in the last 24 hours, ordered by most recent
+    new_records = ItemInventory.objects.filter(created_at__gte=timeframe).order_by('-created_at')
+
+    return render(request, 'Inventory/new_records.html', {
+        'new_records': new_records
     })
 
 
@@ -926,7 +1061,7 @@ def export_client_folder_contents(request, folder_id):
 
         # Define header styles
         header_font = Font(bold=True)
-        blue_fill = PatternFill(start_color='00B0F0', end_color='00B0F0', fill_type='solid')
+        gold_fill = PatternFill(start_color='F59B00', end_color='00B0F0', fill_type='solid')
         currency_format = '#,##0.00'
 
         # Define the headers
@@ -938,16 +1073,16 @@ def export_client_folder_contents(request, folder_id):
 
         for cell in sheet[1]:
             cell.font = header_font
-            cell.fill = blue_fill
+            cell.fill = gold_fill
             cell.value = cell.value.upper() if cell.value is not None else cell.value
 
         # Populate the sheet with data
         for transaction in transactions:
             sheet.append([
                 transaction.id,
-                transaction.client if transaction.client else 'N/A',  # Using client as a string directly
+                transaction.client if transaction.client else 'N/A',  # Assuming client is a string or related field
                 transaction.date.strftime('%Y-%m-%d') if transaction.date else 'N/A',
-                str(transaction.item),  # Convert ItemInventory instance to string
+                str(transaction.item),  # Use 'item' if that's the correct field
                 transaction.quantity_in,
                 transaction.quantity_out,
                 transaction.price,
@@ -1336,15 +1471,11 @@ def bulk_edit_inventory(request):
                         # Determine and set folder based on location_type
                         if location_type == 'site':
                             folder, created = SiteInventoryFolder.objects.get_or_create(name=location_name)
-                            if created:
-                                folder.save()
                             item.site_inventory_folder = folder
                             item.site_delivered = location_name
 
                         elif location_type == 'client':
                             client_folder, created = ClientInventoryFolder.objects.get_or_create(name=location_name)
-                            if created:
-                                client_folder.save()
                             item.client_inventory_folder = client_folder
                             item.client = location_name
 
@@ -1361,6 +1492,38 @@ def bulk_edit_inventory(request):
 
                         # Save updated item
                         item.save()
+
+                        # Check if InventoryHistory record already exists
+                        inventory_history, created = InventoryHistory.objects.get_or_create(
+                            item=item,
+                            date=date,
+                            defaults={
+                                'client_inventory_folder': item.client_inventory_folder,
+                                'site_inventory_folder': item.site_inventory_folder,
+                                'quantity_in': item.quantity_in,
+                                'quantity_out': quantity_out,
+                                'price': price,
+                                'total_amount': total_amount,
+                                'delivery_ref': delivery_ref,
+                                'delivery_no': delivery_no,
+                                'invoice_type': invoice_type,
+                                'invoice_no': invoice_no
+                            }
+                        )
+
+                        # Update the existing InventoryHistory record if it exists
+                        if not created:
+                            inventory_history.quantity_in = item.quantity_in
+                            inventory_history.quantity_out = quantity_out
+                            inventory_history.price = price
+                            inventory_history.total_amount = total_amount
+                            inventory_history.delivery_ref = delivery_ref
+                            inventory_history.delivery_no = delivery_no
+                            inventory_history.invoice_type = invoice_type
+                            inventory_history.invoice_no = invoice_no
+                            inventory_history.save()
+
+                        # Remove item from cart
                         cart_item.delete()
 
                     except ItemInventory.DoesNotExist:
@@ -1381,7 +1544,6 @@ def bulk_edit_inventory(request):
                     messages.error(request, 'Some errors occurred: ' + ', '.join(errors))
                 return redirect('bulk_edit_inventory')
 
-
     else:
         # Handle GET requests (including search functionality)
         query = request.GET.get('q', '')  # Get the search query from the GET request
@@ -1391,6 +1553,8 @@ def bulk_edit_inventory(request):
             items = ItemInventory.objects.all()
 
         cart_items = Cart.objects.all()
+
+        total_cart_amount = sum(cart_item.quantity * cart_item.item.price for cart_item in cart_items)
 
         # Calculate total amount for cart items
         for cart_item in cart_items:
@@ -1403,8 +1567,9 @@ def bulk_edit_inventory(request):
             'items': items,
             'cart_items': cart_items,
             'query': query,  # Pass the query back to the template
-
+            'total_cart_amount': total_cart_amount
         })
+
 
 def remove_cart_item(request, cart_item_id):
     cart_item = get_object_or_404(Cart, id=cart_item_id)
@@ -1414,8 +1579,103 @@ def remove_cart_item(request, cart_item_id):
 
 
 
+def bulk_edit_purchase_order(request):
+    if request.method == 'POST':
+        if 'add_to_cart' in request.POST:
+            po_ids = request.POST.getlist('po_ids')
+            success = True
+            errors = []
+
+            # Add selected items to the cart
+            for po_id in po_ids:
+                try:
+                    po = PurchaseOrder.objects.get(id=po_id)
+                    cart_item, created = poCart.objects.get_or_create(
+                        particulars=po,
+                        defaults={'fbbd_ref_number': '', 'remarks2': ''}
+                    )
+                except PurchaseOrder.DoesNotExist:
+                    success = False
+                    errors.append(f"Purchase Order with ID {po_id} does not exist.")
+                except Exception as e:
+                    success = False
+                    errors.append(f"An error occurred for Purchase Order ID {po_id}: {str(e)}")
+
+            if success:
+                messages.success(request, 'Orders added to cart successfully.')
+            else:
+                messages.error(request, 'Some errors occurred: ' + ', '.join(errors))
+            return redirect('bulk_edit_purchase_order')
+
+        elif 'finalize_changes' in request.POST:
+            fbbd_ref_number = request.POST.get('fbbd_ref_number', '')
+            remarks2 = request.POST.get('remarks2', '')
+            success = True
+            errors = []
+
+            cart_items = poCart.objects.all()
+
+            for cart_item in cart_items:
+                try:
+                    po = cart_item.particulars
+                    po.fbbd_ref_number = fbbd_ref_number
+                    po.remarks2 = remarks2
+                    po.save()
+                    cart_item.delete()
+                except PurchaseOrder.DoesNotExist:
+                    success = False
+                    errors.append(f"Purchase Order with ID {cart_item.particulars.id} does not exist.")
+                except Exception as e:
+                    success = False
+                    errors.append(f"An error occurred for Purchase Order ID {cart_item.particulars.id}: {str(e)}")
+
+            # Clear the cart after finalizing changes
+            poCart.objects.all().delete()
+
+            if success:
+                messages.success(request, 'Orders updated successfully.')
+            else:
+                messages.error(request, 'Some errors occurred: ' + ', '.join(errors))
+
+            return redirect('bulk_edit_purchase_order')
+
+    else:
+        query = request.GET.get('q', '')
+        if query:
+            orders = PurchaseOrder.objects.filter(
+                Q(po_number__icontains=query) |
+                Q(particulars__icontains=query) |
+                Q(quantity__icontains=query) |
+                Q(price__icontains=query)
+            )
+        else:
+            orders = PurchaseOrder.objects.all()
+
+        form = PurchaseOrderBulkForm()
+
+        return render(request, 'records/purchase_order_update.html', {
+            'form': form,
+            'orders': orders,
+            'cart_items': poCart.objects.all(),
+            'query': query,
+            'remarks2_choices': PurchaseOrderBulkForm.REMARKS2_CHOICES,
+        })
 
 
 
 
+
+
+
+def po_remove_cart_item(request, item_id):
+    try:
+        cart_item = get_object_or_404(poCart, id=item_id)
+        cart_item.delete()
+        messages.success(request, 'Item removed from cart successfully.')
+    except poCart.DoesNotExist:
+        messages.error(request, 'Item does not exist.')
+    except Exception as e:
+        messages.error(request, f'An error occurred: {str(e)}')
+
+    return redirect('bulk_edit_purchase_order')
 

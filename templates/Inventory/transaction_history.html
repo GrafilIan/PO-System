@@ -21,16 +21,16 @@
                         <div class="card-header" style="background-color: #0a0a0a; color: white;">
                             <h4>Transaction History</h4>
                             <div class="card-header-action">
-                                <form method="get" action="" class="form-inline justify-content-center col-12">
+                                <form method="get" action="{% url 'export_transaction_history_to_excel' %}"
+                                      class="form-inline justify-content-center col-12">
                                     <div class="input-group">
                                         <!-- Single Search Input -->
                                         <input type="text" name="q" class="form-control"
-                                               placeholder="Search by text or date"
-                                               value="{{ request.GET.q }}">
-
+                                               placeholder="Search by text or date" value="{{ request.GET.q }}">
                                         <div class="input-group-btn">
-                                            <button class="btn btn-primary" type="submit"><i
-                                                    class="fas fa-search"></i></button>
+                                            <button class="btn btn-primary" type="submit">
+                                                <i class="fas fa-search"></i>
+                                            </button>
                                         </div>
                                     </div>
                                     <div class="col-auto">
@@ -39,7 +39,13 @@
                                                 Filter</a>
                                         {% endif %}
                                     </div>
+
+                                    <!-- Export Button -->
+                                    <button type="submit" name="export" value="true" class="btn btn-primary ml-2">
+                                        Export Transaction History
+                                    </button>
                                 </form>
+
                             </div>
                         </div>
                         <div class="card-body p-0">
@@ -94,7 +100,9 @@
                                     <ul class="pagination justify-content-center">
                                         {% if transactions.has_previous %}
                                             <li class="page-item">
-                                                <a class="page-link" href="?page={{ transactions.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}"
+                                                <a class="page-link" href="?page=
+
+                                                        {{ transactions.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}"
                                                    aria-label="Previous">
                                                     <span aria-hidden="true">&laquo;</span>
                                                 </a>
@@ -102,12 +110,16 @@
                                         {% endif %}
                                         {% for num in transactions.paginator.page_range %}
                                             <li class="page-item {% if transactions.number == num %}active{% endif %}">
-                                                <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}">{{ num }}</a>
+                                                <a class="page-link" href="?page=
+
+                                                        {{ num }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}">{{ num }}</a>
                                             </li>
                                         {% endfor %}
                                         {% if transactions.has_next %}
                                             <li class="page-item">
-                                                <a class="page-link" href="?page={{ transactions.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}"
+                                                <a class="page-link" href="?page=
+
+                                                        {{ transactions.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}"
                                                    aria-label="Next">
                                                     <span aria-hidden="true">&raquo;</span>
                                                 </a>

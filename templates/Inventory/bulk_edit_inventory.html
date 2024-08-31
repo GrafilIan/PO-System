@@ -48,10 +48,10 @@
                             {% endif %}
 
                             <form method="get" action="" class="form-inline justify-content-center col-12 mb-4">
-                                <div class="input-group">
+                                <div class="input-group col-5">
                                     <!-- Single Search Input -->
                                     <input type="text" name="q" class="form-control"
-                                           placeholder="Search by text or date"
+                                           placeholder="Search Item Name"
                                            value="{{ request.GET.q }}">
                                     <div class="input-group-btn">
                                         <button class="btn btn-primary" type="submit">
@@ -77,7 +77,7 @@
                                     {% for item in items %}
                                         <div class="col-12 col-md-3 mb-3">
                                             <div class="card card-primary glow-on-hover"
-                                                 style="border: 2px solid #87a8fa; border-radius: 8px;">
+                                                 style="border: 1px solid #336dff; border-radius: 5px;">
                                                 <div class="card-body"
                                                      style="background-color: #ffffff; border-radius: 6px;">
                                                     <h5 class="card-title text-center"
@@ -102,9 +102,8 @@
                                                                        class="form-control"
                                                                        step="0.01" placeholder="Quantity Out">
                                                             </div>
-                                                            <div class="form-group">
-                                                                <label for="total_amount_{{ item.id }}">Total
-                                                                    Amount:</label>
+                                                            <div class="form-group" style="margin-bottom: 1px;">
+                                                                <label for="total_amount_{{ item.id }}">Total Amount:</label>
                                                                 <input type="number" id="total_amount_{{ item.id }}"
                                                                        name="total_amount_{{ item.id }}"
                                                                        value="0.00"
@@ -131,6 +130,10 @@
                                 </div>
                             </div>
                             <h3 style="text-align: center">Cart Items</h3>
+                        <div class="col-12 d-flex justify-content-center align-items-center"
+                                         style="height: 30px;">
+                            <p>Total Cart Amount: <strong> {{total_cart_amount }}</strong></p>
+                                    </div>
                             <div class="row">
                                 {% if cart_items %}
                                     {% for cart_item in cart_items %}

@@ -53,10 +53,9 @@
                                         </div>
                                         <div class="card-body p-0">
                                             <div class="table-responsive">
-                                                <table class="table table-hover table-striped" id="sortable-table">
+                                                <table class="table table-hover table-striped table-sm" id="sortable-table">
                                                     <thead>
                                                     <tr class="archive-background">
-                                                        <th><input type="checkbox" id="select-all"></th>
                                                         <th style="white-space: nowrap; color: white;">DATE</th>
                                                         <th style="color: white;">PO#</th>
                                                         <th style="color: white;">PURCHASER</th>
@@ -82,7 +81,6 @@
                                                     <tbody>
                                                     {% for order in purchase_orders %}
                                                         <tr role="row" class="odd">
-                                                            <td><input type="checkbox" class="select-row" value="{{ order.id }}"></td>
                                                             <td class="no-wrap">{{ order.date }}</td>
                                                             <td>{{ order.po_number }}</td>
                                                             <td class="no-wrap">{{ order.purchaser }}</td>

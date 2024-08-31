@@ -2944,3 +2944,34 @@ body:not(.sidebar-mini) .sidebar-style-2 .sidebar-menu li.active ul.dropdown-men
     background-color: blue; /* Set the color of the line */
     margin: 20px 0; /* Adjust spacing above and below the line */
 }
+
+.nav-item .nav-link {
+    color: #000; /* Default text color */
+    position: relative; /* Required for positioning the pseudo-element */
+    text-decoration: none; /* Remove underline */
+    padding-bottom: 4px; /* Ensure there's space for the bottom border */
+}
+
+.nav-item .nav-link::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 2px; /* Height of the underline */
+    background-color: transparent; /* Default color */
+    transition: background-color 0.3s ease; /* Smooth transition */
+}
+
+.nav-item .nav-link:hover::after {
+    background-color: #007bff; /* Color of the underline on hover */
+}
+
+.nav-item.active .nav-link::after {
+    background-color: #0004c0; /* Color of the underline when active */
+}
+
+#sortable-table th, #sortable-table td {
+  padding-right: 40px;
+  padding-left: 15px;
+}
