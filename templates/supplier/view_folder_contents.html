@@ -11,6 +11,23 @@
           href="{% static 'assets/modules/datatables/DataTables-1.10.16/css/dataTables.bootstrap4.min.css' %}">
     <link rel="stylesheet" href="{% static 'assets/modules/datatables/Select-1.2.4/css/select.bootstrap4.min.css' %}">
     <link rel="stylesheet" href="{% static 'assets/css/custom.css' %}">
+    <style>
+        /* Make table header sticky */
+        #sortable-table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background-color: #1e84b4; /* Background color of the sticky header */
+            color: white; /* Text color for the header */
+            white-space: nowrap; /* Prevent text wrapping */
+        }
+
+        /* Ensure the table is scrollable */
+        .table-responsive {
+            overflow-y: auto;
+            max-height: 800px; /* Adjust this height as needed */
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
@@ -29,7 +46,8 @@
                                         <div class="card-header" style="background-color: #4682b4; color: white;">
                                             <h4>Purchase Order Data Table</h4>
                                             <div class="card-header-action">
-                                                <form method="get" action="" class="form-inline justify-content-center col-12">
+                                                <form method="get" action=""
+                                                      class="form-inline justify-content-center col-12">
                                                     <div class="input-group">
                                                         <input type="text" name="q" class="form-control"
                                                                placeholder="Search" value="{{ request.GET.q }}">
@@ -39,7 +57,8 @@
                                                             </button>
                                                         </div>
                                                         {% if request.GET.q %}
-                                                            <a href="{% url 'purchase_order_list' %}" class="btn btn-secondary">Clear Filter</a>
+                                                            <a href="{% url 'view_folder_contents' folder_id=folder.id %}"
+                                                               class="btn btn-secondary">Clear Filter</a>
                                                         {% endif %}
                                                     </div>
                                                 </form>
@@ -47,13 +66,23 @@
 
                                             <div class="row">
                                                 <div class="col-auto">
-                                                    <a href="{% url 'export_supplier_contents' folder.id %}" class="btn btn-primary">Export Content</a>
+                                                    <a href="{% url 'export_supplier_contents' folder.id %}"
+                                                       class="btn btn-primary">Export Content</a>
+                                                </div>
+                                                <div class="col-auto">
+                                                    <button class="btn btn-secondary" onclick="sortByDate('desc')">
+                                                        <i class="fas fa-arrow-down"></i>
+                                                    </button>
+                                                    <button class="btn btn-secondary" onclick="sortByDate('asc')">
+                                                        <i class="fas fa-arrow-up"></i>
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="card-body p-0">
                                             <div class="table-responsive">
-                                                <table class="table table-hover table-striped table-sm" id="sortable-table">
+                                                <table class="table table-hover table-striped table-sm"
+                                                       id="sortable-table">
                                                     <thead>
                                                     <tr class="archive-background">
                                                         <th style="white-space: nowrap; color: white;">DATE</th>
@@ -122,7 +151,8 @@
                                                     <ul class="pagination justify-content-center">
                                                         {% if orders.has_previous %}
                                                             <li class="page-item">
-                                                                <a class="page-link" href="?page={{ orders.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}"
+                                                                <a class="page-link" href="?page=
+                                                                        {{ orders.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}"
                                                                    aria-label="Previous">
                                                                     <span aria-hidden="true">&laquo;</span>
                                                                 </a>
@@ -130,14 +160,16 @@
                                                         {% endif %}
                                                         {% for num in orders.paginator.page_range %}
                                                             <li class="page-item {% if orders.number == num %}active{% endif %}">
-                                                                <a class="page-link"href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}">
+                                                                <a class="page-link" href="?page=
+                                                                        {{ num }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}">
                                                                     {{ num }}
                                                                 </a>
                                                             </li>
                                                         {% endfor %}
                                                         {% if orders.has_next %}
                                                             <li class="page-item">
-                                                                <a class="page-link" href="?page={{ orders.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}"
+                                                                <a class="page-link" href="?page=
+                                                                        {{ orders.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}"
                                                                    aria-label="Next">
                                                                     <span aria-hidden="true">&raquo;</span>
                                                                 </a>
@@ -145,7 +177,8 @@
                                                         {% endif %}
                                                         <!-- Link to Last Page -->
                                                         <li class="page-item {% if orders.number == orders.paginator.num_pages %}active{% endif %}">
-                                                            <a class="page-link" href="?page={{ orders.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}">
+                                                            <a class="page-link" href="?page=
+                                                                    {{ orders.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}">
                                                                 Last</a>
                                                         </li>
 
@@ -182,7 +215,8 @@
     </div>
 
     <!-- Success Modal -->
-    <div class="modal fade" id="success-modal" tabindex="-1" role="dialog" aria-labelledby="success-modal-label" aria-hidden="true">
+    <div class="modal fade" id="success-modal" tabindex="-1" role="dialog" aria-labelledby="success-modal-label"
+         aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -192,30 +226,12 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    Your request was successful!
+                    Your action has been successfully completed.
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">OK</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Error Modal -->
-    <div class="modal fade" id="error-modal" tabindex="-1" role="dialog" aria-labelledby="error-modal-label" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="error-modal-label">Error</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
+                    <button type="button" class="btn btn-primary" onclick="window.location.reload();"
+                            data-dismiss="modal">OK
                     </button>
-                </div>
-                <div class="modal-body">
-                    Something went wrong. Please try again.
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">OK</button>
                 </div>
             </div>
         </div>
@@ -223,15 +239,33 @@
 {% endblock %}
 
 {% block scripts %}
+    <script src="{% static 'assets/modules/datatables/datatables.min.js' %}"></script>
+    <script src="{% static 'assets/modules/datatables/DataTables-1.10.16/js/dataTables.bootstrap4.min.js' %}"></script>
+    <script src="{% static 'assets/modules/datatables/Select-1.2.4/js/select.bootstrap4.min.js' %}"></script>
+    <script src="{% static 'assets/js/page/modules-datatables.js' %}"></script>
+
+    <!-- Custom JavaScript -->
     <script>
-        const table = document.getElementById('sortable-table');
-if (table) {
-    const cells = table.querySelectorAll('tbody td');
-    cells.forEach(cell => {
-        if (cell.textContent.trim() === 'None') {
-            cell.style.color = 'transparent';  // Hide the text without removing it
+        function sortByDate(order) {
+            let table = document.getElementById('sortable-table');
+            let rows = Array.from(table.querySelectorAll('tbody tr'));
+            let sortedRows;
+
+            if (order === 'asc') {
+                sortedRows = rows.sort((a, b) => new Date(a.cells[0].textContent) - new Date(b.cells[0].textContent));
+            } else {
+                sortedRows = rows.sort((a, b) => new Date(b.cells[0].textContent) - new Date(a.cells[0].textContent));
+            }
+
+            let tbody = table.querySelector('tbody');
+            tbody.innerHTML = '';
+            sortedRows.forEach(row => tbody.appendChild(row));
         }
-    });
-}
+         // Hide 'None' text
+            document.querySelectorAll('td').forEach(td => {
+                if (td.textContent.trim() === 'None') {
+                    td.innerHTML = '<span style="visibility: hidden;">None</span>';
+                }
+            });
     </script>
 {% endblock %}

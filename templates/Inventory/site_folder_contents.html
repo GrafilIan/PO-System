@@ -12,6 +12,23 @@
           href="{% static 'assets/modules/datatables/DataTables-1.10.16/css/dataTables.bootstrap4.min.css' %}">
     <link rel="stylesheet" href="{% static 'assets/modules/datatables/Select-1.2.4/css/select.bootstrap4.min.css' %}">
     <link rel="stylesheet" href="{% static 'assets/css/custom.css' %}">
+    <style>
+    /* Make table header sticky */
+    #sortable-table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background-color: #000270; /* Background color of the sticky header */
+        color: white; /* Text color for the header */
+        white-space: nowrap; /* Prevent text wrapping */
+    }
+
+    /* Ensure the table is scrollable */
+    .table-responsive {
+        overflow-y: auto;
+        max-height: 800px; /* Adjust this height as needed */
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -40,7 +57,7 @@
 
                                         <div class="card-body p-0">
                                             <div class="table-responsive">
-                                                <table class="table table-hover table-striped" id="sortable-table">
+                                                <table class="table table-hover table-striped table-sm" id="sortable-table">
                                                     <thead>
                                                     <tr class="blue-background">
                                                         <!--<th style="white-space: nowrap; color: white;">T. ID
@@ -63,7 +80,7 @@
                                                             <!--<td>{{ transaction.id }}</td>-->
                                                             <td>{{ transaction.site_delivered }}</td>
                                                             <td class="no-wrap">{{ transaction.date }}</td>
-                                                            <td class="no-wrap">{{ transaction.item }}</td>
+                                                            <td class="no-wrap">{{ transaction.po_product_name }}</td>
                                                             <td>{{ transaction.quantity_in }}</td>
                                                             <td>{{ transaction.quantity_out }}</td>
                                                             <td>{{ transaction.price|floatformat:2|intcomma }}</td>

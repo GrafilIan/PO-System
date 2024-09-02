@@ -7,7 +7,8 @@
 {% block head %}
     <link rel="stylesheet" href="{% static 'assets/modules/bootstrap-social/bootstrap-social.css' %}">
     <link rel="stylesheet" href="{% static 'assets/modules/datatables/datatables.min.css' %}">
-    <link rel="stylesheet" href="{% static 'assets/modules/datatables/DataTables-1.10.16/css/dataTables.bootstrap4.min.css' %}">
+    <link rel="stylesheet"
+          href="{% static 'assets/modules/datatables/DataTables-1.10.16/css/dataTables.bootstrap4.min.css' %}">
     <link rel="stylesheet" href="{% static 'assets/modules/datatables/Select-1.2.4/css/select.bootstrap4.min.css' %}">
     <link rel="stylesheet" href="{% static 'assets/css/fcard.css' %}">
     <link rel="stylesheet" href="{% static 'assets/css/custom.css' %}">
@@ -21,23 +22,36 @@
                 <section class="section container-fluid">
                     <div class="section-body">
                         <div class="card card-desk">
-                            <div class="card-header d-flex justify-content-between align-items-center" style="margin-top: 10px">
+                            <div class="card-header d-flex justify-content-between align-items-center"
+                                 style="margin-top: 10px">
                                 <h3 class="mb-0">SUPPLIER FOLDER LIST</h3>
-                                <form id="createFolderForm" method="POST" action="{% url 'supplier_list_folders' %}"
-                                      class="d-flex align-items-center">
-                                    {% csrf_token %}
-                                    <div class="input-group">
-                                        <input type="text" name="folder_name" class="form-control"
-                                               placeholder="New folder name" required>
-                                        <div class="input-group-append">
-                                            <button type="submit" class="btn btn-primary ml-2">
-                                                Create Folder
-                                                <i class="fas fa-folder"></i>
-                                            </button>
+
+                                <div class="d-flex align-items-center">
+                                    <!-- Form to create a new folder -->
+                                    <form id="createFolderForm" method="POST" action="{% url 'supplier_list_folders' %}"
+                                          class="d-flex align-items-center mr-2">
+                                        {% csrf_token %}
+                                        <div class="input-group">
+                                            <input type="text" name="folder_name" class="form-control"
+                                                   placeholder="New folder name" required>
+                                            <div class="input-group-append">
+                                                <button type="submit" class="btn btn-primary">
+                                                    Create Folder
+                                                    <i class="fas fa-folder"></i>
+                                                </button>
+                                            </div>
                                         </div>
-                                    </div>
-                                </form>
+                                    </form>
+
+                                    <!-- Form to export all supplier folders -->
+                                    <form action="{% url 'export_all_suppliers' %}" method="get" class="ml-2">
+                                        <button type="submit" class="btn btn-primary">
+                                            Export All
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
+
 
                             <div class="card-body">
                                 <div class="container">
@@ -51,7 +65,9 @@
                                                                class="text-dark font-weight-bold">{{ folder.name }}</a>
                                                         </h4>
                                                     </div>
-                                                    <form class="delete-folder-form" action="{% url 'delete_supplier_folder' folder.id %}" method="post"
+                                                    <form class="delete-folder-form"
+                                                          action="{% url 'delete_supplier_folder' folder.id %}"
+                                                          method="post"
                                                           style="display: inline;">
                                                         {% csrf_token %}
                                                         <button type="submit" class="fcard-button">Delete</button>
@@ -71,111 +87,111 @@
 
     <script src="{% static 'assets/modules/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
     <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const createFolderForm = document.getElementById('createFolderForm');
+        document.addEventListener('DOMContentLoaded', function () {
+            const createFolderForm = document.getElementById('createFolderForm');
 
-    if (createFolderForm) {
-        createFolderForm.addEventListener('submit', function(event) {
-            event.preventDefault(); // Prevent default form submission
+            if (createFolderForm) {
+                createFolderForm.addEventListener('submit', function (event) {
+                    event.preventDefault(); // Prevent default form submission
 
-            const formData = new FormData(createFolderForm);
+                    const formData = new FormData(createFolderForm);
 
-            fetch(createFolderForm.action, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRFToken': createFolderForm.querySelector('[name="csrfmiddlewaretoken"]').value
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
+                    fetch(createFolderForm.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRFToken': createFolderForm.querySelector('[name="csrfmiddlewaretoken"]').value
+                        }
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Folder Created!',
+                                    text: data.message,
+                                    showConfirmButton: false,
+                                    timer: 2000  // Automatically closes after 2 seconds
+                                }).then(() => {
+                                    location.reload(); // Reload the page after a short delay
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Oops...',
+                                    text: data.message
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Oops...',
+                                text: 'There was an error creating the folder.'
+                            });
+                        });
+                });
+            }
+
+            // Handle folder deletion with SweetAlert2
+            document.querySelectorAll('.delete-folder-form').forEach(form => {
+                form.addEventListener('submit', function (event) {
+                    event.preventDefault(); // Prevent default form submission
+
+                    const deleteForm = this;
+                    const url = deleteForm.action;
+
                     Swal.fire({
-                        icon: 'success',
-                        title: 'Folder Created!',
-                        text: data.message,
-                        showConfirmButton: false,
-                        timer: 2000  // Automatically closes after 2 seconds
-                    }).then(() => {
-                        location.reload(); // Reload the page after a short delay
+                        title: 'Are you sure?',
+                        text: "You won't be able to revert this!",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Yes, delete it!'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            fetch(url, {
+                                method: 'POST',
+                                headers: {
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                    'X-CSRFToken': deleteForm.querySelector('[name="csrfmiddlewaretoken"]').value
+                                }
+                            })
+                                .then(response => {
+                                    if (response.ok) {
+                                        Swal.fire(
+                                            'Deleted!',
+                                            'Your folder has been deleted.',
+                                            'success'
+                                        ).then(() => {
+                                            location.reload(); // Reload the page after deletion
+                                        });
+                                    } else {
+                                        Swal.fire(
+                                            'Error!',
+                                            'There was an issue deleting the folder.',
+                                            'error'
+                                        );
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Error:', error);
+                                    Swal.fire(
+                                        'Error!',
+                                        'There was an issue deleting the folder.',
+                                        'error'
+                                    );
+                                });
+                        }
                     });
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Oops...',
-                        text: data.message
-                    });
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Oops...',
-                    text: 'There was an error creating the folder.'
                 });
             });
         });
-    }
 
-    // Handle folder deletion with SweetAlert2
-    document.querySelectorAll('.delete-folder-form').forEach(form => {
-        form.addEventListener('submit', function(event) {
-            event.preventDefault(); // Prevent default form submission
-
-            const deleteForm = this;
-            const url = deleteForm.action;
-
-            Swal.fire({
-                title: 'Are you sure?',
-                text: "You won't be able to revert this!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes, delete it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    fetch(url, {
-                        method: 'POST',
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'X-CSRFToken': deleteForm.querySelector('[name="csrfmiddlewaretoken"]').value
-                        }
-                    })
-                    .then(response => {
-                        if (response.ok) {
-                            Swal.fire(
-                                'Deleted!',
-                                'Your folder has been deleted.',
-                                'success'
-                            ).then(() => {
-                                location.reload(); // Reload the page after deletion
-                            });
-                        } else {
-                            Swal.fire(
-                                'Error!',
-                                'There was an issue deleting the folder.',
-                                'error'
-                            );
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        Swal.fire(
-                            'Error!',
-                            'There was an issue deleting the folder.',
-                            'error'
-                        );
-                    });
-                }
-            });
-        });
-    });
-});
-
-</script>
+    </script>
 
 
 {% endblock %}

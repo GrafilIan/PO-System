@@ -10,6 +10,23 @@
           href="{% static 'assets/modules/datatables/DataTables-1.10.16/css/dataTables.bootstrap4.min.css' %}">
     <link rel="stylesheet" href="{% static 'assets/modules/datatables/Select-1.2.4/css/select.bootstrap4.min.css' %}">
     <link rel="stylesheet" href="{% static 'assets/css/custom.css' %}">
+    <style>
+        /* Make table header sticky */
+        #sortable-table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background-color: #000270; /* Background color of the sticky header */
+            color: white; /* Text color for the header */
+            white-space: nowrap; /* Prevent text wrapping */
+        }
+
+        /* Ensure the table is scrollable */
+        .table-responsive {
+            overflow-y: auto;
+            max-height: 600px; /* Adjust this height as needed */
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
@@ -21,7 +38,7 @@
                         <div class="card-header" style="background-color: #0a0a0a; color: white;">
                             <h4>Transaction History</h4>
                             <div class="card-header-action">
-                                <form method="get" action="{% url 'export_transaction_history_to_excel' %}"
+                                <form method="get" action="{% url 'transaction_history' %}"
                                       class="form-inline justify-content-center col-12">
                                     <div class="input-group">
                                         <!-- Single Search Input -->
@@ -37,20 +54,19 @@
                                         {% if request.GET.q %}
                                             <a href="{% url 'transaction_history' %}" class="btn btn-outline-primary">Clear
                                                 Filter</a>
+
                                         {% endif %}
                                     </div>
-
-                                    <!-- Export Button -->
-                                    <button type="submit" name="export" value="true" class="btn btn-primary ml-2">
+                                    <a href="{% url 'export_transaction_history_to_excel' %}"
+                                       class="btn btn-primary ml-2">
                                         Export Transaction History
-                                    </button>
+                                    </a>
                                 </form>
-
                             </div>
                         </div>
                         <div class="card-body p-0">
                             <div class="table-responsive">
-                                <table id="transactionTable" class="table table-hover table-striped">
+                                <table id="sortable-table" class="table table-hover table-striped table-sm">
                                     <thead>
                                     <tr class="blue-background">
                                         <th class="no-wrap" style="color: white;">Date</th>
@@ -100,9 +116,7 @@
                                     <ul class="pagination justify-content-center">
                                         {% if transactions.has_previous %}
                                             <li class="page-item">
-                                                <a class="page-link" href="?page=
-
-                                                        {{ transactions.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}"
+                                                <a class="page-link" href="?page={{ transactions.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}"
                                                    aria-label="Previous">
                                                     <span aria-hidden="true">&laquo;</span>
                                                 </a>
@@ -110,16 +124,12 @@
                                         {% endif %}
                                         {% for num in transactions.paginator.page_range %}
                                             <li class="page-item {% if transactions.number == num %}active{% endif %}">
-                                                <a class="page-link" href="?page=
-
-                                                        {{ num }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}">{{ num }}</a>
+                                                <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}">{{ num }}</a>
                                             </li>
                                         {% endfor %}
                                         {% if transactions.has_next %}
                                             <li class="page-item">
-                                                <a class="page-link" href="?page=
-
-                                                        {{ transactions.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}"
+                                                <a class="page-link" href="?page={{ transactions.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}"
                                                    aria-label="Next">
                                                     <span aria-hidden="true">&raquo;</span>
                                                 </a>

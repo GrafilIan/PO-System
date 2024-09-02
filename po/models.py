@@ -71,12 +71,11 @@ class ItemInventory(models.Model):
         if self.pk:
             # Fetch the previous record from the database
             previous = ItemInventory.objects.get(pk=self.pk)
-            quantity_out_delta = self.quantity_out
-            new_quantity_out = previous.quantity_out + quantity_out_delta
-            self.quantity_out = new_quantity_out
-            self.stock = self.quantity_in - new_quantity_out
+            quantity_out_delta = self.quantity_out - previous.quantity_out
+            self.stock = self.quantity_in - self.quantity_out
             self.total_amount = self.quantity_out * self.price
 
+            # Create inventory history entry
             InventoryHistory.objects.create(
                 item=self,
                 date=self.date,
@@ -101,9 +100,11 @@ class ItemInventory(models.Model):
                 site_or_client_choice=self.site_or_client_choice
             )
         else:
+            # For new entries
             self.stock = self.quantity_in - self.quantity_out
             self.total_amount = self.quantity_out * self.price
 
+        # Set location fields based on choice
         if self.site_or_client_choice == 'site':
             self.site_delivered = self.site_delivered
             self.client = None

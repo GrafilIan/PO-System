@@ -1,3 +1,5 @@
+import zipfile
+
 import pandas as pd
 import openpyxl
 from django.core.exceptions import ValidationError
@@ -132,7 +134,6 @@ def purchase_order_edit(request, id):
                     supplier=purchase_order.supplier,
                     po_product_name=purchase_order.particulars,
                     unit=purchase_order.unit,
-                    price=purchase_order.price,
                 ).first()
 
                 if inventory_item:
@@ -167,55 +168,57 @@ def purchase_order_list(request):
     query = request.GET.get('q')  # Single search input
     page_number = request.GET.get('page', 1)
 
+    # Dictionary to map month names to numbers
+    month_mapping = {
+        "January": "1", "February": "2", "March": "3", "April": "4",
+        "May": "5", "June": "6", "July": "7", "August": "8",
+        "September": "9", "October": "10", "November": "11", "December": "12"
+    }
+
+    # Initial queryset, excluding archived or foldered orders
     orders_list = PurchaseOrder.objects.filter(folder__isnull=True, archived=False)
 
     # If there's a search query, filter the orders accordingly
     if query:
         try:
-            # Try to interpret the query as a date first
-            date_obj = datetime.strptime(query, '%b %d, %Y').date()
-            orders_list = orders_list.filter(date=date_obj)
+            # Try to interpret the query as a month number (e.g., "08" for August)
+            month_number = int(query)
+            orders_list = orders_list.filter(date__month=month_number)
         except ValueError:
             try:
-                # Try parsing month and year only (e.g., "Aug 2024")
-                date_obj = datetime.strptime(query, '%b %Y')
-                orders_list = orders_list.filter(date__year=date_obj.year, date__month=date_obj.month)
+                # Try to interpret the query as a full month name only (e.g., "August")
+                month_number = month_mapping.get(query.strip().capitalize())
+                if month_number:
+                    orders_list = orders_list.filter(date__month=month_number)
+                else:
+                    raise ValueError("Not a valid month name")
             except ValueError:
-                try:
-                    # Try parsing full month name and year (e.g., "August 2024")
-                    date_obj = datetime.strptime(query, '%B %Y')
-                    orders_list = orders_list.filter(date__year=date_obj.year, date__month=date_obj.month)
-                except ValueError:
-                    try:
-                        # Try parsing month only (e.g., "08" for August or "11" for November)
-                        month_number = int(query)
-                        orders_list = orders_list.filter(date__month=month_number)
-                    except ValueError:
-                        # If not a date, treat it as a general text search
-                        orders_list = orders_list.filter(
-                            Q(po_number__icontains=query) |
-                            Q(purchaser__icontains=query) |
-                            Q(brand__icontains=query) |
-                            Q(item_code__icontains=query) |
-                            Q(particulars__icontains=query) |
-                            Q(quantity__icontains=query) |
-                            Q(unit__icontains=query) |
-                            Q(price__icontains=query) |
-                            Q(total_amount__icontains=query) |
-                            Q(site_delivered__icontains=query) |
-                            Q(fbbd_ref_number__icontains=query) |
-                            Q(remarks__icontains=query) |
-                            Q(supplier__icontains=query) |
-                            Q(delivery_ref__icontains=query) |
-                            Q(delivery_no__icontains=query) |
-                            Q(invoice_type__icontains=query) |
-                            Q(invoice_no__icontains=query) |
-                            Q(payment_req_ref__icontains=query) |
-                            Q(payment_details__icontains=query) |
-                            Q(remarks2__icontains=query)
-                        )
+                # If not a date, treat it as a general text search
+                orders_list = orders_list.filter(
+                    Q(po_number__icontains=query) |
+                    Q(purchaser__icontains=query) |
+                    Q(brand__icontains=query) |
+                    Q(item_code__icontains=query) |
+                    Q(particulars__icontains=query) |
+                    Q(quantity__icontains=query) |
+                    Q(unit__icontains=query) |
+                    Q(price__icontains=query) |
+                    Q(total_amount__icontains=query) |
+                    Q(site_delivered__icontains=query) |
+                    Q(fbbd_ref_number__icontains=query) |
+                    Q(remarks__icontains=query) |
+                    Q(supplier__icontains=query) |
+                    Q(delivery_ref__icontains=query) |
+                    Q(delivery_no__icontains=query) |
+                    Q(invoice_type__icontains=query) |
+                    Q(invoice_no__icontains=query) |
+                    Q(payment_req_ref__icontains=query) |
+                    Q(payment_details__icontains=query) |
+                    Q(remarks2__icontains=query)
+                )
 
-    paginator = Paginator(orders_list, 20)  # Show 20 orders per page
+    # Pagination
+    paginator = Paginator(orders_list, 100)  # Show 20 orders per page
     try:
         orders = paginator.page(page_number)
     except PageNotAnInteger:
@@ -223,16 +226,16 @@ def purchase_order_list(request):
     except EmptyPage:
         orders = paginator.page(paginator.num_pages)
 
+    # Get all folders for the folder dropdown
     folders = ArchiveFolder.objects.all()
 
+    # Render the template with the context
     return render(request, 'dashboards/front_desk_dashboard.html', {
         'orders': orders,
         'query': query,
         'page_number': page_number,
-        'folders': folders
+        'folders': folders,
     })
-
-
 
 
 # --------------------------------------For Exporting Records----------------------------------------------
@@ -517,6 +520,90 @@ def export_supplier_contents(request, folder_id):
         return HttpResponse("Supplier Folder not found", status=404)
 
 
+def export_all_supplier_folders(request):
+    # Create an in-memory buffer to hold the zip file
+    buffer = BytesIO()
+
+    # Create a zip file in the buffer
+    with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
+        # Iterate through each supplier folder
+        for folder in SupplierFolder.objects.all():
+            # Get purchase orders for the folder
+            orders_list = PurchaseOrder.objects.filter(supplier_folder=folder)
+
+            # Create a workbook and a sheet
+            workbook = Workbook()
+            sheet = workbook.active
+            sheet.title = 'Supplier Orders'
+
+            # Define header styles
+            header_font = Font(bold=True)
+            blue_fill = PatternFill(start_color='00B0F0', end_color='00B0F0', fill_type='solid')
+            currency_format = '#,##0.00'
+
+            # Define the headers
+            headers = [
+                'Date', 'PO Number', 'Purchaser', 'Brand', 'Item Code', 'Particulars',
+                'Quantity', 'Unit', 'Price', 'Total Amount',
+                'Site Delivered', 'FBBD Ref#', 'Remarks', 'Supplier', 'Delivery Ref#',
+                'Delivery No.', 'Invoice Type', 'Invoice No.', 'Payment Req Ref#',
+                'Payment Details', 'Remarks2'
+            ]
+            sheet.append(headers)
+
+            for cell in sheet[1]:
+                cell.font = header_font
+                cell.fill = blue_fill
+                cell.value = cell.value.upper() if cell.value is not None else cell.value
+
+            # Populate the sheet with data
+            for order in orders_list:
+                sheet.append([
+                    order.date.strftime('%Y-%m-%d') if order.date else 'N/A', order.po_number, order.purchaser,
+                    order.brand,
+                    order.item_code,
+                    order.particulars, order.quantity, order.unit, order.price, order.total_amount,
+                    order.site_delivered,
+                    order.fbbd_ref_number, order.remarks, order.supplier, order.delivery_ref, order.delivery_no,
+                    order.invoice_type, order.invoice_no, order.payment_req_ref, order.payment_details, order.remarks2
+                ])
+
+            for cell in sheet['I']:  # Assuming price is in column I (index 9)
+                if cell.row > 1:  # Skip header row
+                    cell.number_format = currency_format
+
+            for cell in sheet['J']:  # Assuming total_amount is in column J (index 10)
+                if cell.row > 1:  # Skip header row
+                    cell.number_format = currency_format
+
+            for column in sheet.columns:
+                max_length = 0
+                column_letter = column[0].column_letter  # Get the column name (e.g., 'A', 'B', etc.)
+                for cell in column:
+                    try:
+                        if len(str(cell.value)) > max_length:
+                            max_length = len(cell.value)
+                    except:
+                        pass
+                adjusted_width = (max_length + 2)  # Add extra space for better visibility
+                sheet.column_dimensions[column_letter].width = adjusted_width
+
+            # Save the workbook to a bytes buffer
+            excel_buffer = BytesIO()
+            workbook.save(excel_buffer)
+            excel_buffer.seek(0)
+
+            # Add the workbook to the zip file
+            zf.writestr(f'SupplierOrders_{folder.name}.xlsx', excel_buffer.getvalue())
+
+    buffer.seek(0)
+
+    # Set the response to return the zip file
+    response = HttpResponse(buffer, content_type='application/zip')
+    response['Content-Disposition'] = 'attachment; filename=supplier_orders.zip'
+    return response
+
+
 def export_transaction_history_to_excel(request):
     query = request.GET.get('q')  # Search query parameter
     date_query = request.GET.get('date')  # Date query parameter
@@ -673,7 +760,7 @@ def archive_orders(request, folder_id):
     folder = ArchiveFolder.objects.get(id=folder_id)
     orders = PurchaseOrder.objects.filter(folder=folder)
 
-    paginator = Paginator(orders, 20)
+    paginator = Paginator(orders, 100)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -819,7 +906,7 @@ def inventory_table(request):
             Q(stock__icontains=query)
         )
 
-    paginator = Paginator(inventory_items, 20)  # Paginate after every 20 entries
+    paginator = Paginator(inventory_items, 100)  # Paginate after every 20 entries
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -1048,6 +1135,92 @@ def export_site_folder_contents(request, folder_id):
         return HttpResponse("Site Inventory Folder not found", status=404)
 
 
+def export_all_site_inventory_folders(request):
+    # Create an in-memory buffer to hold the zip file
+    buffer = BytesIO()
+
+    # Create a zip file in the buffer
+    with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
+        # Iterate through each site inventory folder
+        for folder in SiteInventoryFolder.objects.all():
+            # Get transactions for the folder
+            transactions = InventoryHistory.objects.filter(site_inventory_folder=folder)
+
+            # Create a workbook and a sheet
+            workbook = Workbook()
+            sheet = workbook.active
+            sheet.title = 'Site Inventory Records'
+
+            # Define header styles
+            header_font = Font(bold=True)
+            blue_fill = PatternFill(start_color='00B0F0', end_color='00B0F0', fill_type='solid')
+            currency_format = '#,##0.00'
+
+            # Define the headers
+            headers = [
+                'Transaction ID', 'Site Delivered', 'Date', 'Item', 'Quantity In', 'Quantity Out',
+                'Price', 'Total Amount', 'Delivery Ref', 'Delivery No.'
+            ]
+            sheet.append(headers)
+
+            for cell in sheet[1]:
+                cell.font = header_font
+                cell.fill = blue_fill
+                cell.value = cell.value.upper() if cell.value is not None else cell.value
+
+            # Populate the sheet with data
+            for transaction in transactions:
+                sheet.append([
+                    transaction.id,
+                    transaction.site_delivered,
+                    transaction.date.strftime('%Y-%m-%d') if transaction.date else 'N/A',
+                    str(transaction.item),  # Convert ItemInventory instance to string
+                    transaction.quantity_in,
+                    transaction.quantity_out,
+                    transaction.price,
+                    transaction.total_amount,
+                    transaction.delivery_ref,
+                    transaction.delivery_no,
+                ])
+
+            # Apply currency format to price and total_amount columns
+            for cell in sheet['G']:  # Assuming price is in column G (index 7)
+                if cell.row > 1:  # Skip header row
+                    cell.number_format = currency_format
+
+            for cell in sheet['H']:  # Assuming total_amount is in column H (index 8)
+                if cell.row > 1:  # Skip header row
+                    cell.number_format = currency_format
+
+            # Adjust column widths
+            for column in sheet.columns:
+                max_length = 0
+                column_letter = column[0].column_letter  # Get the column name (e.g., 'A', 'B', etc.)
+                for cell in column:
+                    try:
+                        if len(str(cell.value)) > max_length:
+                            max_length = len(cell.value)
+                    except:
+                        pass
+                adjusted_width = (max_length + 2)  # Add extra space for better visibility
+                sheet.column_dimensions[column_letter].width = adjusted_width
+
+            # Save the workbook to a bytes buffer
+            excel_buffer = BytesIO()
+            workbook.save(excel_buffer)
+            excel_buffer.seek(0)
+
+            # Add the workbook to the zip file
+            zf.writestr(f'SiteInventoryRecords_{folder.name}.xlsx', excel_buffer.getvalue())
+
+    buffer.seek(0)
+
+    # Set the response to return the zip file
+    response = HttpResponse(buffer, content_type='application/zip')
+    response['Content-Disposition'] = 'attachment; filename=site_inventory_folders.zip'
+    return response
+
+
 def export_client_folder_contents(request, folder_id):
     try:
         # Get the client inventory folder by ID
@@ -1132,6 +1305,95 @@ def export_client_folder_contents(request, folder_id):
         return HttpResponse("Client Inventory Folder not found", status=404)
 
 
+
+def export_all_client_folders(request):
+    # Create an in-memory buffer to hold the zip file
+    buffer = BytesIO()
+
+    # Create a zip file in the buffer
+    with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
+        # Iterate through each client folder
+        for folder in ClientInventoryFolder.objects.all():
+            # Get inventory records for the folder
+            transactions = InventoryHistory.objects.filter(client_inventory_folder=folder)
+
+            # Create a workbook and a sheet
+            workbook = Workbook()
+            sheet = workbook.active
+            sheet.title = 'Client Inventory Records'
+
+            # Define header styles
+            header_font = Font(bold=True)
+            gold_fill = PatternFill(start_color='F59B00', end_color='F59B00', fill_type='solid')
+            currency_format = '#,##0.00'
+
+            # Define the headers
+            headers = [
+                'Transaction ID', 'Client', 'Date', 'Item', 'Quantity In', 'Quantity Out',
+                'Price', 'Total Amount', 'Delivery Ref', 'Delivery No.', 'Invoice Type', 'Invoice#'
+            ]
+            sheet.append(headers)
+
+            for cell in sheet[1]:
+                cell.font = header_font
+                cell.fill = gold_fill
+                cell.value = cell.value.upper() if cell.value is not None else cell.value
+
+            # Populate the sheet with data
+            for transaction in transactions:
+                sheet.append([
+                    transaction.id,
+                    transaction.client if transaction.client else 'N/A',  # Assuming client is a string or related field
+                    transaction.date.strftime('%Y-%m-%d') if transaction.date else 'N/A',
+                    str(transaction.item),  # Use 'item' if that's the correct field
+                    transaction.quantity_in,
+                    transaction.quantity_out,
+                    transaction.price,
+                    transaction.total_amount,
+                    transaction.delivery_ref,
+                    transaction.delivery_no,
+                    transaction.invoice_type,
+                    transaction.invoice_no,
+                ])
+
+            # Apply currency format to price and total_amount columns
+            for cell in sheet['G']:  # Assuming price is in column G (index 7)
+                if cell.row > 1:  # Skip header row
+                    cell.number_format = currency_format
+
+            for cell in sheet['H']:  # Assuming total_amount is in column H (index 8)
+                if cell.row > 1:  # Skip header row
+                    cell.number_format = currency_format
+
+            # Adjust column widths
+            for column in sheet.columns:
+                max_length = 0
+                column_letter = column[0].column_letter  # Get the column name (e.g., 'A', 'B', etc.)
+                for cell in column:
+                    try:
+                        if len(str(cell.value)) > max_length:
+                            max_length = len(cell.value)
+                    except:
+                        pass
+                adjusted_width = (max_length + 2)  # Add extra space for better visibility
+                sheet.column_dimensions[column_letter].width = adjusted_width
+
+            # Save the workbook to a bytes buffer
+            excel_buffer = BytesIO()
+            workbook.save(excel_buffer)
+            excel_buffer.seek(0)
+
+            # Add the workbook to the zip file
+            zf.writestr(f'ClientInventory_{folder.name}.xlsx', excel_buffer.getvalue())
+
+    buffer.seek(0)
+
+    # Set the response to return the zip file
+    response = HttpResponse(buffer, content_type='application/zip')
+    response['Content-Disposition'] = 'attachment; filename=client_inventory_folders.zip'
+    return response
+
+
 # ----------------------------Transaction History----------------------------------------------
 def transaction_history(request):
     query = request.GET.get('q')  # Get search query from request
@@ -1177,7 +1439,7 @@ def transaction_history(request):
                         )
 
     # Paginate the filtered transactions
-    paginator = Paginator(transactions, 20)  # Show 20 transactions per page
+    paginator = Paginator(transactions, 100)  # Show 20 transactions per page
     try:
         transactions_page = paginator.page(page_number)
     except PageNotAnInteger:
@@ -1257,7 +1519,7 @@ def view_site_inventory_folder_contents(request, folder_id):
     total_amount = transactions_list.aggregate(total_amount_sum=Sum('total_amount'))['total_amount_sum'] or 0
 
     # Pagination
-    paginator = Paginator(transactions_list, 20)  # Show 20 transactions per page
+    paginator = Paginator(transactions_list, 100)  # Show 20 transactions per page
     page_number = request.GET.get('page')
     try:
         transactions = paginator.page(page_number)
@@ -1340,7 +1602,7 @@ def view_client_inventory_folder_contents(request, folder_id):
     total_amount = transactions_list.aggregate(total_amount_sum=Sum('total_amount'))['total_amount_sum'] or 0
 
     # Pagination
-    paginator = Paginator(transactions_list, 20)  # Show 20 transactions per page
+    paginator = Paginator(transactions_list, 100)  # Show 20 transactions per page
     page_number = request.GET.get('page')
     try:
         transactions = paginator.page(page_number)
@@ -1397,13 +1659,74 @@ def supplier_list_folders(request):
 
 def view_folder_contents(request, folder_id):
     folder = get_object_or_404(SupplierFolder, id=folder_id)
+
+    # Get the search query from the GET parameters
+    query = request.GET.get('q', '').strip()
+    page_number = request.GET.get('page', 1)
+
+    # Initial queryset
     purchase_orders = PurchaseOrder.objects.filter(supplier_folder=folder)
 
+    # If there's a search query, filter the purchase orders accordingly
+    if query:
+        try:
+            # Try to interpret the query as a month number (e.g., "08" for August)
+            month_number = int(query)
+            purchase_orders = purchase_orders.filter(date__month=month_number)
+        except ValueError:
+            try:
+                # Try to interpret the query as a full month name only (e.g., "August")
+                month_mapping = {
+                    "January": "1", "February": "2", "March": "3", "April": "4",
+                    "May": "5", "June": "6", "July": "7", "August": "8",
+                    "September": "9", "October": "10", "November": "11", "December": "12"
+                }
+                month_number = month_mapping.get(query.capitalize())
+                if month_number:
+                    purchase_orders = purchase_orders.filter(date__month=month_number)
+                else:
+                    raise ValueError("Not a valid month name")
+            except ValueError:
+                # If not a date, treat it as a general text search
+                purchase_orders = purchase_orders.filter(
+                    Q(po_number__icontains=query) |
+                    Q(purchaser__icontains=query) |
+                    Q(brand__icontains=query) |
+                    Q(item_code__icontains=query) |
+                    Q(particulars__icontains=query) |
+                    Q(quantity__icontains=query) |
+                    Q(unit__icontains=query) |
+                    Q(price__icontains=query) |
+                    Q(total_amount__icontains=query) |
+                    Q(site_delivered__icontains=query) |
+                    Q(fbbd_ref_number__icontains=query) |
+                    Q(remarks__icontains=query) |
+                    Q(supplier__icontains=query) |
+                    Q(delivery_ref__icontains=query) |
+                    Q(delivery_no__icontains=query) |
+                    Q(invoice_type__icontains=query) |
+                    Q(invoice_no__icontains=query) |
+                    Q(payment_req_ref__icontains=query) |
+                    Q(payment_details__icontains=query) |
+                    Q(remarks2__icontains=query)
+                )
+
+    # Pagination
+    paginator = Paginator(purchase_orders, 100)  # Show 20 orders per page
+    try:
+        orders = paginator.page(page_number)
+    except PageNotAnInteger:
+        orders = paginator.page(1)
+    except EmptyPage:
+        orders = paginator.page(paginator.num_pages)
+
+    # Render the template with the context
     context = {
         'folder': folder,
-        'purchase_orders': purchase_orders,
+        'purchase_orders': orders,
+        'query': query,
+        'page_number': page_number,
     }
-
     return render(request, 'supplier/view_folder_contents.html', context)
 
 
@@ -1578,7 +1901,6 @@ def remove_cart_item(request, cart_item_id):
     return redirect('bulk_edit_inventory')
 
 
-
 def bulk_edit_purchase_order(request):
     if request.method == 'POST':
         if 'add_to_cart' in request.POST:
@@ -1662,11 +1984,6 @@ def bulk_edit_purchase_order(request):
         })
 
 
-
-
-
-
-
 def po_remove_cart_item(request, item_id):
     try:
         cart_item = get_object_or_404(poCart, id=item_id)
@@ -1679,3 +1996,12 @@ def po_remove_cart_item(request, item_id):
 
     return redirect('bulk_edit_purchase_order')
 
+
+def remove_all_cart_items(request):
+    try:
+        poCart.objects.all().delete()
+        messages.success(request, 'All items removed from cart successfully.')
+    except Exception as e:
+        messages.error(request, f'An error occurred while removing items from the cart: {str(e)}')
+
+    return redirect('bulk_edit_purchase_order')

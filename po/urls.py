@@ -31,6 +31,7 @@ urlpatterns = [
     path('supfolders/<int:folder_id>/view/', views.view_folder_contents, name='view_folder_contents'),
     path('supfolders/<int:folder_id>/delete/', views.delete_supplier_folder, name='delete_supplier_folder'),
     path('export-supplier-contents/<int:folder_id>/', views.export_supplier_contents, name='export_supplier_contents'),
+    path('export_all_suppliers/', views.export_all_supplier_folders, name='export_all_suppliers'),
 
     path('site-inventory/create-folder/', views.create_site_inventory_folder, name='create_site_inventory_folder'),
     path('site-inventory/delete-folder/<int:folder_id>/', views.delete_site_inventory_folder,
@@ -40,6 +41,8 @@ urlpatterns = [
          name='view_site_inventory_folder_contents'),
     path('export-site-folder-contents/<int:folder_id>/', views.export_site_folder_contents,
          name='export_site_folder_contents'),
+    path('export-all-site-inventory-folders/', views.export_all_site_inventory_folders,
+         name='export_all_site_inventory_folders'),
 
     path('create-client-folder/', views.create_client_inventory_folder, name='create_client_inventory_folder'),
     path('delete-client-folder/<int:folder_id>/', views.delete_client_inventory_folder,
@@ -49,12 +52,14 @@ urlpatterns = [
          name='view_client_inventory_folder_contents'),
     path('client-folder/export/<int:folder_id>/', views.export_client_folder_contents,
          name='export_client_folder_contents'),
+    path('export-all-client-folders/', views.export_all_client_folders, name='export_all_client_folders'),
     path('bulk_edit_inventory/', views.bulk_edit_inventory, name='bulk_edit_inventory'),
     path('remove-cart-item/<int:cart_item_id>/', views.remove_cart_item, name='remove_cart_item'),
 
     path('new-records/', views.new_records_view, name='new_records'),
-    path('export-transaction-history/', views.export_transaction_history_to_excel, name='export_transaction_history_to_excel'),
+    path('export-transaction-history/', views.export_transaction_history_to_excel,
+         name='export_transaction_history_to_excel'),
     path('bulk_edit_purchase_order/', views.bulk_edit_purchase_order, name='bulk_edit_purchase_order'),
     path('po_remove_cart_item/<int:item_id>/', views.po_remove_cart_item, name='po_remove_cart_item'),
-
+    path('remove_all_cart_items/', views.remove_all_cart_items, name='remove_all_cart_items'),
 ]

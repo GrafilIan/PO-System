@@ -90,53 +90,78 @@
                                             </div>
 
                                             <!-- Finalize Changes Button -->
-                                            <div class="col-12 mb-3">
+                                            <div class="col-12">
                                                 <button type="submit" name="finalize_changes"
                                                         class="btn btn-primary btn-block">
                                                     Finalize Changes
                                                 </button>
                                             </div>
+
                                         </div>
                                     </form>
                                 </div>
                             </div>
 
+                            <div class="col-12">
+                                <div style="border-top: 1px solid #8f8f8f; margin: 20px 0; text-align: center;">
+                                </div>
+                            </div>
 
                             <!-- Cart Items -->
-                            <h3 style="text-align: center">Cart Items</h3>
-                            <div class="row">
-                                {% if cart_items %}
-                                    {% for cart_item in cart_items %}
-                                        <div class="col-12 col-md-4 mb-3">
-                                            <div class="card card-primary glow-on-hover"
-                                                 style="border: 2px solid #87a8fa; border-radius: 8px;">
-                                                <div class="card-body"
-                                                     style="background-color: #ffffff; border-radius: 6px;">
-                                                    <h5 class="card-title text-center">{{ cart_item.particulars.particulars }}</h5>
-                                                    <p class="card-text">
-                                                        PO Number: {{ cart_item.particulars.po_number }}<br>
-                                                        Quantity:
-                                                        <strong>{{ cart_item.particulars.quantity }}</strong><br>
-                                                        Price: ₱{{ cart_item.particulars.price }}<br>
-                                                        FBBD Ref#: {{ cart_item.fbbd_ref_number }}<br>
-                                                        Remarks2: {{ cart_item.remarks2 }}
-                                                    </p>
-                                                    <form method="POST"
-                                                          action="{% url 'po_remove_cart_item' cart_item.id %}">
+                            <h3 class="text-center mb-3">Cart Items</h3>
+                            <div class="d-flex flex-column h-100">
+                                <div class="flex-fill">
+                                    <div class="row">
+                                        {% if cart_items %}
+                                            {% for cart_item in cart_items %}
+                                                <div class="col-12 col-md-3 mb-2">
+                                                    <div class="card card-primary glow-on-hover"
+                                                         style="border: 2px solid #87a8fa; border-radius: 8px;">
+                                                        <div class="card-body"
+                                                             style="background-color: #ffffff; border-radius: 6px;">
+                                                            <h5 class="card-title text-center">{{ cart_item.particulars.particulars }}</h5>
+                                                            <p class="card-text">
+                                                                PO Number: {{ cart_item.particulars.po_number }}<br>
+                                                                Quantity:
+                                                                <strong>{{ cart_item.particulars.quantity }}</strong><br>
+                                                                Price: ₱{{ cart_item.particulars.price }}<br>
+                                                                FBBD Ref#: {{ cart_item.fbbd_ref_number }}<br>
+                                                                Remarks2: {{ cart_item.remarks2 }}
+                                                            </p>
+                                                            <form method="POST"
+                                                                  action="{% url 'po_remove_cart_item' cart_item.id %}">
+                                                                {% csrf_token %}
+                                                                <button type="submit" class="btn btn-danger">Remove
+                                                                </button>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+
+                                            <!-- Remove All Cart Items Form -->
+                                            <div class="col-12 d-flex justify-content-center mb-4">
+                                                <div class="col-4">
+                                                    <form method="post" action="{% url 'remove_all_cart_items' %}">
                                                         {% csrf_token %}
-                                                        <button type="submit" class="btn btn-danger">Remove</button>
+                                                        <button type="submit" class="btn btn-outline-primary btn-block">
+                                                            Remove All Cart Items
+                                                        </button>
                                                     </form>
                                                 </div>
                                             </div>
-                                        </div>
-                                    {% endfor %}
-                                {% else %}
-                                    <div class="col-12 d-flex justify-content-center align-items-center"
-                                         style="height: 30px;">
-                                        <p class="text-center">No items in cart.</p>
+                                        {% else %}
+                                            <div class="col-12 d-flex justify-content-center align-items-center"
+                                                 style="height: 30px;">
+                                                <p class="text-center">No items in cart.</p>
+                                            </div>
+                                        {% endif %}
                                     </div>
-                                {% endif %}
+                                </div>
                             </div>
+
+
+
 
                             <!-- Add to Cart Form -->
                             <form method="post" action="{% url 'bulk_edit_purchase_order' %}" class="mb-4">
