@@ -12,6 +12,15 @@
     <link rel="stylesheet" href="{% static 'assets/modules/datatables/Select-1.2.4/css/select.bootstrap4.min.css' %}">
     <link rel="stylesheet" href="{% static 'assets/css/custom.css' %}">
     <script src="{% static 'assets/js/cleave.min.js' %}"></script>
+    <style>
+        .glow-on-hover {
+            transition: box-shadow 0.3s ease-in-out;
+        }
+
+        .glow-on-hover:hover {
+            box-shadow: 0 0 10px rgba(0, 90, 154, 0.8), 0 0 20px rgba(255, 255, 255, 0.6), 0 0 30px rgba(255, 255, 255, 0.4);
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
@@ -24,18 +33,22 @@
 
                         <div class="card-body">
                             <!-- Display messages -->
-                            {% if messages %}
-                                <div class="alert alert-{{ messages.tags }} alert-dismissible fade show text-center"
-                                     role="alert"
-                                     style="border: 1px solid #0026e5; background-color: #e0f7fa; color: #000000;">
-                                    {% for message in messages %}
-                                        <strong>{{ message }}</strong>
-                                    {% endfor %}
-                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"
-                                            style="color: #004085;">
-                                        <span aria-hidden="true">&times;</span>
-                                    </button>
-                                </div>
+                           {% if messages %}
+                                {% for message in messages %}
+                                    <div class="alert alert-dismissible fade show text-center
+                {% if message.tags == 'success' %}alert-success
+                {% elif message.tags == 'error' %}alert-danger
+                {% elif message.tags == 'info' %}alert-info
+                {% elif message.tags == 'warning' %}alert-warning
+                {% endif %}"
+                                         style="color: #ffffff;"
+                                         role="alert"><strong>{{ message }}</strong>
+                                {% endfor %}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close"
+                                    style="color: #004085;">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                            </div>
                             {% endif %}
 
                             <div class="form-inline justify-content-center col-12 mb-4">
@@ -180,10 +193,14 @@
                                                 <div class="card-body"
                                                      style="background-color: #ffffff; border-radius: 6px;">
                                                     <h5 class="card-title text-center">{{ order.particulars }}</h5>
+                                                     <div class="col-12">
+                                                        <div style="border-top: 1px solid #0026e5; margin: 4px 0;"></div>
+                                                    </div>
                                                     <p class="card-text" style="margin-bottom: 0.1rem;">
                                                         PO Number: <strong>{{ order.po_number }}</strong><br>
                                                         <strong>Current Stock: {{ order.quantity }}</strong><br>
-                                                        Price: ₱{{ order.price }}
+                                                        Price: ₱{{ order.price }}<br>
+                                                        Remarks: {{ order.remarks2 }}
                                                     </p>
                                                     <div class="d-flex justify-content-center">
                                                         <div class="custom-control custom-checkbox">

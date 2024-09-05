@@ -10,6 +10,7 @@ urlpatterns = [
     path('purchase-order/create/', views.purchase_order_create, name='purchase_order_create'),
     path('purchase-orders/', views.purchase_order_list, name='purchase_order_list'),
     path('purchase_order/edit/<int:id>/', views.purchase_order_edit, name='purchase_order_edit'),
+    path('purchase_order_supplier/edit/<int:id>/', views.purchase_order_edit_supplier, name='purchase_order_edit_supplier'),
 
     path('export-orders/', export_orders_to_excel, name='export_orders_to_excel'),
     path('folders/', views.list_folders, name='list_folders'),
@@ -20,6 +21,7 @@ urlpatterns = [
 
     path('upload/', views.upload_file, name='upload_file'),
     path('inventory/', views.inventory_table, name='inventory_table'),
+    path('inventory/form/', views.inventory_form, name='inventory_form'),
     path('inventory/edit/<int:id>/', views.inventory_edit, name='inventory_edit'),
 
     path('transaction-history/', views.transaction_history, name='transaction_history'),
@@ -62,4 +64,6 @@ urlpatterns = [
     path('bulk_edit_purchase_order/', views.bulk_edit_purchase_order, name='bulk_edit_purchase_order'),
     path('po_remove_cart_item/<int:item_id>/', views.po_remove_cart_item, name='po_remove_cart_item'),
     path('remove_all_cart_items/', views.remove_all_cart_items, name='remove_all_cart_items'),
+    path('item_code_list/', views.item_code_list, name='item_code_list'),
+
 ]

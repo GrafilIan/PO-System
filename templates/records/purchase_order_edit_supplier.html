@@ -36,7 +36,7 @@
                 <h2>Edit Purchase Order</h2>
             </div>
             <div class="card-body">
-                <form id="purchaseOrderForm" method="post" action="{% url 'purchase_order_edit' order.id %}"
+                <form id="purchaseOrderForm" method="post" action="{% url 'purchase_order_edit_supplier' order.id %}"
                       enctype="multipart/form-data">
                     {% csrf_token %}
 
@@ -192,7 +192,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }).then((result) => {
                     if (result.isConfirmed) {
                         // Redirect to a new page after success
-                        window.location.href = "{% url 'purchase_order_list' %}";
+                        window.location.href = "{% url 'view_folder_contents' folder_id %}";
                     }
                 });
             } else {

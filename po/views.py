@@ -11,9 +11,10 @@ from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
 from django.utils import timezone
 from openpyxl.workbook import Workbook
-from .forms import PurchaseOrderForm, UploadFileForm, ItemInventoryForm, ItemInventoryBulkForm, PurchaseOrderBulkForm
+from .forms import PurchaseOrderForm, UploadFileForm, ItemInventoryBulkForm, PurchaseOrderBulkForm, \
+    ItemInventoryListForm, ItemInventoryQuantityForm
 from .models import PurchaseOrder, ArchiveFolder, ItemInventory, SupplierFolder, InventoryHistory, SiteInventoryFolder, \
-    ClientInventoryFolder, Cart, poCart
+    ClientInventoryFolder, Cart, poCart, ItemCodeList
 from datetime import datetime
 from openpyxl.styles import Font, PatternFill
 from io import BytesIO
@@ -83,32 +84,34 @@ def purchase_order_create(request):
                     order.save()
 
             purchase_order.site_delivered = purchase_order.site_delivered.strip().upper()
-            if purchase_order.site_delivered in ['BTCS', 'BTCS WH']:
-                # Check if an inventory record for the item exists
-                inventory_item = ItemInventory.objects.filter(
-                    supplier=purchase_order.supplier,
-                    po_product_name=purchase_order.particulars,
-                    unit=purchase_order.unit,
-                    price=purchase_order.price,
-                ).first()
-
-                if inventory_item:
-                    # Update existing inventory record
-                    inventory_item.quantity_in += purchase_order.quantity
-                else:
-                    # Create a new inventory record
-                    inventory_item = ItemInventory(
-                        supplier=purchase_order.supplier,
-                        po_product_name=purchase_order.particulars,
-                        unit=purchase_order.unit,
-                        quantity_in=purchase_order.quantity,
-                        price=purchase_order.price,
-                        delivery_ref=purchase_order.delivery_ref,
-                        delivery_no=purchase_order.delivery_no,
-                        invoice_type=purchase_order.invoice_type,
-                        invoice_no=purchase_order.invoice_no,
-                    )
-                inventory_item.save()
+            # Removed the following code related to ItemInventory:
+            #
+            # if purchase_order.site_delivered in ['BTCS', 'BTCS WH']:
+            #     # Check if an inventory record for the item exists
+            #     inventory_item = ItemInventory.objects.filter(
+            #         supplier=purchase_order.supplier,
+            #         po_product_name=purchase_order.particulars,
+            #         unit=purchase_order.unit,
+            #         price=purchase_order.price,
+            #     ).first()
+            #
+            #     if inventory_item:
+            #         # Update existing inventory record
+            #         inventory_item.quantity_in += purchase_order.quantity
+            #     else:
+            #         # Create a new inventory record
+            #         inventory_item = ItemInventory(
+            #             supplier=purchase_order.supplier,
+            #             po_product_name=purchase_order.particulars,
+            #             unit=purchase_order.unit,
+            #             quantity_in=purchase_order.quantity,
+            #             price=purchase_order.price,
+            #             delivery_ref=purchase_order.delivery_ref,
+            #             delivery_no=purchase_order.delivery_no,
+            #             invoice_type=purchase_order.invoice_type,
+            #             invoice_no=purchase_order.invoice_no,
+            #         )
+            #     inventory_item.save()
 
             return JsonResponse({'status': 'success'})
         else:
@@ -117,6 +120,35 @@ def purchase_order_create(request):
         form = PurchaseOrderForm()
 
     return render(request, 'records/purchase_order_form.html', {'form': form})
+
+
+def purchase_order_edit_supplier(request, id):
+    order = get_object_or_404(PurchaseOrder, id=id)
+    folder = order.supplier_folder  # Retrieve the folder object directly
+    folder_id = folder.id if folder else None  # Get folder ID if available
+
+    if request.method == 'POST':
+        form = PurchaseOrderForm(request.POST, instance=order)
+        if form.is_valid():
+            purchase_order = form.save()
+
+            purchase_order.site_delivered = purchase_order.site_delivered.strip().upper()
+
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'status': 'success'})
+            return redirect('view_folder_contents')
+        else:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'status': 'error'})
+    else:
+        form = PurchaseOrderForm(instance=order)
+
+    return render(request, 'records/purchase_order_edit_supplier.html', {
+        'form': form,
+        'order': order,
+        'folder_id': folder_id
+    })
+
 
 
 def purchase_order_edit(request, id):
@@ -128,29 +160,31 @@ def purchase_order_edit(request, id):
             purchase_order = form.save()
 
             purchase_order.site_delivered = purchase_order.site_delivered.strip().upper()
-            if purchase_order.site_delivered in ['BTCS', 'BTCS WH']:
-                # Update or create inventory item
-                inventory_item = ItemInventory.objects.filter(
-                    supplier=purchase_order.supplier,
-                    po_product_name=purchase_order.particulars,
-                    unit=purchase_order.unit,
-                ).first()
-
-                if inventory_item:
-                    # Update existing inventory record
-                    inventory_item.quantity_in += purchase_order.quantity
-                else:
-                    # Create a new inventory record
-                    inventory_item = ItemInventory(
-                        supplier=purchase_order.supplier,
-                        po_product_name=purchase_order.particulars,
-                        unit=purchase_order.unit,
-                        quantity_in=purchase_order.quantity,
-                        price=purchase_order.price,
-                    )
-
-                # Save the inventory item
-                inventory_item.save()
+            # Removed the following code related to ItemInventory:
+            #
+            # if purchase_order.site_delivered in ['BTCS', 'BTCS WH']:
+            #     # Update or create inventory item
+            #     inventory_item = ItemInventory.objects.filter(
+            #         supplier=purchase_order.supplier,
+            #         po_product_name=purchase_order.particulars,
+            #         unit=purchase_order.unit,
+            #     ).first()
+            #
+            #     if inventory_item:
+            #         # Update existing inventory record
+            #         inventory_item.quantity_in += purchase_order.quantity
+            #     else:
+            #         # Create a new inventory record
+            #         inventory_item = ItemInventory(
+            #             supplier=purchase_order.supplier,
+            #             po_product_name=purchase_order.particulars,
+            #             unit=purchase_order.unit,
+            #             quantity_in=purchase_order.quantity,
+            #             price=purchase_order.price,
+            #         )
+            #
+            #     # Save the inventory item
+            #     inventory_item.save()
 
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({'status': 'success'})
@@ -609,7 +643,7 @@ def export_transaction_history_to_excel(request):
     date_query = request.GET.get('date')  # Date query parameter
 
     # Start with all transactions
-    transactions = InventoryHistory.objects.all().order_by('-date')
+    transactions = InventoryHistory.objects.exclude(date__isnull=True).order_by('-date')
 
     # Apply search filter
     if query:
@@ -839,35 +873,37 @@ def handle_uploaded_file(f):
         # Save the purchase order
         purchase_order.save()
 
-        purchase_order.site_delivered = purchase_order.site_delivered.strip().upper()
-        if purchase_order.site_delivered in ['BTCS', 'BTCS WH']:
-            # Check if an inventory record for the item exists
-            inventory_item = ItemInventory.objects.filter(
-                supplier=purchase_order.supplier,
-                po_product_name=purchase_order.particulars,
-                unit=purchase_order.unit,
-                price=purchase_order.price,
-            ).first()
-
-            if inventory_item:
-                # Update existing inventory record
-                inventory_item.quantity_in += purchase_order.quantity
-            else:
-                # Create a new inventory record
-                inventory_item = ItemInventory(
-                    supplier=purchase_order.supplier,
-                    po_product_name=purchase_order.particulars,
-                    unit=purchase_order.unit,
-                    quantity_in=purchase_order.quantity,
-                    price=purchase_order.price,
-                    delivery_ref=purchase_order.delivery_ref,
-                    delivery_no=purchase_order.delivery_no,
-                    invoice_type=purchase_order.invoice_type,
-                    invoice_no=purchase_order.invoice_no,
-                )
-
-            # Save the inventory item
-            inventory_item.save()
+    # Removed the following code related to ItemInventory:
+    #
+    # purchase_order.site_delivered = purchase_order.site_delivered.strip().upper()
+    # if purchase_order.site_delivered in ['BTCS', 'BTCS WH']:
+    #     # Check if an inventory record for the item exists
+    #     inventory_item = ItemInventory.objects.filter(
+    #         supplier=purchase_order.supplier,
+    #         po_product_name=purchase_order.particulars,
+    #         unit=purchase_order.unit,
+    #         price=purchase_order.price,
+    #     ).first()
+    #
+    #     if inventory_item:
+    #         # Update existing inventory record
+    #         inventory_item.quantity_in += purchase_order.quantity
+    #     else:
+    #         # Create a new inventory record
+    #         inventory_item = ItemInventory(
+    #             supplier=purchase_order.supplier,
+    #             po_product_name=purchase_order.particulars,
+    #             unit=purchase_order.unit,
+    #             quantity_in=purchase_order.quantity,
+    #             price=purchase_order.price,
+    #             delivery_ref=purchase_order.delivery_ref,
+    #             delivery_no=purchase_order.delivery_no,
+    #             invoice_type=purchase_order.invoice_type,
+    #             invoice_no=purchase_order.invoice_no,
+    #         )
+    #
+    #     # Save the inventory item
+    #     inventory_item.save()
 
 
 def upload_file(request):
@@ -885,12 +921,31 @@ def upload_file(request):
 
 
 # -----------------------------For INVENTORY----------------------------------------------
+def inventory_form(request):
+    if request.method == 'POST':
+        form = ItemInventoryListForm(request.POST)
+        po_product_name = request.POST.get('po_product_name')
+
+        # Check if the po_product_name already exists in the database
+        if ItemInventory.objects.filter(po_product_name=po_product_name).exists():
+            messages.error(request, 'PO Product Name already exists. Please use a different name.')
+        elif form.is_valid():
+            form.save()
+            messages.success(request, 'Item successfully added!')
+            return redirect('inventory_form')  # Redirect to the same form page
+        else:
+            messages.error(request, 'There was an error adding the item. Please try again.')
+    else:
+        form = ItemInventoryListForm()
+
+    return render(request, 'inventory/inventory_form.html', {'form': form})
+
 
 def inventory_table(request):
     query = request.GET.get('q')  # 'q' is the name of the search input field
 
     # Start with all inventory items
-    inventory_items = ItemInventory.objects.all()
+    inventory_items = ItemInventory.objects.all().order_by('po_product_name')
 
     # If there's a search query, filter the inventory items accordingly
     if query:
@@ -898,13 +953,21 @@ def inventory_table(request):
             Q(item_code__icontains=query) |
             Q(supplier__icontains=query) |
             Q(po_product_name__icontains=query) |
-            Q(new_product_name__icontains=query) |
             Q(unit__icontains=query) |
             Q(quantity_in__icontains=query) |
             Q(quantity_out__icontains=query) |
-            Q(price__icontains=query) |
             Q(stock__icontains=query)
         )
+
+    # Save the filtered records to SavedItemCodeList
+    for item in inventory_items:
+        if not ItemCodeList.objects.filter(item_code=item.item_code,
+                                           po_product_name=item.po_product_name).exists():
+            ItemCodeList.objects.create(
+                item_code=item.item_code,
+                po_product_name=item.po_product_name,
+                unit=item.unit
+            )
 
     paginator = Paginator(inventory_items, 100)  # Paginate after every 20 entries
     page_number = request.GET.get('page')
@@ -931,42 +994,23 @@ def inventory_edit(request, id):
     inventory_item = get_object_or_404(ItemInventory, id=id)
 
     if request.method == 'POST':
-        form = ItemInventoryForm(request.POST, instance=inventory_item)
+        form = ItemInventoryQuantityForm(request.POST, instance=inventory_item)
         if form.is_valid():
             updated_item = form.save(commit=False)
-            location_type = form.cleaned_data.get('location_type')
-            location_name = form.cleaned_data.get('location_name')
-            updated_item.site_or_client_choice = location_type
-
-            if location_type == 'site':
-                # Create or get the site folder
-                folder, created = SiteInventoryFolder.objects.get_or_create(name=location_name)
-                updated_item.site_inventory_folder = folder
-
-                # Save the updated item
-                updated_item.save()
-
-                # Update or associate existing transactions with the folder
-                InventoryHistory.objects.filter(site_delivered=location_name).update(site_inventory_folder=folder)
-
-            elif location_type == 'client':
-                # Create or get the client folder
-                client_folder, created = ClientInventoryFolder.objects.get_or_create(name=location_name)
-                updated_item.client_inventory_folder = client_folder
-
-                # Save the updated item
-                updated_item.save()
-
-                # Update or associate existing transactions with the client folder
-                InventoryHistory.objects.filter(client=location_name).update(client_inventory_folder=client_folder)
-
+            updated_item.stock = updated_item.quantity_in - updated_item.quantity_out  # Update stock based on quantities
+            updated_item.save()
             return JsonResponse({'status': 'success'})
         else:
             return JsonResponse({'status': 'error', 'errors': form.errors})
     else:
-        form = ItemInventoryForm(instance=inventory_item)
+        form = ItemInventoryQuantityForm(instance=inventory_item)
 
     return render(request, 'inventory/inventory_edit.html', {'form': form, 'item': inventory_item})
+
+
+def item_code_list(request):
+    saved_items = ItemCodeList.objects.all()  # Querying all saved items
+    return render(request, 'inventory/item_code_list.html', {'saved_items': saved_items})
 
 
 def export_inventory_to_excel(request):
@@ -1305,7 +1349,6 @@ def export_client_folder_contents(request, folder_id):
         return HttpResponse("Client Inventory Folder not found", status=404)
 
 
-
 def export_all_client_folders(request):
     # Create an in-memory buffer to hold the zip file
     buffer = BytesIO()
@@ -1399,8 +1442,8 @@ def transaction_history(request):
     query = request.GET.get('q')  # Get search query from request
     page_number = request.GET.get('page', 1)  # Get page number from request
 
-    # Retrieve all records from InventoryHistory
-    transactions = InventoryHistory.objects.all().order_by('-date')
+    # Retrieve all records from InventoryHistory and exclude records where date is null
+    transactions = InventoryHistory.objects.exclude(date__isnull=True).order_by('-date')
 
     # Apply search filter if a query is present
     if query:
@@ -1439,7 +1482,7 @@ def transaction_history(request):
                         )
 
     # Paginate the filtered transactions
-    paginator = Paginator(transactions, 100)  # Show 20 transactions per page
+    paginator = Paginator(transactions, 100)  # Show 100 transactions per page
     try:
         transactions_page = paginator.page(page_number)
     except PageNotAnInteger:
@@ -1493,13 +1536,16 @@ def site_inventory_folder_list(request):
             new_folder, created = SiteInventoryFolder.objects.get_or_create(name=folder_name)
 
             if created:
-                # Handle matching orders here
-                matching_orders = PurchaseOrder.objects.filter(site_delivered=folder_name)
-                for order in matching_orders:
-                    order.site_inventory_folder = new_folder
-                    order.save()
+                # Removed code:
+                # The following code was responsible for finding and associating matching PurchaseOrder records
+                # with the newly created SiteInventoryFolder:
+                #
+                # matching_orders = PurchaseOrder.objects.filter(site_delivered=folder_name)
+                # for order in matching_orders:
+                #     order.site_inventory_folder = new_folder
+                #     order.save()
 
-                return JsonResponse({'success': True, 'message': 'Folder created and orders updated successfully.'})
+                return JsonResponse({'success': True, 'message': 'Folder created successfully.'})
             else:
                 return JsonResponse({'success': False, 'message': 'Folder with this name already exists.'})
 
@@ -1513,7 +1559,7 @@ def site_inventory_folder_list(request):
 
 def view_site_inventory_folder_contents(request, folder_id):
     folder = get_object_or_404(SiteInventoryFolder, id=folder_id)
-    transactions_list = ItemInventory.objects.filter(site_inventory_folder=folder)
+    transactions_list = InventoryHistory.objects.filter(site_inventory_folder=folder)
 
     # Calculate total_amount
     total_amount = transactions_list.aggregate(total_amount_sum=Sum('total_amount'))['total_amount_sum'] or 0
@@ -1577,13 +1623,16 @@ def client_inventory_folder_list(request):
             new_folder, created = ClientInventoryFolder.objects.get_or_create(name=folder_name)
 
             if created:
-                # Handle matching orders here
-                matching_orders = PurchaseOrder.objects.filter(client=folder_name)
-                for order in matching_orders:
-                    order.client_inventory_folder = new_folder
-                    order.save()
+                # Removed code:
+                # The following code was responsible for finding and associating matching PurchaseOrder records
+                # with the newly created ClientInventoryFolder:
+                #
+                # matching_orders = PurchaseOrder.objects.filter(client=folder_name)
+                # for order in matching_orders:
+                #     order.client_inventory_folder = new_folder
+                #     order.save()
 
-                return JsonResponse({'success': True, 'message': 'Folder created and orders updated successfully.'})
+                return JsonResponse({'success': True, 'message': 'Folder created successfully.'})
             else:
                 return JsonResponse({'success': False, 'message': 'Folder with this name already exists.'})
 
@@ -1597,7 +1646,7 @@ def client_inventory_folder_list(request):
 
 def view_client_inventory_folder_contents(request, folder_id):
     folder = get_object_or_404(ClientInventoryFolder, id=folder_id)
-    transactions_list = ItemInventory.objects.filter(client_inventory_folder=folder)
+    transactions_list = InventoryHistory.objects.filter(client_inventory_folder=folder)
 
     total_amount = transactions_list.aggregate(total_amount_sum=Sum('total_amount'))['total_amount_sum'] or 0
 
@@ -1769,6 +1818,11 @@ def bulk_edit_inventory(request):
             return redirect('bulk_edit_inventory')
 
         elif 'finalize_changes' in request.POST:
+            # Check if the cart is empty before finalizing changes
+            if not Cart.objects.exists():
+                messages.error(request, 'The cart is empty. Please add items to the cart before finalizing changes.')
+                return redirect('bulk_edit_inventory')
+
             form = ItemInventoryBulkForm(request.POST)
             if form.is_valid():
                 date = form.cleaned_data['date']
@@ -1791,16 +1845,32 @@ def bulk_edit_inventory(request):
                         price = item.price
                         total_amount = quantity_out * price
 
-                        # Determine and set folder based on location_type
-                        if location_type == 'site':
-                            folder, created = SiteInventoryFolder.objects.get_or_create(name=location_name)
-                            item.site_inventory_folder = folder
-                            item.site_delivered = location_name
+                        # Fetch InventoryHistory if it exists
+                        inventory_history = InventoryHistory.objects.filter(
+                            item=item,
+                            date=date
+                        ).first()
 
-                        elif location_type == 'client':
-                            client_folder, created = ClientInventoryFolder.objects.get_or_create(name=location_name)
-                            item.client_inventory_folder = client_folder
-                            item.client = location_name
+                        if inventory_history:
+                            # Use the existing folder from InventoryHistory
+                            if location_type == 'site':
+                                folder = inventory_history.site_inventory_folder
+                                item.site_inventory_folder = folder
+                                item.site_delivered = folder.name if folder else location_name
+                            elif location_type == 'client':
+                                folder = inventory_history.client_inventory_folder
+                                item.client_inventory_folder = folder
+                                item.client = folder.name if folder else location_name
+                        else:
+                            # If no InventoryHistory exists, proceed with folder creation
+                            if location_type == 'site':
+                                folder, created = SiteInventoryFolder.objects.get_or_create(name=location_name)
+                                item.site_inventory_folder = folder
+                                item.site_delivered = location_name
+                            elif location_type == 'client':
+                                folder, created = ClientInventoryFolder.objects.get_or_create(name=location_name)
+                                item.client_inventory_folder = folder
+                                item.client = location_name
 
                         # Update ItemInventory details
                         item.date = date
@@ -1816,10 +1886,12 @@ def bulk_edit_inventory(request):
                         # Save updated item
                         item.save()
 
-                        # Check if InventoryHistory record already exists
+                        # Update or create InventoryHistory record
                         inventory_history, created = InventoryHistory.objects.get_or_create(
                             item=item,
                             date=date,
+                            invoice_no=invoice_no if location_type == 'client' else None,
+                            delivery_ref=delivery_ref if location_type == 'site' else None,
                             defaults={
                                 'client_inventory_folder': item.client_inventory_folder,
                                 'site_inventory_folder': item.site_inventory_folder,
@@ -1827,10 +1899,8 @@ def bulk_edit_inventory(request):
                                 'quantity_out': quantity_out,
                                 'price': price,
                                 'total_amount': total_amount,
-                                'delivery_ref': delivery_ref,
                                 'delivery_no': delivery_no,
-                                'invoice_type': invoice_type,
-                                'invoice_no': invoice_no
+                                'invoice_type': invoice_type
                             }
                         )
 
@@ -1930,31 +2000,40 @@ def bulk_edit_purchase_order(request):
             return redirect('bulk_edit_purchase_order')
 
         elif 'finalize_changes' in request.POST:
+            if poCart.objects.count() == 0:
+                messages.error(request, 'The cart is empty. Please add items to the cart before finalizing changes.')
+                return redirect('bulk_edit_purchase_order')
+
             fbbd_ref_number = request.POST.get('fbbd_ref_number', '')
             remarks2 = request.POST.get('remarks2', '')
             success = True
             errors = []
+            changes_made = False
 
             cart_items = poCart.objects.all()
 
             for cart_item in cart_items:
-                try:
-                    po = cart_item.particulars
+                po = cart_item.particulars
+                # Check if the values have actually changed
+                if (po.fbbd_ref_number != fbbd_ref_number or po.remarks2 != remarks2):
+                    changes_made = True
                     po.fbbd_ref_number = fbbd_ref_number
                     po.remarks2 = remarks2
-                    po.save()
+                    try:
+                        po.save()
+                    except Exception as e:
+                        success = False
+                        errors.append(f"An error occurred while saving Purchase Order ID {po.id}: {str(e)}")
                     cart_item.delete()
-                except PurchaseOrder.DoesNotExist:
-                    success = False
-                    errors.append(f"Purchase Order with ID {cart_item.particulars.id} does not exist.")
-                except Exception as e:
-                    success = False
-                    errors.append(f"An error occurred for Purchase Order ID {cart_item.particulars.id}: {str(e)}")
+
+            if not changes_made:
+                messages.error(request,
+                               'No changes were made to any items. Please edit at least one item before finalizing changes.')
+                return redirect('bulk_edit_purchase_order')
 
             # Clear the cart after finalizing changes
-            poCart.objects.all().delete()
-
             if success:
+                poCart.objects.all().delete()
                 messages.success(request, 'Orders updated successfully.')
             else:
                 messages.error(request, 'Some errors occurred: ' + ', '.join(errors))

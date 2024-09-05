@@ -105,6 +105,7 @@
                                                         <th class="no-wrap" style="color: white;">PAYMENT DETAILS</th>
                                                         <th class="no-wrap" style="color: white;">PAYMENT REQ.#</th>
                                                         <th style="color: white;">REMARKS</th>
+                                                        <th class="no-wrap" style="color: white;">Action</th>
                                                     </tr>
                                                     </thead>
                                                     <tbody>
@@ -139,6 +140,13 @@
                                                                     {{ order.remarks2 }}
                                                                 </span>
                                                             </td>
+                                                            <td>
+                                                                <!-- Edit button -->
+                                                                <a href="{% url 'purchase_order_edit_supplier' order.id %}"
+                                                                   class="btn btn-dark btn-sm"
+                                                                   style="width: 50px; height: 30px;"><i
+                                                                        class="fa fa-wrench" aria-hidden="true"></i></a>
+                                                            </td>
                                                         </tr>
                                                     {% endfor %}
                                                     </tbody>
@@ -151,8 +159,7 @@
                                                     <ul class="pagination justify-content-center">
                                                         {% if orders.has_previous %}
                                                             <li class="page-item">
-                                                                <a class="page-link" href="?page=
-                                                                        {{ orders.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}"
+                                                                <a class="page-link" href="?page={{ orders.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}"
                                                                    aria-label="Previous">
                                                                     <span aria-hidden="true">&laquo;</span>
                                                                 </a>
@@ -160,16 +167,14 @@
                                                         {% endif %}
                                                         {% for num in orders.paginator.page_range %}
                                                             <li class="page-item {% if orders.number == num %}active{% endif %}">
-                                                                <a class="page-link" href="?page=
-                                                                        {{ num }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}">
+                                                                <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}">
                                                                     {{ num }}
                                                                 </a>
                                                             </li>
                                                         {% endfor %}
                                                         {% if orders.has_next %}
                                                             <li class="page-item">
-                                                                <a class="page-link" href="?page=
-                                                                        {{ orders.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}"
+                                                                <a class="page-link" href="?page={{ orders.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}"
                                                                    aria-label="Next">
                                                                     <span aria-hidden="true">&raquo;</span>
                                                                 </a>
@@ -177,8 +182,7 @@
                                                         {% endif %}
                                                         <!-- Link to Last Page -->
                                                         <li class="page-item {% if orders.number == orders.paginator.num_pages %}active{% endif %}">
-                                                            <a class="page-link" href="?page=
-                                                                    {{ orders.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}">
+                                                            <a class="page-link" href="?page={{ orders.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if date_query %}&date={{ date_query }}{% endif %}">
                                                                 Last</a>
                                                         </li>
 

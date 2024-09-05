@@ -41,7 +41,7 @@
                             <div class="card-header"
                                  style="display: flex; justify-content: space-between; align-items: center;">
                                 <h2>INVENTORY RECORDS OF {{ folder.name }}</h2>
-                                <h3><strong>Total Amount:</strong> {{ total_amount|floatformat:2|intcomma }}</h3>
+                                <!--<h3><strong>Total Amount:</strong> {{ total_amount|floatformat:2|intcomma }}</h3>-->
                             </div>
                             <div class="card-body">
                                 <div class="col-12">
@@ -68,8 +68,6 @@
                                                         <th style="white-space: nowrap; color: white;">Item</th>
                                                         <th style="white-space: nowrap; color: white;">Quantity In</th>
                                                         <th style="white-space: nowrap; color: white;">Quantity Out</th>
-                                                        <th style="white-space: nowrap; color: white;">Price</th>
-                                                        <th style="white-space: nowrap; color: white;">Total Amount</th>
                                                         <th style="white-space: nowrap; color: white;">Delivery Ref</th>
                                                         <th style="white-space: nowrap; color: white;">Delivery No.</th>
                                                     </tr>
@@ -83,8 +81,6 @@
                                                             <td class="no-wrap">{{ transaction.po_product_name }}</td>
                                                             <td>{{ transaction.quantity_in }}</td>
                                                             <td>{{ transaction.quantity_out }}</td>
-                                                            <td>{{ transaction.price|floatformat:2|intcomma }}</td>
-                                                            <td>{{ transaction.total_amount|floatformat:2|intcomma }}</td>
                                                             <td>{{ transaction.delivery_ref }}</td>
                                                             <td>{{ transaction.delivery_no }}</td>
                                                         </tr>

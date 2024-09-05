@@ -18,80 +18,80 @@
     <div class="row">
         <div class="col-12 col-sm-10 offset-sm-1 col-md-8 offset-md-2 col-lg-8 offset-lg-2 col-xl-8 offset-xl-2">
             <div class="card card-primary" style="background-color: rgba(255, 255, 255, 0.9); margin-top: 180px">
-                {% if messages %}
-                    <ul class="messages">
-                        {% for message in messages %}
-                            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-                        {% endfor %}
-                    </ul>
-                {% endif %}
 
                 <div class="card">
                     <div class="card-header d-flex justify-content-center" style="margin-top: 10px;">
-                        <h2>Edit Item Inventory</h2>
+                        <h2>Add Item Inventory</h2>
                     </div>
                     <div class="card-body">
-                        <form id="itemInventoryForm" method="post" action="{% url 'inventory_edit' item.id %}"
-                              enctype="multipart/form-data">
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-dismissible fade show text-center
+                {% if message.tags == 'success' %}alert-success
+                {% elif message.tags == 'error' %}alert-danger
+                {% elif message.tags == 'info' %}alert-info
+                {% elif message.tags == 'warning' %}alert-warning
+                {% endif %}"
+                                     style="color: #0E1112;"
+                                     role="alert"><strong>{{ message }}</strong>
+                            {% endfor %}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"
+                                style="color: #004085;">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                        </div>
+                        {% endif %}
+
+                        <form method="post" action="{% url 'inventory_form' %}">
                             {% csrf_token %}
+                            {{ form.non_field_errors }}
+                            <div class="row">
+
+                                <div class="form-group col-12 col-sm-6">
+                                    <label for="po_product_name">Particulars:</label>
+                                     {{ form.po_product_name }}
+                                </div>
+                                <div class="form-group col-12 col-sm-6">
+                                    <label for="item_code">Item Code:</label>
+                                    {{ form.item_code }}
+                                </div>
+
+                            </div>
+                            <div class="row">
+                                <div class="form-group col-12 col-sm-6">
+                                    <label for="supplier">Supplier:</label>
+                                    {{ form.supplier }}
+
+                                </div>
+
+                                <div class="form-group col-12 col-sm-6">
+                                    <label for="unit">Unit:</label>
+                                    {{ form.unit }}
+                                </div>
+                            </div>
 
                             <div class="row">
 
-                                <!-- Supplier Field -->
-                                <div class="form-group col-12 col-sm-4">
-                                    <label for="supplier">Supplier</label>
-                                    <input type="text" name="supplier" value="{{ form.supplier.value }}"
-                                           class="form-control">
-                                    <input type="hidden" name="supplier" value="{{ form.supplier.value }}">
-                                </div>
-
-                                <!-- PO Product Name Field -->
-                                <div class="form-group col-12 col-sm-5">
-                                    <label for="po_product_name">Particular</label>
-                                    <input type="text" name="po_product_name" value="{{ form.po_product_name.value }}"
-                                           class="form-control" disabled>
-                                    <input type="hidden" name="po_product_name"
-                                           value="{{ form.po_product_name.value }}">
-                                </div>
-
-                                <!-- Unit Field -->
-                                <div class="form-group col-12 col-sm-3">
-                                    <label for="unit">Unit</label>
-                                    <input type="text" name="unit_display" value="{{ form.instance.unit }}"
-                                           class="form-control" disabled>
-                                    <input type="hidden" name="unit" value="{{ form.instance.unit }}">
-                                </div>
-
-
-                                <!-- Quantity In Field -->
-                                <div class="form-group col-12 col-sm-4">
-                                    <label for="quantity_in">Quantity In</label>
-                                    {{ form.quantity_in }}
-                                </div>
-
-                                <!-- Quantity Out Field -->
-                                <div class="form-group col-12 col-sm-4">
-                                    <label for="quantity_out">Quantity Out</label>
-                                    {{ form.quantity_out }}
-                                </div>
-
-                                <!-- Stock Field -->
-                                <div class="form-group col-12 col-sm-4">
-                                    <label for="stock">Stock</label>
-                                    <input type="text" name="stock" value="{{ form.stock.value }}" class="form-control"
-                                           disabled>
-                                    <input type="hidden" name="stock" value="{{ form.stock.value }}">
-                                </div>
-
+                            <div class="form-group col-12 col-sm-4">
+                                <label for="quantity_in">Quantity In:</label>
+                                {{ form.quantity_in }}
 
                             </div>
+                            <div class="form-group col-12 col-sm-4">
+                                <label for="quantity_out">Quantity Out:</label>
+                                {{ form.quantity_out }}
 
-                            <div class="form-divider align-center">
-                                <div class="form-group">
-                                    <button type="submit" class="btn btn-primary btn-block">SUBMIT</button>
-                                </div>
                             </div>
+                            <div class="form-group col-12 col-sm-4">
+                                 <label for="stock">Stock:</label>
+                                 {{ form.stock }}
+                            </div>
+                                </div>
+
+                            <button type="submit" class="btn btn-primary">Save</button>
                         </form>
+
+
                     </div>
                 </div>
             </div>

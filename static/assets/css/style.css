@@ -588,13 +588,13 @@ select.form-control:not([size]):not([multiple]) {
   .alert.alert-secondary {
     background-color: #cdd3d8; }
   .alert.alert-success {
-    background-color: #63ed7a; }
+    background-color: #008617; }
   .alert.alert-info {
     background-color: #3abaf4; }
   .alert.alert-warning {
     background-color: #ffa426; }
   .alert.alert-danger {
-    background-color: #fc544b; }
+    background-color: #a20a00; }
   .alert.alert-light {
     background-color: #e3eaef;
     color: #191d21; }
@@ -1320,7 +1320,7 @@ h6 .badge {
   .btn-primary:focus, .btn-primary.disabled:focus {
     background-color: #0b0072 !important; }
     .btn-primary:focus:active, .btn-primary.disabled:focus:active {
-      background-color: #157200 !important; }
+      background-color: #00ade1 !important; }
   .btn-primary:active, .btn-primary:hover, .btn-primary.disabled:active, .btn-primary.disabled:hover {
     background-color: #001359 !important; }
 

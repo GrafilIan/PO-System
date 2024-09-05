@@ -28,70 +28,35 @@
 
                 <div class="card">
                     <div class="card-header d-flex justify-content-center" style="margin-top: 10px;">
-                        <h2>Edit Item Inventory</h2>
+                        <h2>Add Item Code</h2>
                     </div>
                     <div class="card-body">
-                        <form id="itemInventoryForm" method="post" action="{% url 'inventory_edit' item.id %}"
-                              enctype="multipart/form-data">
+                        <form method="post">
                             {% csrf_token %}
 
-                            <div class="row">
-
-                                <!-- Supplier Field -->
-                                <div class="form-group col-12 col-sm-4">
-                                    <label for="supplier">Supplier</label>
-                                    <input type="text" name="supplier" value="{{ form.supplier.value }}"
-                                           class="form-control">
-                                    <input type="hidden" name="supplier" value="{{ form.supplier.value }}">
-                                </div>
-
-                                <!-- PO Product Name Field -->
-                                <div class="form-group col-12 col-sm-5">
-                                    <label for="po_product_name">Particular</label>
-                                    <input type="text" name="po_product_name" value="{{ form.po_product_name.value }}"
-                                           class="form-control" disabled>
-                                    <input type="hidden" name="po_product_name"
-                                           value="{{ form.po_product_name.value }}">
-                                </div>
-
-                                <!-- Unit Field -->
-                                <div class="form-group col-12 col-sm-3">
-                                    <label for="unit">Unit</label>
-                                    <input type="text" name="unit_display" value="{{ form.instance.unit }}"
-                                           class="form-control" disabled>
-                                    <input type="hidden" name="unit" value="{{ form.instance.unit }}">
-                                </div>
-
-
-                                <!-- Quantity In Field -->
-                                <div class="form-group col-12 col-sm-4">
-                                    <label for="quantity_in">Quantity In</label>
-                                    {{ form.quantity_in }}
-                                </div>
-
-                                <!-- Quantity Out Field -->
-                                <div class="form-group col-12 col-sm-4">
-                                    <label for="quantity_out">Quantity Out</label>
-                                    {{ form.quantity_out }}
-                                </div>
-
-                                <!-- Stock Field -->
-                                <div class="form-group col-12 col-sm-4">
-                                    <label for="stock">Stock</label>
-                                    <input type="text" name="stock" value="{{ form.stock.value }}" class="form-control"
-                                           disabled>
-                                    <input type="hidden" name="stock" value="{{ form.stock.value }}">
-                                </div>
-
-
+                            <!-- Item Code -->
+                            <div class="form-group">
+                                <label for="id_item_code">Item Code</label>
+                                {{ form.item_code }}
                             </div>
 
-                            <div class="form-divider align-center">
-                                <div class="form-group">
-                                    <button type="submit" class="btn btn-primary btn-block">SUBMIT</button>
-                                </div>
+                            <!-- PO Product Name -->
+                            <div class="form-group">
+                                <label for="id_po_product_name">PO Product Name</label>
+                                {{ form.po_product_name }}
                             </div>
+
+                            <!-- Stock -->
+                            <div class="form-group">
+                                <label for="id_stock">Stock</label>
+                                {{ form.unit }}
+                            </div>
+
+                            <!-- Submit Button -->
+                            <button type="submit" class="btn btn-primary">Save</button>
                         </form>
+
+
                     </div>
                 </div>
             </div>
@@ -102,7 +67,7 @@
 {% block scripts %}
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            var form = document.getElementById('itemInventoryForm');
+            var form = document.getElementById('ItemCodeForm');
 
             form.addEventListener('submit', function (event) {
                 event.preventDefault(); // Prevent the default form submission
@@ -138,7 +103,7 @@
                                 confirmButtonText: 'OK'
                             }).then((result) => {
                                 if (result.isConfirmed) {
-                                    window.location.href = "{% url 'inventory_table' %}";
+                                    window.location.href = "{% url 'item_code_form' %}";
                                 }
                             });
                         } else {

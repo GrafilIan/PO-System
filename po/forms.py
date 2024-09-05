@@ -1,4 +1,5 @@
 from django import forms
+from django.core.exceptions import ValidationError
 
 from .models import PurchaseOrder, ItemInventory
 
@@ -78,7 +79,6 @@ class PurchaseOrderForm(forms.ModelForm):
         self.fields['remarks2'].widget.attrs.update({'class': 'form-control'})
 
 
-
 class PurchaseOrderBulkForm(forms.ModelForm):
     REMARKS2_CHOICES = [
         ('On Hold', 'On Hold'),
@@ -146,84 +146,87 @@ class UploadFileForm(forms.Form):
     file = forms.FileField()
 
 
-class ItemInventoryForm(forms.ModelForm):
-    LOCATION_CHOICES = [
-        ('site', 'Site Delivered'),
-        ('client', 'Client'),
-    ]
-
-    location_type = forms.ChoiceField(
-        choices=LOCATION_CHOICES,
-        widget=forms.Select(attrs={'class': 'form-control'}),
-        label='Location Type',
-    )
-    location_name = forms.CharField(
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter Site or Client Name'}),
-        label='Location Name',
-    )
-
+class ItemCodeForm(forms.Form):
     class Meta:
         model = ItemInventory
         fields = [
-            'date',
             'item_code',
-            'supplier',
             'po_product_name',
-            'new_product_name',
             'unit',
             'quantity_in',
             'quantity_out',
             'stock',
-            'price',
-            'total_amount',
-            'site_delivered',  # This will be used based on the choice made
-            'client',  # This will be used based on the choice made
-            'location_type',  # New field for choosing between site and client
-            'location_name',  # New field for entering the site or client name
-            'delivery_ref',
-            'delivery_no',
-            'invoice_type',
-            'invoice_no',
+            'supplier',
         ]
+
         widgets = {
-            'date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control', 'placeholder': 'Date'}),
             'item_code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Item Code'}),
-            'supplier': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Supplier'}),
             'po_product_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'PO Product Name'}),
-            'new_product_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'New Product Name'}),
             'unit': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Unit'}),
             'quantity_in': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Quantity In'}),
             'quantity_out': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Quantity Out'}),
-            'price': forms.NumberInput(attrs={'step': '0.01', 'class': 'form-control', 'placeholder': 'Price'}),
-            'total_amount': forms.NumberInput(
-                attrs={'step': '0.01', 'class': 'form-control', 'placeholder': 'Total Amount', 'readonly': True}),
-            'stock': forms.NumberInput(attrs={'readonly': True, 'class': 'form-control', 'placeholder': 'Stock'}),
-            'delivery_ref': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Delivery Ref#'}),
-            'delivery_no': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Delivery No.'}),
-            'invoice_type': forms.Select(attrs={'class': 'form-control', 'placeholder': 'Invoice Type'}),
-            'invoice_no': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Invoice No.'}),
+            'stock': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Stock'}),
+            'supplier': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Supplier'}),
         }
 
-    def __init__(self, *args, **kwargs):
-        super(ItemInventoryForm, self).__init__(*args, **kwargs)
-        # Set widget attributes in init to ensure all fields have the correct attributes
-        for field_name, field in self.fields.items():
-            field.widget.attrs.update({'class': 'form-control', 'placeholder': field.label})
+class ItemInventoryListForm(forms.ModelForm):
+    class Meta:
+        model = ItemInventory
+        fields = [
+            'item_code',
+            'po_product_name',
+            'unit',
+            'quantity_in',
+            'quantity_out',
+            'stock',
+            'supplier',
+        ]
+
+        widgets = {
+            'item_code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Item Code'}),
+            'po_product_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Particular'}),
+            'unit': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Unit'}),
+            'quantity_in': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Quantity In'}),
+            'quantity_out': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Quantity Out'}),
+            'stock': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Stock'}),
+            'supplier': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Supplier'}),
+        }
+
+        # Custom validation for po_product_name to avoid duplicates
+        def __init__(self):
+            self.cleaned_data = None
+
+        def clean_po_product_name(self):
+            po_product_name = self.cleaned_data.get('po_product_name')
+
+            # Check if the po_product_name already exists in the database
+            if ItemInventory.objects.filter(po_product_name=po_product_name).exists():
+                raise ValidationError('PO Product Name already exists. Please use a different name.')
+
+            return po_product_name
+
+
+class ItemInventoryQuantityForm(forms.ModelForm):
+    class Meta:
+        model = ItemInventory
+        fields = ['po_product_name', 'quantity_in', 'quantity_out', 'stock', 'supplier']  # Only include the quantity fields
+        widgets = {
+            'po_product_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'quantity_in': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Quantity In'}),
+            'quantity_out': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Quantity Out'}),
+            'stock': forms.NumberInput(attrs={'readonly': True, 'class': 'form-control', 'placeholder': 'Stock'}),
+            'supplier': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Supplier'}),
+        }
 
     def clean(self):
         cleaned_data = super().clean()
-        location_type = cleaned_data.get('location_type')
-        location_name = cleaned_data.get('location_name')
 
-        if location_type == 'site':
-            cleaned_data['site_delivered'] = location_name
-            cleaned_data['client'] = None
-        elif location_type == 'client':
-            cleaned_data['client'] = location_name
-            cleaned_data['site_delivered'] = None
+        # Update the stock based on the quantities
+        quantity_in = cleaned_data.get('quantity_in', 0)
+        quantity_out = cleaned_data.get('quantity_out', 0)
 
-        # Ensure site_or_client_choice is set
-        cleaned_data['site_or_client_choice'] = location_type
+        # Calculate stock
+        cleaned_data['stock'] = quantity_in - quantity_out
 
         return cleaned_data
 
