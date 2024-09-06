@@ -10,7 +10,6 @@ urlpatterns = [
     path('purchase-order/create/', views.purchase_order_create, name='purchase_order_create'),
     path('purchase-orders/', views.purchase_order_list, name='purchase_order_list'),
     path('purchase_order/edit/<int:id>/', views.purchase_order_edit, name='purchase_order_edit'),
-    path('purchase_order_supplier/edit/<int:id>/', views.purchase_order_edit_supplier, name='purchase_order_edit_supplier'),
 
     path('export-orders/', export_orders_to_excel, name='export_orders_to_excel'),
     path('folders/', views.list_folders, name='list_folders'),

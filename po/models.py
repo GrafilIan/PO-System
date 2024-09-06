@@ -52,9 +52,9 @@ class ItemInventory(models.Model):
     po_product_name = models.CharField(max_length=100, blank=True, null=True)
     new_product_name = models.CharField(max_length=100, blank=True, null=True)
     unit = models.CharField(max_length=50, blank=True, null=True)
-    quantity_in = models.DecimalField(max_digits=10, decimal_places=2)
-    quantity_out = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    stock = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    quantity_in = models.IntegerField()
+    quantity_out = models.IntegerField(default=0)
+    stock = models.IntegerField(default=0)
     price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0)
     site_or_client_choice = models.CharField(max_length=10, choices=SITE_OR_CLIENT_CHOICES, blank=True, null=True)
@@ -67,7 +67,7 @@ class ItemInventory(models.Model):
     invoice_type = models.CharField(max_length=10, choices=INVOICE_CHOICES, verbose_name='Invoice#', null=True,
                                     blank=True)
     invoice_no = models.CharField(max_length=255, verbose_name='Invoice No.', null=True, blank=True)
-    created_at = models.DateTimeField(default=timezone.now, blank=True)
+
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -77,12 +77,17 @@ class ItemInventory(models.Model):
         if self.pk:
             # Fetch the previous record from the database
             previous = ItemInventory.objects.get(pk=self.pk)
+
+            # The current input is how much more we want to subtract from stock
             quantity_out_delta = self.quantity_out
+
+            # Update the cumulative quantity_out by adding the new quantity to the previous total
             new_quantity_out = previous.quantity_out + quantity_out_delta
             self.quantity_out = new_quantity_out
             self.stock = self.quantity_in - new_quantity_out
-            self.total_amount = self.quantity_out * self.price
+            self.total_amount = self.quantity_out * self.price  # Updated calculation
 
+            # Create a history entry with the current quantity_out input (delta), not the cumulative
             InventoryHistory.objects.create(
                 item=self,
                 date=self.date,
@@ -92,23 +97,21 @@ class ItemInventory(models.Model):
                 new_product_name=self.new_product_name,
                 unit=self.unit,
                 quantity_in=self.quantity_in,
-                quantity_out=quantity_out_delta,
+                quantity_out=quantity_out_delta,  # Log the delta/change, not the cumulative
                 stock=self.stock,
                 price=self.price,
-                total_amount=quantity_out_delta * self.price,
+                total_amount=quantity_out_delta * self.price,  # Correctly log the delta amount
                 site_delivered=self.site_delivered if self.site_or_client_choice == 'site' else None,
                 client=self.client if self.site_or_client_choice == 'client' else None,
-                site_inventory_folder=self.site_inventory_folder,
-                client_inventory_folder=self.client_inventory_folder,
                 delivery_ref=self.delivery_ref,
                 delivery_no=self.delivery_no,
                 invoice_type=self.invoice_type,
                 invoice_no=self.invoice_no,
-                site_or_client_choice=self.site_or_client_choice
             )
         else:
+            # For new records, set initial stock and total_amount
             self.stock = self.quantity_in - self.quantity_out
-            self.total_amount = self.quantity_out * self.price
+            self.total_amount = self.quantity_out * self.price  # Updated calculation
 
         if self.site_or_client_choice == 'site':
             self.site_delivered = self.site_delivered
@@ -117,7 +120,9 @@ class ItemInventory(models.Model):
             self.client = self.client
             self.site_delivered = None
 
+        # Ensure site_or_client_choice is set correctly
         self.site_or_client_choice = self.site_or_client_choice or self.location_type
+
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -167,7 +172,6 @@ class InventoryHistory(models.Model):
 
     def __str__(self):
         return f"{self.po_product_name} ({self.item_code}) - {self.quantity_out}"
-
 
 
 

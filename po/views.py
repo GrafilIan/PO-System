@@ -122,35 +122,6 @@ def purchase_order_create(request):
     return render(request, 'records/purchase_order_form.html', {'form': form})
 
 
-def purchase_order_edit_supplier(request, id):
-    order = get_object_or_404(PurchaseOrder, id=id)
-    folder = order.supplier_folder  # Retrieve the folder object directly
-    folder_id = folder.id if folder else None  # Get folder ID if available
-
-    if request.method == 'POST':
-        form = PurchaseOrderForm(request.POST, instance=order)
-        if form.is_valid():
-            purchase_order = form.save()
-
-            purchase_order.site_delivered = purchase_order.site_delivered.strip().upper()
-
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({'status': 'success'})
-            return redirect('view_folder_contents')
-        else:
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({'status': 'error'})
-    else:
-        form = PurchaseOrderForm(instance=order)
-
-    return render(request, 'records/purchase_order_edit_supplier.html', {
-        'form': form,
-        'order': order,
-        'folder_id': folder_id
-    })
-
-
-
 def purchase_order_edit(request, id):
     order = get_object_or_404(PurchaseOrder, id=id)
 
@@ -990,6 +961,7 @@ def new_records_view(request):
     })
 
 
+
 def inventory_edit(request, id):
     inventory_item = get_object_or_404(ItemInventory, id=id)
 
@@ -1497,6 +1469,7 @@ def transaction_history(request):
     })
 
 
+
 def create_site_inventory_folder(request):
     if request.method == 'POST':
         folder_name = request.POST.get('folder_name')
@@ -1559,7 +1532,7 @@ def site_inventory_folder_list(request):
 
 def view_site_inventory_folder_contents(request, folder_id):
     folder = get_object_or_404(SiteInventoryFolder, id=folder_id)
-    transactions_list = InventoryHistory.objects.filter(site_inventory_folder=folder)
+    transactions_list = ItemInventory.objects.filter(site_inventory_folder=folder)
 
     # Calculate total_amount
     total_amount = transactions_list.aggregate(total_amount_sum=Sum('total_amount'))['total_amount_sum'] or 0
@@ -1646,7 +1619,7 @@ def client_inventory_folder_list(request):
 
 def view_client_inventory_folder_contents(request, folder_id):
     folder = get_object_or_404(ClientInventoryFolder, id=folder_id)
-    transactions_list = InventoryHistory.objects.filter(client_inventory_folder=folder)
+    transactions_list = ItemInventory.objects.filter(client_inventory_folder=folder)
 
     total_amount = transactions_list.aggregate(total_amount_sum=Sum('total_amount'))['total_amount_sum'] or 0
 
@@ -1818,11 +1791,6 @@ def bulk_edit_inventory(request):
             return redirect('bulk_edit_inventory')
 
         elif 'finalize_changes' in request.POST:
-            # Check if the cart is empty before finalizing changes
-            if not Cart.objects.exists():
-                messages.error(request, 'The cart is empty. Please add items to the cart before finalizing changes.')
-                return redirect('bulk_edit_inventory')
-
             form = ItemInventoryBulkForm(request.POST)
             if form.is_valid():
                 date = form.cleaned_data['date']
@@ -1845,32 +1813,20 @@ def bulk_edit_inventory(request):
                         price = item.price
                         total_amount = quantity_out * price
 
-                        # Fetch InventoryHistory if it exists
-                        inventory_history = InventoryHistory.objects.filter(
-                            item=item,
-                            date=date
-                        ).first()
+                        # Determine and set folder based on location_type
+                        if location_type == 'site':
+                            folder, created = SiteInventoryFolder.objects.get_or_create(name=location_name)
+                            item.site_inventory_folder = folder
+                            item.site_delivered = location_name
+                            # Save the relationship
+                            item.save()
 
-                        if inventory_history:
-                            # Use the existing folder from InventoryHistory
-                            if location_type == 'site':
-                                folder = inventory_history.site_inventory_folder
-                                item.site_inventory_folder = folder
-                                item.site_delivered = folder.name if folder else location_name
-                            elif location_type == 'client':
-                                folder = inventory_history.client_inventory_folder
-                                item.client_inventory_folder = folder
-                                item.client = folder.name if folder else location_name
-                        else:
-                            # If no InventoryHistory exists, proceed with folder creation
-                            if location_type == 'site':
-                                folder, created = SiteInventoryFolder.objects.get_or_create(name=location_name)
-                                item.site_inventory_folder = folder
-                                item.site_delivered = location_name
-                            elif location_type == 'client':
-                                folder, created = ClientInventoryFolder.objects.get_or_create(name=location_name)
-                                item.client_inventory_folder = folder
-                                item.client = location_name
+                        elif location_type == 'client':
+                            client_folder, created = ClientInventoryFolder.objects.get_or_create(name=location_name)
+                            item.client_inventory_folder = client_folder
+                            item.client = location_name
+                            # Save the relationship
+                            item.save()
 
                         # Update ItemInventory details
                         item.date = date
@@ -1885,38 +1841,6 @@ def bulk_edit_inventory(request):
 
                         # Save updated item
                         item.save()
-
-                        # Update or create InventoryHistory record
-                        inventory_history, created = InventoryHistory.objects.get_or_create(
-                            item=item,
-                            date=date,
-                            invoice_no=invoice_no if location_type == 'client' else None,
-                            delivery_ref=delivery_ref if location_type == 'site' else None,
-                            defaults={
-                                'client_inventory_folder': item.client_inventory_folder,
-                                'site_inventory_folder': item.site_inventory_folder,
-                                'quantity_in': item.quantity_in,
-                                'quantity_out': quantity_out,
-                                'price': price,
-                                'total_amount': total_amount,
-                                'delivery_no': delivery_no,
-                                'invoice_type': invoice_type
-                            }
-                        )
-
-                        # Update the existing InventoryHistory record if it exists
-                        if not created:
-                            inventory_history.quantity_in = item.quantity_in
-                            inventory_history.quantity_out = quantity_out
-                            inventory_history.price = price
-                            inventory_history.total_amount = total_amount
-                            inventory_history.delivery_ref = delivery_ref
-                            inventory_history.delivery_no = delivery_no
-                            inventory_history.invoice_type = invoice_type
-                            inventory_history.invoice_no = invoice_no
-                            inventory_history.save()
-
-                        # Remove item from cart
                         cart_item.delete()
 
                     except ItemInventory.DoesNotExist:
@@ -1937,17 +1861,16 @@ def bulk_edit_inventory(request):
                     messages.error(request, 'Some errors occurred: ' + ', '.join(errors))
                 return redirect('bulk_edit_inventory')
 
+
     else:
         # Handle GET requests (including search functionality)
         query = request.GET.get('q', '')  # Get the search query from the GET request
         if query:
-            items = ItemInventory.objects.filter(po_product_name__icontains=query)
+            items = ItemInventory.objects.filter(po_product_name__icontains(query))
         else:
             items = ItemInventory.objects.all()
 
         cart_items = Cart.objects.all()
-
-        total_cart_amount = sum(cart_item.quantity * cart_item.item.price for cart_item in cart_items)
 
         # Calculate total amount for cart items
         for cart_item in cart_items:
@@ -1960,8 +1883,13 @@ def bulk_edit_inventory(request):
             'items': items,
             'cart_items': cart_items,
             'query': query,  # Pass the query back to the template
-            'total_cart_amount': total_cart_amount
+
         })
+
+
+
+
+
 
 
 def remove_cart_item(request, cart_item_id):
