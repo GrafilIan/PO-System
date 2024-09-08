@@ -55,23 +55,18 @@
             <a href="#" class="nav-link sidebar-gone-show" data-toggle="sidebar"><i class="fas fa-bars"></i></a>
             <div class="nav-collapse">
                 <ul class="navbar-nav">
-                    <li class="nav-item active"><h5 style="color: white; margin-top: 5px">Botox Trading Construction and Supply Inventory Management
-                        System</h5></li>
+                    <li class="nav-item active"><h5 style="color: white; margin-top: 5px">Botox Trading Construction and
+                        Supply Inventory Management System</h5></li>
                 </ul>
             </div>
-            <form class="form-inline ml-auto">
-
-            </form>
+            <form class="form-inline ml-auto"></form>
             <ul class="navbar-nav navbar-right">
-
-
                 <li class="dropdown"><a href="#" data-toggle="dropdown"
                                         class="nav-link dropdown-toggle nav-link-lg nav-link-user">
                     <img alt="image" src="{% static 'assets/img/avatar/avatar-1.png' %}" class="rounded-circle mr-1">
                     <div class="d-sm-none d-lg-inline-block">Hi, Ma'am Kath</div>
                 </a>
                     <div class="dropdown-menu dropdown-menu-right">
-
                         <a href="#" class="dropdown-item has-icon text-danger" onclick="confirmLogout()">
                             <i class="fas fa-sign-out-alt"></i> Logout
                         </a>
@@ -80,69 +75,79 @@
             </ul>
         </nav>
 
+        <!-- Secondary navbar -->
         <nav class="navbar navbar-secondary navbar-expand-lg">
-    <div class="container">
-        <ul class="navbar-nav">
-            <li class="nav-item {% if request.path == '/products-codes/' %}active{% endif %}">
-                <a href="{% url 'item_code_list' %}" class="nav-link">
-                    <i class="fas fa-truck"></i><span>Products Codes</span>
-                </a>
-            </li>
+            <div class="container">
+                <ul class="navbar-nav">
+                    <!-- Products Codes Dropdown -->
+                    <li class="nav-item dropdown {% if request.path == '/products-codes/' %}active{% endif %}">
+                        <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">
+                            <i class="fas fa-truck"></i><span>Products</span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a href="{% url 'item_code_list' %}" class="dropdown-item">Item Codes</a></li>
+                            <li><a href="{% url 'inventory_table' %}" class="dropdown-item">Item Inventory</a></li>
+                        </ul>
+                    </li>
 
-            <li class="nav-item {% if request.path == '/inventory/' %}active{% endif %}">
-                <a href="{% url 'inventory_table' %}" class="nav-link">
-                    <i class="fas fa-boxes"></i><span>Inventory</span>
-                </a>
-            </li>
+                    <!-- Inventory Dropdown -->
+                    <li class="nav-item dropdown {% if request.path == '/inventory/' %}active{% endif %}">
+                        <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">
+                            <i class="fas fa-boxes"></i><span>Inventory</span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a href="{% url 'site_inventory_folder_list' %}" class="dropdown-item">Site
+                                Inventory</a></li>
+                            <li><a href="{% url 'client_inventory_folder_list' %}" class="dropdown-item">Client
+                                Inventory</a></li>
+                        </ul>
+                    </li>
 
+                    <!-- Bulk Edit outside of dropdown -->
+                    <li class="nav-item {% if request.path == '/bulk_edit_inventory/' %}active{% endif %}">
+                        <a href="{% url 'bulk_edit_inventory' %}" class="nav-link">
+                            <i class="fa fa-cart-plus"></i><span>Bulk Edit</span>
+                        </a>
+                    </li>
 
-            <li class="nav-item {% if request.path == '/bulk_edit_inventory/' %}active{% endif %}">
-                <a href="{% url 'bulk_edit_inventory' %}" class="nav-link">
-                    <i class="fa fa-cart-plus"></i><span>Shop</span>
-                </a>
-            </li>
+                    <li class="nav-item {% if request.path == '/stock-in/create/' %}active{% endif %}">
+                        <a href="{% url 'stock_in_create' %}" class="nav-link">
+                            <i class="fas fa-box"></i><span>Stock In</span>
+                        </a>
+                    </li>
 
-            <li class="nav-item {% if request.path == '/site-inventory/folders/' %}active{% endif %}">
-                <a href="{% url 'site_inventory_folder_list' %}" class="nav-link">
-                    <i class="fa fa-building"></i><span>Site</span>
-                </a>
-            </li>
-
-            <li class="nav-item {% if request.path == '/client-folder-list/' %}active{% endif %}">
-                <a href="{% url 'client_inventory_folder_list' %}" class="nav-link">
-                    <i class="fas fa-users"></i><span>Client</span>
-                </a>
-            </li>
-
-            <li class="nav-item {% if request.path == '/transaction-history/' %}active{% endif %}">
-                <a href="{% url 'transaction_history' %}" class="nav-link">
-                    <i class="fas fa-receipt"></i><span>Transaction History</span>
-                </a>
-            </li>
-
-            <!--<li class="nav-item {% if request.path == '/new-records/' %}active{% endif %}">
-                <a href="{% url 'new_records' %}" class="nav-link">
-                    <i class="fas fa-receipt"></i><span>New Records</span>
-                </a>
-            </li>-->
-
-        </ul>
-    </div>
-</nav>
+                    <li class="nav-item {% if request.path == '/inventory-supplier-folders/' %}active{% endif %}">
+                        <a href="{% url 'inventory_supplier_list_folders' %}" class="nav-link">
+                            <i class="fas fa-receipt"></i><span>Supplier Folder</span>
+                        </a>
+                    </li>
 
 
+                    <!-- History Dropdown -->
+                    <li class="nav-item dropdown {% if request.path == '/transaction-history/' or request.path == '/stock_in_transaction_history/' %}active{% endif %}">
+                        <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">
+                            <i class="fas fa-clock"></i><span>History</span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a href="{% url 'transaction_history' %}" class="dropdown-item">Transaction History</a>
+                            </li>
+                            <li><a href="{% url 'stock_in_transaction_history' %}" class="dropdown-item">Stock In
+                                History</a></li>
+                        </ul>
+                    </li>
 
+                </ul>
+            </div>
+        </nav>
     </div>
 </div>
 
 </body>
 {% block style %}
 {% endblock %}
-
 </head>
 
 <body style="background-color: #e7e7e7;">
-
 
 {% block content %}
 {% endblock %}
@@ -160,15 +165,11 @@
             cancelButtonText: "No, cancel",
         }).then((result) => {
             if (result.isConfirmed) {
-                // The user clicked the "Yes" button, so you can log them out here.
                 window.location.href = "{% url 'logout' %}";
-            } else {
-                // The user clicked the "No" button or closed the dialog, no action needed.
             }
         });
     }
 </script>
-
 
 <script src="{% static 'assets/modules/jquery.min.js' %}"></script>
 <script src="{% static 'assets/modules/popper.js' %}"></script>
@@ -177,7 +178,6 @@
 <script src="{% static 'assets/modules/nicescroll/jquery.nicescroll.min.js' %}"></script>
 <script src="{% static 'assets/modules/moment.min.js' %}"></script>
 <script src="{% static 'assets/js/stisla.js' %}"></script>
-
 
 <!-- JS Libraries -->
 <script src="{% static 'assets/modules/jquery.sparkline.min.js' %}"></script>

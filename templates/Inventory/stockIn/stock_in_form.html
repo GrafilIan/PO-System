@@ -1,0 +1,327 @@
+{% extends 'inventorybase.html' %}
+
+{% block title %}Stock In Record{% endblock %}
+
+{% load static %}
+
+{% block head %}
+    <link rel="stylesheet" href="{% static 'assets/modules/bootstrap-social/bootstrap-social.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/modules/datatables/datatables.min.css' %}">
+    <link rel="stylesheet"
+          href="{% static 'assets/modules/datatables/DataTables-1.10.16/css/dataTables.bootstrap4.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/modules/datatables/Select-1.2.4/css/select.bootstrap4.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/custom.css' %}">
+    <script src="{% static 'assets/js/cleave.min.js' %}"></script>
+    <style>
+        /* Add custom style for Select2 to ensure it is properly styled */
+        .select2-container .select2-selection--single {
+            height: 38px;
+            background-color: #dcdcdc; /* White background */
+        }
+
+        .select2-results__option {
+            background-color: #d2d2d2; /* White background for dropdown */
+            color: black;
+        }
+
+        /* Adjust dropdown to ensure it appears below */
+        .select2-dropdown {
+            top: 100% !important;
+        }
+    </style>
+
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-12 col-sm-10 offset-sm-1 col-md-8 offset-md-2 col-lg-8 offset-lg-2 col-xl-8 offset-xl-2">
+            <div class="card card-primary" style="background-color: rgba(255, 255, 255, 0.9); margin-top: 180px">
+                {% if messages %}
+                    <ul class="messages">
+                        {% for message in messages %}
+                            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+
+                <div class="card">
+                    <div class="card-header d-flex justify-content-center">
+                        <h2>Create Stock In Record</h2>
+                    </div>
+                    <div class="card-body">
+
+                        <form id="stockInForm" method="post" action="{% url 'stock_in_create' %}"
+                              enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div class="row">
+                                <div class="form-group col-6 col-sm-3">
+                                    <label for="date">Date</label>
+                                    {{ form.date }}
+                                </div>
+
+                                <div class="form-group col-6 col-sm-3">
+                                    <label for="po_number">PO#</label>
+                                    {{ form.po_number }}
+                                </div>
+
+                                <div class="form-group col-12 col-sm-6">
+                                    <label for="purchaser">Purchaser</label>
+                                    {{ form.purchaser }}
+                                </div>
+
+                                <div class="form-group col-12 col-sm-6">
+                                    <label for="fbbd_ref_number">FBBD Ref#</label>
+                                    {{ form.fbbd_ref_number }}
+                                </div>
+
+                                <div class="form-group col-6 col-sm-6">
+                                    <label for="remarks">Remarks</label>
+                                    {{ form.remarks }}
+                                </div>
+
+                                <div class="col-12">
+                                    <div style="border-top: 1px solid #0026e5; margin: 20px 0; text-align: center;">
+                                    </div>
+                                </div>
+
+                                <div class="form-group col-12 col-sm-12">
+                                    <label for="supplier">Supplier</label>
+                                    {{ form.supplier }}
+                                </div>
+
+                                <div class="form-group col-6">
+                                    <label for="delivery_ref">Delivery Ref#</label>
+                                    {{ form.delivery_ref }}
+                                </div>
+
+                                <div class="form-group col-6">
+                                    <label for="delivery_no">Delivery No.</label>
+                                    {{ form.delivery_no }}
+                                </div>
+
+                                <div class="form-group col-6">
+                                    <label for="invoice_type">Invoice# Type</label>
+                                    {{ form.invoice_type }}
+                                </div>
+
+                                <div class="form-group col-6">
+                                    <label for="invoice_no">Invoice No.</label>
+                                    {{ form.invoice_no }}
+                                </div>
+
+                                <div class="form-group col-6">
+                                    <label for="payment_details">Payment Details</label>
+                                    {{ form.payment_details }}
+                                </div>
+
+                                <div class="form-group col-6">
+                                    <label for="payment_req_ref">Payment Req Ref#</label>
+                                    {{ form.payment_req_ref }}
+                                </div>
+
+                                <div class="form-group col-6">
+                                    <label for="remarks2">Remarks2</label>
+                                    {{ form.remarks2 }}
+                                </div>
+
+                                <div class="col-12">
+                                    <div style="border-top: 1px solid #0026e5; margin: 20px 0; text-align: center;">
+                                    </div>
+                                </div>
+
+                                <div class="form-group col-6 col-sm-6">
+                                    <label for="item_code">Item Code</label>
+                                    {{ form.item_code }}
+                                </div>
+
+                                <div class="form-group col-12 col-sm-6">
+                                    <label for="particulars">Particulars</label>
+                                    {{ form.particulars }}
+                                </div>
+
+                                <div class="form-group col-3">
+                                    <label for="unit">Unit</label>
+                                    {{ form.unit }}
+                                </div>
+
+                                <div class="form-group col-3">
+                                    <label for="quantity_in">Quantity In</label>
+                                    {{ form.quantity_in }}
+                                </div>
+                            </div>
+
+                            <div class="form-divider align-center">
+                                <div class="form-group">
+                                    <button type="submit" class="btn btn-primary btn-block">
+                                        SUBMIT
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal fade" id="successModal" tabindex="-1" role="dialog" aria-labelledby="successModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="successModalLabel">Success!</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    Your record has been saved successfully.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="errorModalLabel">Error!</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    There was an error saving the record.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            // Initialize Select2 for the particulars field
+            function refreshParticularsDropdown() {
+                $.ajax({
+                    url: "{% url 'get_item_inventory' %}",
+                    dataType: 'json',
+                    success: function (data) {
+                        var $particularsSelect = $('#id_particulars');
+
+                        // Clear the existing options
+                        $particularsSelect.empty();
+
+                        // Append new options
+                        $.each(data.items, function (index, item) {
+                            $particularsSelect.append(new Option(item.text, item.text));
+                        });
+
+                        // Reinitialize the Select2 dropdown
+                        $particularsSelect.select2({
+                            placeholder: 'Select a particular',
+                            allowClear: true,
+                            width: '100%',
+                            dropdownAutoWidth: true,
+                            minimumInputLength: 1,
+                            dropdownParent: $('body'),
+                            dropdownPosition: 'below' // Ensure the dropdown stays within the body
+                        });
+                    },
+                    error: function () {
+                        console.error('Error fetching item particulars');
+                    }
+                });
+            }
+
+            refreshParticularsDropdown();  // Initial load
+
+            // Listen for changes in the particulars field
+            $('#id_particulars').on('change', function () {
+                var selectedParticular = $(this).val();
+
+                if (selectedParticular) {
+                    $.ajax({
+                        url: "{% url 'get_item_details' %}",
+                        data: { 'particulars': selectedParticular },
+                        dataType: 'json',
+                        success: function (data) {
+                            if (data.item_code && data.unit) {
+                                // Auto-fill item_code and unit fields
+                                $('#id_item_code').val(data.item_code);
+                                $('#id_unit').val(data.unit);
+                            } else {
+                                console.error('Item details not found');
+                            }
+                        },
+                        error: function () {
+                            console.error('Error fetching item details');
+                        }
+                    });
+                }
+            });
+
+            // Form submission with clearing the quantity_in field
+            $('#stockInForm').on('submit', function (event) {
+                event.preventDefault();
+                var form = $(this);
+                var formData = new FormData(form[0]);
+
+                $.ajax({
+                    url: form.attr('action'),
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (data) {
+                        if (data.status === 'success') {
+                            Swal.fire({
+                                title: 'Success!',
+                                text: 'Your record has been saved successfully.',
+                                icon: 'success',
+                                confirmButtonText: 'OK'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    // Clear only the quantity_in field
+                                    $('#id_quantity_in').val('');
+                                }
+                            });
+                        } else if (data.status === 'error') {
+                            Swal.fire({
+                                title: 'Error!',
+                                text: data.message || 'There was an error saving the record.',
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: 'There was an error saving the record.',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock %}
+
+
+
+
+
+

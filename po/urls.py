@@ -65,4 +65,18 @@ urlpatterns = [
     path('remove_all_cart_items/', views.remove_all_cart_items, name='remove_all_cart_items'),
     path('item_code_list/', views.item_code_list, name='item_code_list'),
 
+    path('stock-in/create/', views.stock_in_create, name='stock_in_create'),
+    path('inventory-supplier-folders/', views.inventory_supplier_list_folders, name='inventory_supplier_list_folders'),
+    path('inventory-supplier-folders/<int:folder_id>/', views.inventory_supplier_contents,
+         name='inventory_supplier_folder_contents'),
+    path('inventory-supplier-folders/delete/<int:folder_id>/', views.delete_inventory_supplier_folder,
+         name='delete_inventory_supplier_folder'),
+    path('inventory/stock-in/export/<int:folder_id>/', views.export_inventory_supplier_contents,
+         name='export_inventory_supplier_contents'),
+    path('get-item-details/', views.get_item_details, name='get_item_details'),
+    path('get-item-inventory/', views.get_item_inventory, name='get_item_inventory'),
+    path('export_stock_in_transaction_history_to_excel/', views.export_stock_in_transaction_history_to_excel,
+         name='export_stock_in_transaction_history_to_excel'),
+    path('stock_in_transaction_history/', views.stock_in_transaction_history, name='stock_in_transaction_history'),
+    path('stock-in/upload/', views.upload_stock_in_file, name='upload_stock_in_file'),
 ]

@@ -1,7 +1,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
 
-from .models import PurchaseOrder, ItemInventory
+from .models import PurchaseOrder, ItemInventory, StockInHistory
 
 
 class PurchaseOrderForm(forms.ModelForm):
@@ -169,6 +169,7 @@ class ItemCodeForm(forms.Form):
             'supplier': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Supplier'}),
         }
 
+
 class ItemInventoryListForm(forms.ModelForm):
     class Meta:
         model = ItemInventory
@@ -186,9 +187,11 @@ class ItemInventoryListForm(forms.ModelForm):
             'item_code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Item Code'}),
             'po_product_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Particular'}),
             'unit': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Unit'}),
-            'quantity_in': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Quantity In'}),
-            'quantity_out': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Quantity Out'}),
-            'stock': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Stock'}),
+            'quantity_in': forms.NumberInput(
+                attrs={'class': 'form-control', 'placeholder': 'Quantity In', 'step': '0.0001'}),
+            'quantity_out': forms.NumberInput(
+                attrs={'class': 'form-control', 'placeholder': 'Quantity Out', 'step': '0.0001'}),
+            'stock': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Stock', 'step': '0.0001'}),
             'supplier': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Supplier'}),
         }
 
@@ -209,12 +212,16 @@ class ItemInventoryListForm(forms.ModelForm):
 class ItemInventoryQuantityForm(forms.ModelForm):
     class Meta:
         model = ItemInventory
-        fields = ['po_product_name', 'quantity_in', 'quantity_out', 'stock', 'supplier']  # Only include the quantity fields
+        fields = ['po_product_name', 'quantity_in', 'quantity_out', 'stock',
+                  'supplier']  # Only include the quantity fields
         widgets = {
             'po_product_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'quantity_in': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Quantity In'}),
-            'quantity_out': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Quantity Out'}),
-            'stock': forms.NumberInput(attrs={'readonly': True, 'class': 'form-control', 'placeholder': 'Stock'}),
+            'quantity_in': forms.NumberInput(
+                attrs={'class': 'form-control', 'placeholder': 'Quantity In', 'step': '0.0001'}),
+            'quantity_out': forms.NumberInput(
+                attrs={'class': 'form-control', 'placeholder': 'Quantity Out', 'step': '0.0001'}),
+            'stock': forms.NumberInput(
+                attrs={'readonly': True, 'class': 'form-control', 'placeholder': 'Stock', 'step': '0.0001'}),
             'supplier': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Supplier'}),
         }
 
@@ -229,6 +236,7 @@ class ItemInventoryQuantityForm(forms.ModelForm):
         cleaned_data['stock'] = quantity_in - quantity_out
 
         return cleaned_data
+
 
 class ItemInventoryBulkForm(forms.ModelForm):
     LOCATION_CHOICES = [
@@ -276,13 +284,16 @@ class ItemInventoryBulkForm(forms.ModelForm):
             'po_product_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'PO Product Name'}),
             'new_product_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'New Product Name'}),
             'unit': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Unit'}),
-            'quantity_in': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Quantity In'}),
-            'quantity_out': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Quantity Out'}),
+            'quantity_in': forms.NumberInput(
+                attrs={'class': 'form-control', 'placeholder': 'Quantity In', 'step': '0.0001'}),
+            'quantity_out': forms.NumberInput(
+                attrs={'class': 'form-control', 'placeholder': 'Quantity Out', 'step': '0.0001'}),
             'price': forms.NumberInput(attrs={'step': '0.01', 'class': 'form-control', 'placeholder': 'Price'}),
             'total_amount': forms.NumberInput(
                 attrs={'step': '0.01', 'class': 'form-control', 'placeholder': 'Total Amount', 'readonly': True}),
-            'stock': forms.NumberInput(attrs={'readonly': True, 'class': 'form-control', 'placeholder': 'Stock'}),
-            'delivery_ref': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Delivery Ref#'}),
+            'stock': forms.NumberInput(
+                attrs={'readonly': True, 'class': 'form-control', 'placeholder': 'Stock', 'step': '0.0001'}),
+            'delivery_ref': forms.Select(attrs={'class': 'form-control', 'placeholder': 'Delivery Ref#'}),
             'delivery_no': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Delivery No.'}),
             'invoice_type': forms.Select(attrs={'class': 'form-control'}),
             'invoice_no': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Invoice No.'}),
@@ -309,5 +320,58 @@ class ItemInventoryBulkForm(forms.ModelForm):
 
         return cleaned_data
 
+
+class StockInHistoryForm(forms.ModelForm):
+    particulars = forms.ChoiceField(
+        choices=[(p, p) for p in ItemInventory.objects.values_list('po_product_name', flat=True).distinct()],
+        widget=forms.Select(attrs={'class': 'form-control select2', 'id': 'id_particulars'}),
+        required=True,
+        label='Particulars'
+    )
+
+    class Meta:
+        model = StockInHistory
+        fields = [
+            'date',
+            'po_number',
+            'purchaser',
+            'item_code',
+            'particulars',
+            'quantity_in',
+            'unit',
+            'fbbd_ref_number',
+            'remarks',
+            'supplier',
+            'delivery_ref',
+            'delivery_no',
+            'invoice_type',
+            'invoice_no',
+            'payment_req_ref',
+            'payment_details',
+            'remarks2'
+        ]
+        widgets = {
+            'date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control', 'placeholder': 'Date'}),
+            'po_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'PO#'}),
+            'purchaser': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Purchaser'}),
+            'item_code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Item Code'}),
+            'quantity_in': forms.NumberInput(attrs={'min': 0, 'class': 'form-control', 'placeholder': 'Quantity In', 'step': '0.01'}),
+            'unit': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Unit'}),
+            'fbbd_ref_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'FBBD Ref#'}),
+            'remarks': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Remarks'}),
+            'supplier': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Supplier'}),
+            'delivery_ref': forms.Select(attrs={'class': 'form-control'}),
+            'delivery_no': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Delivery No.'}),
+            'invoice_type': forms.Select(attrs={'class': 'form-control'}),
+            'invoice_no': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Invoice No.'}),
+            'payment_req_ref': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Payment Req Ref#'}),
+            'payment_details': forms.Select(attrs={'class': 'form-control'}),
+            'remarks2': forms.Select(attrs={'class': 'form-control'})
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(StockInHistoryForm, self).__init__(*args, **kwargs)
+        # Dynamically update the queryset for 'particulars'
+        self.fields['particulars'].queryset = ItemInventory.objects.values_list('po_product_name', flat=True).distinct()
 
 

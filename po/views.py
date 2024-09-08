@@ -1,4 +1,5 @@
 import zipfile
+from decimal import Decimal
 
 import pandas as pd
 import openpyxl
@@ -12,9 +13,9 @@ from django.contrib import messages
 from django.utils import timezone
 from openpyxl.workbook import Workbook
 from .forms import PurchaseOrderForm, UploadFileForm, ItemInventoryBulkForm, PurchaseOrderBulkForm, \
-    ItemInventoryListForm, ItemInventoryQuantityForm
+    ItemInventoryListForm, ItemInventoryQuantityForm, StockInHistoryForm
 from .models import PurchaseOrder, ArchiveFolder, ItemInventory, SupplierFolder, InventoryHistory, SiteInventoryFolder, \
-    ClientInventoryFolder, Cart, poCart, ItemCodeList
+    ClientInventoryFolder, Cart, poCart, ItemCodeList, InventorySupplierFolder, StockInHistory
 from datetime import datetime
 from openpyxl.styles import Font, PatternFill
 from io import BytesIO
@@ -901,7 +902,15 @@ def inventory_form(request):
         if ItemInventory.objects.filter(po_product_name=po_product_name).exists():
             messages.error(request, 'PO Product Name already exists. Please use a different name.')
         elif form.is_valid():
-            form.save()
+            # Save the form to create the item
+            item = form.save(commit=False)  # Get the instance but don't save it to the database yet
+
+            # Manually calculate the stock
+            item.stock = item.quantity_in - item.quantity_out  # Calculate stock based on quantity_in and quantity_out
+
+            # Now save the item with the updated stock value
+            item.save()
+
             messages.success(request, 'Item successfully added!')
             return redirect('inventory_form')  # Redirect to the same form page
         else:
@@ -913,12 +922,10 @@ def inventory_form(request):
 
 
 def inventory_table(request):
-    query = request.GET.get('q')  # 'q' is the name of the search input field
+    query = request.GET.get('q')
 
-    # Start with all inventory items
     inventory_items = ItemInventory.objects.all().order_by('po_product_name')
 
-    # If there's a search query, filter the inventory items accordingly
     if query:
         inventory_items = inventory_items.filter(
             Q(item_code__icontains=query) |
@@ -930,17 +937,15 @@ def inventory_table(request):
             Q(stock__icontains=query)
         )
 
-    # Save the filtered records to SavedItemCodeList
     for item in inventory_items:
-        if not ItemCodeList.objects.filter(item_code=item.item_code,
-                                           po_product_name=item.po_product_name).exists():
+        if not ItemCodeList.objects.filter(item_code=item.item_code, po_product_name=item.po_product_name).exists():
             ItemCodeList.objects.create(
                 item_code=item.item_code,
                 po_product_name=item.po_product_name,
                 unit=item.unit
             )
 
-    paginator = Paginator(inventory_items, 100)  # Paginate after every 20 entries
+    paginator = Paginator(inventory_items, 100)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -959,7 +964,6 @@ def new_records_view(request):
     return render(request, 'Inventory/new_records.html', {
         'new_records': new_records
     })
-
 
 
 def inventory_edit(request, id):
@@ -1408,11 +1412,119 @@ def export_all_client_folders(request):
     response['Content-Disposition'] = 'attachment; filename=client_inventory_folders.zip'
     return response
 
+def export_stock_in_transaction_history_to_excel(request):
+    query = request.GET.get('q')  # Search query parameter
+    date_query = request.GET.get('date')  # Date query parameter
+
+    # Start with all stock-in transactions
+    transactions = StockInHistory.objects.exclude(date__isnull=True).order_by('-date')
+
+    # Apply search filter
+    if query:
+        transactions = transactions.filter(
+            Q(date__icontains=query) |
+            Q(item_code__icontains=query) |
+            Q(supplier__icontains=query) |
+            Q(particulars__icontains=query) |
+            Q(unit__icontains=query) |
+            Q(quantity_in__icontains=query) |
+            Q(invoice_no__icontains=query) |
+            Q(invoice_type__icontains=query)
+        )
+
+    # Apply date filter
+    if date_query:
+        try:
+            date_obj = datetime.strptime(date_query, '%b %d, %Y').date()
+            transactions = transactions.filter(date=date_obj)
+        except ValueError:
+            try:
+                date_obj = datetime.strptime(date_query, '%b %Y')
+                transactions = transactions.filter(date__year=date_obj.year, date__month=date_obj.month)
+            except ValueError:
+                try:
+                    date_obj = datetime.strptime(date_query, '%B %Y')
+                    transactions = transactions.filter(date__year=date_obj.year, date__month=date_obj.month)
+                except ValueError:
+                    try:
+                        month_number = int(date_query)
+                        transactions = transactions.filter(date__month=month_number)
+                    except ValueError:
+                        try:
+                            date_obj = datetime.strptime(date_query, '%B')
+                            transactions = transactions.filter(date__month=date_obj.month)
+                        except ValueError:
+                            pass
+
+    # Create a workbook and a sheet
+    workbook = openpyxl.Workbook()
+    sheet = workbook.active
+    sheet.title = 'Stock In Transaction History'
+
+    header_font = Font(color='FFFFFF', bold=True)
+    black_fill = PatternFill(start_color='000000', end_color='000000', fill_type='solid')
+
+    # Define the headers
+    headers = [
+        'Date', 'PO#', 'Item Code', 'Particulars', 'Unit',
+        'Quantity In', 'Supplier', 'Remarks', 'Invoice No.', 'Invoice Type'
+    ]
+    sheet.append(headers)
+
+    for cell in sheet[1]:
+        cell.font = header_font
+        cell.fill = black_fill
+        cell.value = cell.value.upper() if cell.value is not None else cell.value
+
+    # Populate the sheet with data
+    for transaction in transactions:
+        sheet.append([
+            transaction.date.strftime('%Y-%m-%d') if transaction.date else 'N/A',
+            transaction.po_number, transaction.item_code, transaction.particulars,
+            transaction.unit, transaction.quantity_in, transaction.supplier,
+            transaction.remarks, transaction.invoice_no, transaction.invoice_type
+        ])
+
+    # Auto-size columns for better visibility
+    for column in sheet.columns:
+        max_length = 0
+        column_letter = column[0].column_letter
+        for cell in column:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except:
+                pass
+        adjusted_width = (max_length + 2)
+        sheet.column_dimensions[column_letter].width = adjusted_width
+
+    # Create an in-memory buffer
+    buffer = BytesIO()
+    workbook.save(buffer)
+    buffer.seek(0)
+
+    # Set the response to return the Excel file
+    response = HttpResponse(
+        buffer,
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename=StockInTransactionHistory.xlsx'
+    return response
+
 
 # ----------------------------Transaction History----------------------------------------------
 def transaction_history(request):
     query = request.GET.get('q')  # Get search query from request
     page_number = request.GET.get('page', 1)  # Get page number from request
+
+    # Dictionary to map full and abbreviated month names to month numbers
+    month_mapping = {
+        "January": "1", "February": "2", "March": "3", "April": "4",
+        "May": "5", "June": "6", "July": "7", "August": "8",
+        "September": "9", "October": "10", "November": "11", "December": "12",
+        "Jan": "1", "Feb": "2", "Mar": "3", "Apr": "4",
+        "Jun": "6", "Jul": "7", "Aug": "8", "Sep": "9", "Oct": "10", "Nov": "11", "Dec": "12"
+    }
 
     # Retrieve all records from InventoryHistory and exclude records where date is null
     transactions = InventoryHistory.objects.exclude(date__isnull=True).order_by('-date')
@@ -1420,38 +1532,40 @@ def transaction_history(request):
     # Apply search filter if a query is present
     if query:
         try:
-            # Try to interpret the query as a date first
+            # Try to interpret the query as a full date (e.g., 'Aug 20, 2024')
             date_obj = datetime.strptime(query, '%b %d, %Y').date()
             transactions = transactions.filter(date=date_obj)
         except ValueError:
-            try:
-                # Try parsing month and year only (e.g., "Aug 2024")
-                date_obj = datetime.strptime(query, '%b %Y')
-                transactions = transactions.filter(date__year=date_obj.year, date__month=date_obj.month)
-            except ValueError:
-                try:
-                    # Try parsing full month name and year (e.g., "August 2024")
-                    date_obj = datetime.strptime(query, '%B %Y')
-                    transactions = transactions.filter(date__year=date_obj.year, date__month=date_obj.month)
-                except ValueError:
+            # If it's not a full date, check if the query is a month name (full or abbreviated)
+            for month_name, month_number in month_mapping.items():
+                if month_name.lower() in query.lower():
+                    # Check if the query contains a year
+                    year = None
                     try:
-                        # Try parsing month only (e.g., "08" for August or "11" for November)
-                        month_number = int(query)
+                        year = int(query.split()[-1])  # Try to extract the year
+                    except (ValueError, IndexError):
+                        pass
+
+                    # Filter based on month and possibly year
+                    if year:
+                        transactions = transactions.filter(date__month=month_number, date__year=year)
+                    else:
                         transactions = transactions.filter(date__month=month_number)
-                    except ValueError:
-                        # If not a date, treat it as a general text search
-                        transactions = transactions.filter(
-                            Q(item_code__icontains=query) |
-                            Q(supplier__icontains=query) |
-                            Q(po_product_name__icontains=query) |
-                            Q(new_product_name__icontains=query) |
-                            Q(unit__icontains=query) |
-                            Q(quantity_out__icontains=query) |
-                            Q(price__icontains=query) |
-                            Q(total_amount__icontains=query) |
-                            Q(site_delivered__icontains=query) |
-                            Q(client__icontains=query)
-                        )
+                    break
+            else:
+                # If not a date or month, treat as a general text search
+                transactions = transactions.filter(
+                    Q(item_code__icontains=query) |
+                    Q(supplier__icontains=query) |
+                    Q(po_product_name__icontains=query) |
+                    Q(new_product_name__icontains=query) |
+                    Q(unit__icontains=query) |
+                    Q(quantity_out__icontains=query) |
+                    Q(price__icontains=query) |
+                    Q(total_amount__icontains=query) |
+                    Q(site_delivered__icontains=query) |
+                    Q(client__icontains=query)
+                )
 
     # Paginate the filtered transactions
     paginator = Paginator(transactions, 100)  # Show 100 transactions per page
@@ -1467,7 +1581,6 @@ def transaction_history(request):
         'query': query,
         'page_number': page_number
     })
-
 
 
 def create_site_inventory_folder(request):
@@ -1532,7 +1645,7 @@ def site_inventory_folder_list(request):
 
 def view_site_inventory_folder_contents(request, folder_id):
     folder = get_object_or_404(SiteInventoryFolder, id=folder_id)
-    transactions_list = ItemInventory.objects.filter(site_inventory_folder=folder)
+    transactions_list = InventoryHistory.objects.filter(site_inventory_folder=folder)
 
     # Calculate total_amount
     total_amount = transactions_list.aggregate(total_amount_sum=Sum('total_amount'))['total_amount_sum'] or 0
@@ -1619,7 +1732,7 @@ def client_inventory_folder_list(request):
 
 def view_client_inventory_folder_contents(request, folder_id):
     folder = get_object_or_404(ClientInventoryFolder, id=folder_id)
-    transactions_list = ItemInventory.objects.filter(client_inventory_folder=folder)
+    transactions_list = InventoryHistory.objects.filter(client_inventory_folder=folder)
 
     total_amount = transactions_list.aggregate(total_amount_sum=Sum('total_amount'))['total_amount_sum'] or 0
 
@@ -1757,14 +1870,13 @@ def view_folder_contents(request, folder_id):
 def bulk_edit_inventory(request):
     if request.method == 'POST':
         if 'add_to_cart' in request.POST:
-            # Handle adding items to the cart
             item_ids = request.POST.getlist('item_ids')
             success = True
             errors = []
 
             for item_id in item_ids:
                 quantity_out = request.POST.get(f'quantity_out_{item_id}', '0')
-                quantity_out = int(quantity_out) if quantity_out.strip() != '' else 0
+                quantity_out = Decimal(quantity_out) if quantity_out.strip() != '' else 0
 
                 if quantity_out > 0:
                     try:
@@ -1813,66 +1925,79 @@ def bulk_edit_inventory(request):
                         price = item.price
                         total_amount = quantity_out * price
 
-                        # Determine and set folder based on location_type
+                        # Determine folder based on location_type
                         if location_type == 'site':
                             folder, created = SiteInventoryFolder.objects.get_or_create(name=location_name)
                             item.site_inventory_folder = folder
                             item.site_delivered = location_name
-                            # Save the relationship
-                            item.save()
 
                         elif location_type == 'client':
                             client_folder, created = ClientInventoryFolder.objects.get_or_create(name=location_name)
                             item.client_inventory_folder = client_folder
                             item.client = location_name
-                            # Save the relationship
-                            item.save()
 
                         # Update ItemInventory details
                         item.date = date
-                        item.quantity_out = quantity_out
+                        item.quantity_out += quantity_out
+                        item.stock = item.quantity_in - item.quantity_out
                         item.total_amount = total_amount
-                        item.stock = item.stock + item.quantity_in - quantity_out
                         item.delivery_ref = delivery_ref
                         item.delivery_no = delivery_no
                         item.invoice_type = invoice_type
                         item.invoice_no = invoice_no
                         item.site_or_client_choice = location_type
 
-                        # Save updated item
                         item.save()
+
+                        # Create an InventoryHistory record
+                        InventoryHistory.objects.create(
+                            item=item,
+                            date=date,
+                            item_code=item.item_code,
+                            supplier=item.supplier,
+                            po_product_name=item.po_product_name,
+                            quantity_in=item.quantity_in,
+                            quantity_out=quantity_out,
+                            stock=item.stock,
+                            price=price,
+                            total_amount=total_amount,
+                            delivery_ref=delivery_ref,
+                            delivery_no=delivery_no,
+                            invoice_type=invoice_type,
+                            invoice_no=invoice_no,
+                            site_inventory_folder=item.site_inventory_folder if location_type == 'site' else None,
+                            client_inventory_folder=item.client_inventory_folder if location_type == 'client' else None,
+                            site_delivered=item.site_delivered if location_type == 'site' else None,
+                            client=item.client if location_type == 'client' else None,
+                        )
+
+                        # Remove the item from the cart
                         cart_item.delete()
 
                     except ItemInventory.DoesNotExist:
                         success = False
                         errors.append(f"Item with ID {cart_item.item.id} does not exist.")
-                    except ValidationError as e:
-                        success = False
-                        errors.append(f"Validation error for item ID {cart_item.item.id}: {str(e)}")
                     except Exception as e:
                         success = False
                         errors.append(f"An error occurred for item ID {cart_item.item.id}: {str(e)}")
 
                 # Clear the cart after processing
                 Cart.objects.all().delete()
+
                 if success:
                     messages.success(request, 'Items updated successfully.')
                 else:
                     messages.error(request, 'Some errors occurred: ' + ', '.join(errors))
                 return redirect('bulk_edit_inventory')
 
-
     else:
-        # Handle GET requests (including search functionality)
-        query = request.GET.get('q', '')  # Get the search query from the GET request
+        query = request.GET.get('q', '')
         if query:
-            items = ItemInventory.objects.filter(po_product_name__icontains(query))
+            items = ItemInventory.objects.filter(po_product_name__icontains=query)
         else:
             items = ItemInventory.objects.all()
 
         cart_items = Cart.objects.all()
-
-        # Calculate total amount for cart items
         for cart_item in cart_items:
             cart_item.total_amount = cart_item.quantity * cart_item.item.price
 
@@ -1882,14 +2007,8 @@ def bulk_edit_inventory(request):
             'form': form,
             'items': items,
             'cart_items': cart_items,
-            'query': query,  # Pass the query back to the template
-
+            'query': query,
         })
-
-
-
-
-
 
 
 def remove_cart_item(request, cart_item_id):
@@ -2012,3 +2131,432 @@ def remove_all_cart_items(request):
         messages.error(request, f'An error occurred while removing items from the cart: {str(e)}')
 
     return redirect('bulk_edit_purchase_order')
+
+
+# -----------------------------STOCK IN INVENTORY----------------------------------------------
+
+
+def stock_in_create(request):
+    if request.method == 'POST':
+        form = StockInHistoryForm(request.POST)
+        if form.is_valid():
+            # Save the new stock in history but don't commit to DB yet
+            stock_in = form.save(commit=False)
+
+            # Check if the particulars match an existing po_product_name in ItemInventory
+            if not ItemInventory.objects.filter(po_product_name=stock_in.particulars).exists():
+                # Raise an error if the item does not exist in the ItemInventory list
+                return JsonResponse({'status': 'error',
+                                     'message': 'The item does not exist in the item list. Please check the particulars.'})
+
+            # Get the supplier name from the stock in history
+            supplier_name = stock_in.supplier
+
+            if supplier_name:
+                # Create or get the InventorySupplierFolder associated with this supplier
+                folder, created = InventorySupplierFolder.objects.get_or_create(name=supplier_name)
+
+                # Associate the new stock in history with the supplier's folder
+                stock_in.supplier_folder = folder
+                stock_in.save()
+
+                # Ensure all existing stock in histories with the same supplier are associated with the folder
+                matching_histories = StockInHistory.objects.filter(supplier=supplier_name, supplier_folder__isnull=True)
+                for history in matching_histories:
+                    history.supplier_folder = folder
+                    history.save()
+
+            # Update or create the related ItemInventory record
+            item_inventory, created = ItemInventory.objects.get_or_create(
+                item_code=stock_in.item_code,
+                supplier=stock_in.supplier,
+                defaults={
+                    'po_product_name': stock_in.particulars,
+                    'unit': stock_in.unit,
+                    'quantity_in': stock_in.quantity_in,
+                    'quantity_out': 0,  # Set quantity_out to 0 if the record is new
+                    'stock': stock_in.quantity_in  # Initialize stock to quantity_in for new items
+                }
+            )
+
+            if not created:
+                # Update the existing ItemInventory record by adding the quantity_in
+                item_inventory.quantity_in += stock_in.quantity_in
+                item_inventory.stock = item_inventory.quantity_in - item_inventory.quantity_out
+                item_inventory.quantity_out = item_inventory.quantity_out or 0  # Ensure quantity_out is never None
+                item_inventory.save()
+
+            return JsonResponse({'status': 'success'})
+        else:
+            print(form.errors)  # Debugging form errors
+            return JsonResponse({'status': 'error', 'errors': form.errors})
+    else:
+        form = StockInHistoryForm()
+
+    return render(request, 'Inventory/stockIn/stock_in_form.html', {'form': form})
+
+
+def delete_inventory_supplier_folder(request, folder_id):
+    if request.method == 'POST':
+        folder = get_object_or_404(InventorySupplierFolder, id=folder_id)
+        folder.delete()  # This will set the supplier_folder field in PurchaseOrder to NULL
+        return JsonResponse({'success': True})
+
+    return JsonResponse({'success': False, 'error': 'Invalid request method.'})
+
+
+def inventory_supplier_list_folders(request):
+    if request.method == 'POST':
+        folder_name = request.POST.get('folder_name')
+
+        if folder_name:
+            # Create or get the InventorySupplierFolder based on the folder_name
+            new_folder, created = InventorySupplierFolder.objects.get_or_create(name=folder_name)
+
+            if created:
+                # Handle matching stock in records here
+                matching_stock_ins = StockInHistory.objects.filter(supplier=folder_name)
+                for stock_in in matching_stock_ins:
+                    stock_in.supplier_folder = new_folder
+                    stock_in.save()
+
+                return JsonResponse({'success': True, 'message': 'Folder created successfully.'})
+            else:
+                return JsonResponse({'success': False, 'message': 'Folder with this name already exists.'})
+
+    # Handling GET requests to render the folder list
+    folders = InventorySupplierFolder.objects.all()
+    context = {
+        'folders': folders,
+    }
+    return render(request, 'Inventory/stockIn/inventory_supplier_list_folders.html', context)
+
+
+def inventory_supplier_contents(request, folder_id):
+    folder = get_object_or_404(InventorySupplierFolder, id=folder_id)
+
+    # Get the search query from the GET parameters
+    query = request.GET.get('q', '').strip()
+    page_number = request.GET.get('page', 1)
+
+    # Initial queryset
+    stock_in_histories = StockInHistory.objects.filter(supplier_folder=folder)
+
+    # If there's a search query, filter the stock in records accordingly
+    if query:
+        try:
+            # Try to interpret the query as a month number (e.g., "08" for August)
+            month_number = int(query)
+            stock_in_histories = stock_in_histories.filter(date__month=month_number)
+        except ValueError:
+            try:
+                # Try to interpret the query as a full month name only (e.g., "August")
+                month_mapping = {
+                    "January": "1", "February": "2", "March": "3", "April": "4",
+                    "May": "5", "June": "6", "July": "7", "August": "8",
+                    "September": "9", "October": "10", "November": "11", "December": "12"
+                }
+                month_number = month_mapping.get(query.capitalize())
+                if month_number:
+                    stock_in_histories = stock_in_histories.filter(date__month=month_number)
+                else:
+                    raise ValueError("Not a valid month name")
+            except ValueError:
+                # If not a date, treat it as a general text search
+                stock_in_histories = stock_in_histories.filter(
+                    Q(po_number__icontains=query) |
+                    Q(purchaser__icontains=query) |
+                    Q(item_code__icontains=query) |
+                    Q(particulars__icontains=query) |
+                    Q(quantity_in__icontains=query) |
+                    Q(unit__icontains=query) |
+                    Q(fbbd_ref_number__icontains=query) |
+                    Q(remarks__icontains=query) |
+                    Q(supplier__icontains=query) |
+                    Q(delivery_ref__icontains=query) |
+                    Q(delivery_no__icontains=query) |
+                    Q(invoice_type__icontains=query) |
+                    Q(invoice_no__icontains=query) |
+                    Q(payment_req_ref__icontains=query) |
+                    Q(payment_details__icontains=query) |
+                    Q(remarks2__icontains=query)
+                )
+
+    # Pagination
+    paginator = Paginator(stock_in_histories, 100)  # Show 100 records per page
+    try:
+        stock_in_records = paginator.page(page_number)
+    except PageNotAnInteger:
+        stock_in_records = paginator.page(1)
+    except EmptyPage:
+        stock_in_records = paginator.page(paginator.num_pages)
+
+    # Render the template with the context
+    context = {
+        'folder': folder,
+        'stock_in_records': stock_in_records,
+        'query': query,
+        'page_number': page_number,
+    }
+    return render(request, 'Inventory/stockIn/inventory_supplier_contents.html', context)
+
+
+def export_inventory_supplier_contents(request, folder_id):
+    try:
+        # Get the InventorySupplierFolder by ID
+        folder = InventorySupplierFolder.objects.get(id=folder_id)
+        stock_in_list = StockInHistory.objects.filter(supplier_folder=folder)
+
+        # Create a workbook and a sheet
+        workbook = Workbook()
+        sheet = workbook.active
+        sheet.title = 'Stock In Records'
+
+        # Define header styles
+        header_font = Font(bold=True)
+        blue_fill = PatternFill(start_color='00B0F0', end_color='00B0F0', fill_type='solid')
+        currency_format = '#,##0.00'
+
+        # Define the headers
+        headers = [
+            'Date', 'PO Number', 'Purchaser', 'Item Code', 'Particulars',
+            'Quantity In', 'Unit', 'FBBD Ref#', 'Remarks', 'Supplier',
+            'Delivery Ref#', 'Delivery No.', 'Invoice Type', 'Invoice No.',
+            'Payment Req Ref#', 'Payment Details', 'Remarks2'
+        ]
+        sheet.append(headers)
+
+        for cell in sheet[1]:
+            cell.font = header_font
+            cell.fill = blue_fill
+            cell.value = cell.value.upper() if cell.value is not None else cell.value
+
+        # Populate the sheet with data
+        for stock_in in stock_in_list:
+            sheet.append([
+                stock_in.date.strftime('%Y-%m-%d') if stock_in.date else 'N/A',
+                stock_in.po_number,
+                stock_in.purchaser,
+                stock_in.item_code,
+                stock_in.particulars,
+                stock_in.quantity_in,
+                stock_in.unit,
+                stock_in.fbbd_ref_number,
+                stock_in.remarks,
+                stock_in.supplier,
+                stock_in.delivery_ref,
+                stock_in.delivery_no,
+                stock_in.invoice_type,
+                stock_in.invoice_no,
+                stock_in.payment_req_ref,
+                stock_in.payment_details,
+                stock_in.remarks2
+            ])
+
+        for cell in sheet['F']:  # Assuming quantity_in is in column F (index 6)
+            if cell.row > 1:  # Skip header row
+                cell.number_format = currency_format
+
+        # Auto-adjust column widths based on content
+        for column in sheet.columns:
+            max_length = 0
+            column_letter = column[0].column_letter  # Get the column name (e.g., 'A', 'B', etc.)
+            for cell in column:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(cell.value)
+                except:
+                    pass
+            adjusted_width = (max_length + 2)  # Add extra space for better visibility
+            sheet.column_dimensions[column_letter].width = adjusted_width
+
+        # Create an in-memory buffer
+        buffer = BytesIO()
+        workbook.save(buffer)
+        buffer.seek(0)
+
+        # Set the response to return the Excel file
+        response = HttpResponse(
+            buffer,
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = f'attachment; filename=StockInRecords_{folder.name}.xlsx'
+        return response
+
+    except InventorySupplierFolder.DoesNotExist:
+        return HttpResponse("Inventory Supplier Folder not found", status=404)
+
+
+def get_item_details(request):
+    particulars = request.GET.get('particulars', None)
+
+    if particulars:
+        try:
+            item = ItemInventory.objects.get(po_product_name=particulars)
+            return JsonResponse({
+                'item_code': item.item_code,
+                'unit': item.unit,
+            })
+        except ItemInventory.DoesNotExist:
+            return JsonResponse({'error': 'Item not found'}, status=404)
+
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+def get_item_inventory(request):
+    items = list(ItemInventory.objects.values('id', 'po_product_name'))
+    return JsonResponse({
+        'items': [{'id': item['id'], 'text': item['po_product_name']} for item in items]
+    })
+
+
+def stock_in_transaction_history(request):
+    query = request.GET.get('q')  # Get search query from request
+    page_number = request.GET.get('page', 1)  # Get page number from request
+
+    # Dictionary to map full and abbreviated month names to month numbers
+    month_mapping = {
+        "January": "1", "February": "2", "March": "3", "April": "4",
+        "May": "5", "June": "6", "July": "7", "August": "8",
+        "September": "9", "October": "10", "November": "11", "December": "12",
+        "Jan": "1", "Feb": "2", "Mar": "3", "Apr": "4",
+        "Jun": "6", "Jul": "7", "Aug": "8", "Sep": "9", "Oct": "10", "Nov": "11", "Dec": "12"
+    }
+
+    # Retrieve all records from StockInHistory and exclude records where date is null
+    stock_in_transactions = StockInHistory.objects.exclude(date__isnull=True).order_by('-date')
+
+    # Apply search filter if a query is present
+    if query:
+        try:
+            # Try to interpret the query as a full date (e.g., 'Aug 20, 2024')
+            date_obj = datetime.strptime(query, '%b %d, %Y').date()
+            stock_in_transactions = stock_in_transactions.filter(date=date_obj)
+        except ValueError:
+            # If it's not a full date, check if the query is a month name (full or abbreviated)
+            for month_name, month_number in month_mapping.items():
+                if month_name.lower() in query.lower():
+                    # Check if the query contains a year
+                    year = None
+                    try:
+                        year = int(query.split()[-1])  # Try to extract the year
+                    except (ValueError, IndexError):
+                        pass
+
+                    # Filter based on month and possibly year
+                    if year:
+                        stock_in_transactions = stock_in_transactions.filter(date__month=month_number, date__year=year)
+                    else:
+                        stock_in_transactions = stock_in_transactions.filter(date__month=month_number)
+                    break
+            else:
+                # If not a date or month, treat as a general text search
+                stock_in_transactions = stock_in_transactions.filter(
+                    Q(item_code__icontains=query) |
+                    Q(supplier__icontains=query) |
+                    Q(particulars__icontains=query) |
+                    Q(unit__icontains=query) |
+                    Q(quantity_in__icontains=query) |
+                    Q(remarks__icontains=query) |
+                    Q(invoice_no__icontains=query) |
+                    Q(po_number__icontains=query)
+                )
+
+    # Paginate the filtered stock-in transactions
+    paginator = Paginator(stock_in_transactions, 100)  # Show 100 transactions per page
+    try:
+        stock_in_page = paginator.page(page_number)
+    except PageNotAnInteger:
+        stock_in_page = paginator.page(1)
+    except EmptyPage:
+        stock_in_page = paginator.page(paginator.num_pages)
+
+    return render(request, 'Inventory/stockIn/stock_in_transaction_history.html', {
+        'stock_in_transactions': stock_in_page,
+        'query': query,
+        'page_number': page_number
+    })
+
+
+def handle_uploaded_stock_in_file(f):
+    df = pd.read_excel(f, engine='openpyxl')
+    df = df.fillna('')  # Replace NaN with an empty string
+
+    for _, row in df.iterrows():
+        # Create or update the StockInHistory record
+        stock_in = StockInHistory(
+            date=row.get('DATE'),
+            po_number=row.get('PO NUMBER'),
+            purchaser=row.get('PURCHASER'),
+            item_code=row.get('ITEM CODE'),
+            particulars=row.get('PARTICULAR'),
+            quantity_in=row.get('QTY'),
+            unit=row.get('UNIT'),
+            supplier=row.get('SUPPLIER'),
+            delivery_ref=row.get('DELIVERY REF#'),
+            delivery_no=row.get('DELIVERY NO.'),
+            invoice_type=row.get('INVOICE TYPE'),
+            invoice_no=row.get('INVOICE NO.'),
+            payment_req_ref=row.get('PAYMENT REQ REF#'),
+            payment_details=row.get('PAYMENT DETAILS'),
+            remarks=row.get('REMARKS'),
+            remarks2=row.get('REMARKS2')
+        )
+
+        # Check if the supplier folder exists or create a new one
+        supplier_name = stock_in.supplier
+        if supplier_name:
+            folder, created = SupplierFolder.objects.get_or_create(name=supplier_name)
+            # Update the stock in history to reference the SupplierFolder
+            stock_in.supplier_folder = folder
+
+        # Save the stock in history record
+        stock_in.save()
+
+        # Inventory update logic:
+        # Check if an inventory record for the item exists
+        inventory_item = ItemInventory.objects.filter(
+            item_code=stock_in.item_code,
+            supplier=stock_in.supplier,
+            po_product_name=stock_in.particulars,
+            unit=stock_in.unit,
+        ).first()
+
+        if inventory_item:
+            # Update the existing inventory record by adding the quantity_in
+            inventory_item.quantity_in += stock_in.quantity_in
+            inventory_item.stock = inventory_item.quantity_in - inventory_item.quantity_out
+            inventory_item.save()
+        else:
+            # If no inventory record exists, create a new one
+            ItemInventory.objects.create(
+                item_code=stock_in.item_code,
+                supplier=stock_in.supplier,
+                po_product_name=stock_in.particulars,
+                unit=stock_in.unit,
+                quantity_in=stock_in.quantity_in,
+                quantity_out=0,  # New stock-in, no items taken out yet
+                stock=stock_in.quantity_in,  # Stock is initially the quantity in
+                price=None,  # Add price if it's available in stock_in
+                delivery_ref=stock_in.delivery_ref,
+                delivery_no=stock_in.delivery_no,
+                invoice_type=stock_in.invoice_type,
+                invoice_no=stock_in.invoice_no
+            )
+
+
+
+def upload_stock_in_file(request):
+    if request.method == 'POST':
+        form = UploadFileForm(request.POST, request.FILES)
+        if form.is_valid():
+            try:
+                handle_uploaded_stock_in_file(request.FILES['file'])
+                return JsonResponse({'status': 'success', 'message': 'File uploaded and stock-in data imported successfully.'})
+            except Exception as e:
+                return JsonResponse({'status': 'error', 'message': str(e)})
+    else:
+        form = UploadFileForm()
+    return render(request, 'records/upload.html', {'form': form})
+
+
