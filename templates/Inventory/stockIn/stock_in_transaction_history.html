@@ -52,15 +52,21 @@
                                     </div>
                                     <div class="col-auto">
                                         {% if request.GET.q %}
-                                            <a href="{% url 'stock_in_transaction_history' %}" class="btn btn-outline-primary">Clear Filter</a>
+                                            <a href="{% url 'stock_in_transaction_history' %}"
+                                               class="btn btn-outline-primary">Clear Filter</a>
                                         {% endif %}
                                     </div>
-                                    <a href="{% url 'export_stock_in_transaction_history_to_excel' %}" class="btn btn-primary ml-2">
+                                    <a href="{% url 'export_stock_in_transaction_history_to_excel' %}"
+                                       class="btn btn-primary ml-2">
                                         Export Stock In Transaction History
+                                    </a>
+                                    <a href="{% url 'upload_stock_in_file' %}" class="btn btn-primary ml-2">
+                                        Upload Stock In File
                                     </a>
                                 </form>
                             </div>
                         </div>
+
                         <div class="card-body p-0">
                             <div class="table-responsive">
                                 <table id="sortable-table" class="table table-hover table-striped table-sm">
@@ -68,6 +74,7 @@
                                     <tr class="blue-background">
                                         <th class="no-wrap" style="color: white;">Date</th>
                                         <th class="no-wrap" style="color: white;">PO#</th>
+                                        <th class="no-wrap" style="color: white;">Purchaser</th>
                                         <th class="no-wrap" style="color: white;">Item Code</th>
                                         <th class="no-wrap" style="color: white;">Particular</th>
                                         <th class="no-wrap" style="color: white;">Unit</th>
@@ -83,6 +90,7 @@
                                         <tr>
                                             <td class="no-wrap">{{ transaction.date }}</td>
                                             <td class="no-wrap">{{ transaction.po_number }}</td>
+                                            <td class="no-wrap">{{ transaction.purchaser }}</td>
                                             <td class="no-wrap">{{ transaction.item_code }}</td>
                                             <td class="no-wrap">{{ transaction.particulars }}</td>
                                             <td class="no-wrap">{{ transaction.unit }}</td>
@@ -103,7 +111,8 @@
                                     <ul class="pagination justify-content-center">
                                         {% if stock_in_transactions.has_previous %}
                                             <li class="page-item">
-                                                <a class="page-link" href="?page={{ stock_in_transactions.previous_page_number }}{% if query %}&q={{ query }}{% endif %}"
+                                                <a class="page-link" href="?page=
+                                                        {{ stock_in_transactions.previous_page_number }}{% if query %}&q={{ query }}{% endif %}"
                                                    aria-label="Previous">
                                                     <span aria-hidden="true">&laquo;</span>
                                                 </a>
@@ -111,12 +120,14 @@
                                         {% endif %}
                                         {% for num in stock_in_transactions.paginator.page_range %}
                                             <li class="page-item {% if stock_in_transactions.number == num %}active{% endif %}">
-                                                <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}">{{ num }}</a>
+                                                <a class="page-link" href="?page=
+                                                        {{ num }}{% if query %}&q={{ query }}{% endif %}">{{ num }}</a>
                                             </li>
                                         {% endfor %}
                                         {% if stock_in_transactions.has_next %}
                                             <li class="page-item">
-                                                <a class="page-link" href="?page={{ stock_in_transactions.next_page_number }}{% if query %}&q={{ query }}{% endif %}"
+                                                <a class="page-link" href="?page=
+                                                        {{ stock_in_transactions.next_page_number }}{% if query %}&q={{ query }}{% endif %}"
                                                    aria-label="Next">
                                                     <span aria-hidden="true">&raquo;</span>
                                                 </a>
@@ -125,7 +136,8 @@
                                     </ul>
                                 </nav>
                             </div>
-                            <p>Page {{ stock_in_transactions.number }} of {{ stock_in_transactions.paginator.num_pages }}</p>
+                            <p>Page {{ stock_in_transactions.number }}
+                                of {{ stock_in_transactions.paginator.num_pages }}</p>
                         </div>
                     </div>
                 </div>

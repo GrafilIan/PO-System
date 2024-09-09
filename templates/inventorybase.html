@@ -28,6 +28,21 @@
 
     <link rel="stylesheet" href="{% static 'assets/modules/prism/prism.css' %}">
 
+    <!-- CSS Libraries -->
+    <style>
+        /* Dropdown hover effect */
+        .dropdown-menu {
+            background-color: #f8f9fa; /* Set background color for dropdown */
+            border: none; /* Remove default border */
+        }
+
+        .dropdown-item:hover {
+            background-color: #000270; /* Change background color on hover */
+            color: #fff; /* Change text color on hover */
+        }
+    </style>
+
+
     <!-- Start GA -->
     <script async src="{% static 'assets/js/gtag.js' %}"></script>
     <script src="{% static 'assets/js/sweetalert2.all.min.js' %}"></script>
@@ -96,6 +111,8 @@
                             <i class="fas fa-boxes"></i><span>Inventory</span>
                         </a>
                         <ul class="dropdown-menu">
+                            <li><a href="{% url 'inventory_supplier_list_folders' %}" class="dropdown-item">
+                                Supplier Inventory</a></li>
                             <li><a href="{% url 'site_inventory_folder_list' %}" class="dropdown-item">Site
                                 Inventory</a></li>
                             <li><a href="{% url 'client_inventory_folder_list' %}" class="dropdown-item">Client
@@ -113,12 +130,6 @@
                     <li class="nav-item {% if request.path == '/stock-in/create/' %}active{% endif %}">
                         <a href="{% url 'stock_in_create' %}" class="nav-link">
                             <i class="fas fa-box"></i><span>Stock In</span>
-                        </a>
-                    </li>
-
-                    <li class="nav-item {% if request.path == '/inventory-supplier-folders/' %}active{% endif %}">
-                        <a href="{% url 'inventory_supplier_list_folders' %}" class="nav-link">
-                            <i class="fas fa-receipt"></i><span>Supplier Folder</span>
                         </a>
                     </li>
 

@@ -973,8 +973,27 @@ def inventory_edit(request, id):
         form = ItemInventoryQuantityForm(request.POST, instance=inventory_item)
         if form.is_valid():
             updated_item = form.save(commit=False)
-            updated_item.stock = updated_item.quantity_in - updated_item.quantity_out  # Update stock based on quantities
-            updated_item.save()
+
+            # Check if an existing record with the same supplier and po_product_name already exists
+            existing_inventory_item = ItemInventory.objects.filter(
+                supplier=updated_item.supplier,
+                po_product_name=updated_item.po_product_name
+            ).exclude(id=id).first()
+
+            if existing_inventory_item:
+                # If a matching record exists, update its quantities and stock
+                existing_inventory_item.quantity_in += updated_item.quantity_in
+                existing_inventory_item.quantity_out += updated_item.quantity_out
+                existing_inventory_item.stock = existing_inventory_item.quantity_in - existing_inventory_item.quantity_out
+                existing_inventory_item.save()
+
+                # Optionally, delete the current record or return success message
+                inventory_item.delete()  # Remove the current item as it merges with the existing one.
+            else:
+                # If no matching record, update the current inventory item
+                updated_item.stock = updated_item.quantity_in - updated_item.quantity_out
+                updated_item.save()
+
             return JsonResponse({'status': 'success'})
         else:
             return JsonResponse({'status': 'error', 'errors': form.errors})
@@ -982,6 +1001,7 @@ def inventory_edit(request, id):
         form = ItemInventoryQuantityForm(instance=inventory_item)
 
     return render(request, 'inventory/inventory_edit.html', {'form': form, 'item': inventory_item})
+
 
 
 def item_code_list(request):
@@ -1410,105 +1430,6 @@ def export_all_client_folders(request):
     # Set the response to return the zip file
     response = HttpResponse(buffer, content_type='application/zip')
     response['Content-Disposition'] = 'attachment; filename=client_inventory_folders.zip'
-    return response
-
-def export_stock_in_transaction_history_to_excel(request):
-    query = request.GET.get('q')  # Search query parameter
-    date_query = request.GET.get('date')  # Date query parameter
-
-    # Start with all stock-in transactions
-    transactions = StockInHistory.objects.exclude(date__isnull=True).order_by('-date')
-
-    # Apply search filter
-    if query:
-        transactions = transactions.filter(
-            Q(date__icontains=query) |
-            Q(item_code__icontains=query) |
-            Q(supplier__icontains=query) |
-            Q(particulars__icontains=query) |
-            Q(unit__icontains=query) |
-            Q(quantity_in__icontains=query) |
-            Q(invoice_no__icontains=query) |
-            Q(invoice_type__icontains=query)
-        )
-
-    # Apply date filter
-    if date_query:
-        try:
-            date_obj = datetime.strptime(date_query, '%b %d, %Y').date()
-            transactions = transactions.filter(date=date_obj)
-        except ValueError:
-            try:
-                date_obj = datetime.strptime(date_query, '%b %Y')
-                transactions = transactions.filter(date__year=date_obj.year, date__month=date_obj.month)
-            except ValueError:
-                try:
-                    date_obj = datetime.strptime(date_query, '%B %Y')
-                    transactions = transactions.filter(date__year=date_obj.year, date__month=date_obj.month)
-                except ValueError:
-                    try:
-                        month_number = int(date_query)
-                        transactions = transactions.filter(date__month=month_number)
-                    except ValueError:
-                        try:
-                            date_obj = datetime.strptime(date_query, '%B')
-                            transactions = transactions.filter(date__month=date_obj.month)
-                        except ValueError:
-                            pass
-
-    # Create a workbook and a sheet
-    workbook = openpyxl.Workbook()
-    sheet = workbook.active
-    sheet.title = 'Stock In Transaction History'
-
-    header_font = Font(color='FFFFFF', bold=True)
-    black_fill = PatternFill(start_color='000000', end_color='000000', fill_type='solid')
-
-    # Define the headers
-    headers = [
-        'Date', 'PO#', 'Item Code', 'Particulars', 'Unit',
-        'Quantity In', 'Supplier', 'Remarks', 'Invoice No.', 'Invoice Type'
-    ]
-    sheet.append(headers)
-
-    for cell in sheet[1]:
-        cell.font = header_font
-        cell.fill = black_fill
-        cell.value = cell.value.upper() if cell.value is not None else cell.value
-
-    # Populate the sheet with data
-    for transaction in transactions:
-        sheet.append([
-            transaction.date.strftime('%Y-%m-%d') if transaction.date else 'N/A',
-            transaction.po_number, transaction.item_code, transaction.particulars,
-            transaction.unit, transaction.quantity_in, transaction.supplier,
-            transaction.remarks, transaction.invoice_no, transaction.invoice_type
-        ])
-
-    # Auto-size columns for better visibility
-    for column in sheet.columns:
-        max_length = 0
-        column_letter = column[0].column_letter
-        for cell in column:
-            try:
-                if len(str(cell.value)) > max_length:
-                    max_length = len(str(cell.value))
-            except:
-                pass
-        adjusted_width = (max_length + 2)
-        sheet.column_dimensions[column_letter].width = adjusted_width
-
-    # Create an in-memory buffer
-    buffer = BytesIO()
-    workbook.save(buffer)
-    buffer.seek(0)
-
-    # Set the response to return the Excel file
-    response = HttpResponse(
-        buffer,
-        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    )
-    response['Content-Disposition'] = 'attachment; filename=StockInTransactionHistory.xlsx'
     return response
 
 
@@ -2319,7 +2240,7 @@ def export_inventory_supplier_contents(request, folder_id):
 
         # Define the headers
         headers = [
-            'Date', 'PO Number', 'Purchaser', 'Item Code', 'Particulars',
+            'Date', 'PO Number', 'Purchaser', 'Item Code', 'Particular',
             'Quantity In', 'Unit', 'FBBD Ref#', 'Remarks', 'Supplier',
             'Delivery Ref#', 'Delivery No.', 'Invoice Type', 'Invoice No.',
             'Payment Req Ref#', 'Payment Details', 'Remarks2'
@@ -2387,6 +2308,106 @@ def export_inventory_supplier_contents(request, folder_id):
         return HttpResponse("Inventory Supplier Folder not found", status=404)
 
 
+def export_stock_in_transaction_history_to_excel(request):
+    query = request.GET.get('q')  # Search query parameter
+    date_query = request.GET.get('date')  # Date query parameter
+
+    # Start with all stock-in transactions
+    transactions = StockInHistory.objects.exclude(date__isnull=True).order_by('-date')
+
+    # Apply search filter
+    if query:
+        transactions = transactions.filter(
+            Q(date__icontains=query) |
+            Q(item_code__icontains=query) |
+            Q(supplier__icontains=query) |
+            Q(particulars__icontains=query) |
+            Q(unit__icontains=query) |
+            Q(quantity_in__icontains=query) |
+            Q(invoice_no__icontains=query) |
+            Q(invoice_type__icontains=query)
+        )
+
+    # Apply date filter
+    if date_query:
+        try:
+            date_obj = datetime.strptime(date_query, '%b %d, %Y').date()
+            transactions = transactions.filter(date=date_obj)
+        except ValueError:
+            try:
+                date_obj = datetime.strptime(date_query, '%b %Y')
+                transactions = transactions.filter(date__year=date_obj.year, date__month=date_obj.month)
+            except ValueError:
+                try:
+                    date_obj = datetime.strptime(date_query, '%B %Y')
+                    transactions = transactions.filter(date__year=date_obj.year, date__month=date_obj.month)
+                except ValueError:
+                    try:
+                        month_number = int(date_query)
+                        transactions = transactions.filter(date__month=month_number)
+                    except ValueError:
+                        try:
+                            date_obj = datetime.strptime(date_query, '%B')
+                            transactions = transactions.filter(date__month=date_obj.month)
+                        except ValueError:
+                            pass
+
+    # Create a workbook and a sheet
+    workbook = openpyxl.Workbook()
+    sheet = workbook.active
+    sheet.title = 'Stock In Transaction History'
+
+    header_font = Font(color='FFFFFF', bold=True)
+    black_fill = PatternFill(start_color='000000', end_color='000000', fill_type='solid')
+
+    # Define the headers
+    headers = [
+        'Date', 'PO#','Purchaser', 'Item Code', 'Particular', 'Unit',
+        'Quantity In', 'Supplier', 'Remarks', 'Invoice No.', 'Invoice Type'
+    ]
+    sheet.append(headers)
+
+    for cell in sheet[1]:
+        cell.font = header_font
+        cell.fill = black_fill
+        cell.value = cell.value.upper() if cell.value is not None else cell.value
+
+    # Populate the sheet with data
+    for transaction in transactions:
+        sheet.append([
+            transaction.date.strftime('%Y-%m-%d') if transaction.date else 'N/A',
+            transaction.po_number, transaction.purchaser, transaction.item_code, transaction.particulars,
+            transaction.unit, transaction.quantity_in, transaction.supplier,
+            transaction.remarks, transaction.invoice_no, transaction.invoice_type
+        ])
+
+    # Auto-size columns for better visibility
+    for column in sheet.columns:
+        max_length = 0
+        column_letter = column[0].column_letter
+        for cell in column:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except:
+                pass
+        adjusted_width = (max_length + 2)
+        sheet.column_dimensions[column_letter].width = adjusted_width
+
+    # Create an in-memory buffer
+    buffer = BytesIO()
+    workbook.save(buffer)
+    buffer.seek(0)
+
+    # Set the response to return the Excel file
+    response = HttpResponse(
+        buffer,
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename=StockInTransactionHistory.xlsx'
+    return response
+
+
 def get_item_details(request):
     particulars = request.GET.get('particulars', None)
 
@@ -2396,6 +2417,7 @@ def get_item_details(request):
             return JsonResponse({
                 'item_code': item.item_code,
                 'unit': item.unit,
+                'supplier': item.supplier,
             })
         except ItemInventory.DoesNotExist:
             return JsonResponse({'error': 'Item not found'}, status=404)
@@ -2490,7 +2512,7 @@ def handle_uploaded_stock_in_file(f):
             purchaser=row.get('PURCHASER'),
             item_code=row.get('ITEM CODE'),
             particulars=row.get('PARTICULAR'),
-            quantity_in=row.get('QTY'),
+            quantity_in=row.get('QUANTITY IN'),
             unit=row.get('UNIT'),
             supplier=row.get('SUPPLIER'),
             delivery_ref=row.get('DELIVERY REF#'),
@@ -2506,7 +2528,7 @@ def handle_uploaded_stock_in_file(f):
         # Check if the supplier folder exists or create a new one
         supplier_name = stock_in.supplier
         if supplier_name:
-            folder, created = SupplierFolder.objects.get_or_create(name=supplier_name)
+            folder, created = InventorySupplierFolder.objects.get_or_create(name=supplier_name)
             # Update the stock in history to reference the SupplierFolder
             stock_in.supplier_folder = folder
 
@@ -2537,7 +2559,6 @@ def handle_uploaded_stock_in_file(f):
                 quantity_in=stock_in.quantity_in,
                 quantity_out=0,  # New stock-in, no items taken out yet
                 stock=stock_in.quantity_in,  # Stock is initially the quantity in
-                price=None,  # Add price if it's available in stock_in
                 delivery_ref=stock_in.delivery_ref,
                 delivery_no=stock_in.delivery_no,
                 invoice_type=stock_in.invoice_type,
@@ -2552,11 +2573,11 @@ def upload_stock_in_file(request):
         if form.is_valid():
             try:
                 handle_uploaded_stock_in_file(request.FILES['file'])
-                return JsonResponse({'status': 'success', 'message': 'File uploaded and stock-in data imported successfully.'})
+                return JsonResponse({'status': 'success', 'message': 'Stock-in data imported successfully.'})
             except Exception as e:
                 return JsonResponse({'status': 'error', 'message': str(e)})
     else:
         form = UploadFileForm()
-    return render(request, 'records/upload.html', {'form': form})
+    return render(request, 'Inventory/stockIn/stock_in_upload.html', {'form': form})
 
 

@@ -13,21 +13,64 @@
     <link rel="stylesheet" href="{% static 'assets/css/custom.css' %}">
     <script src="{% static 'assets/js/cleave.min.js' %}"></script>
     <style>
+
+        #id_particulars {
+            display: none !important;
+        }
+
         /* Add custom style for Select2 to ensure it is properly styled */
         .select2-container .select2-selection--single {
+            border: 1px solid #ced4da; /* Subtle border */
+            border-radius: 3px;
             height: 38px;
-            background-color: #dcdcdc; /* White background */
+            background-color: #ffffff; /* White background */
         }
 
         .select2-results__option {
-            background-color: #d2d2d2; /* White background for dropdown */
+            background-color: #ffffff; /* White background for dropdown */
+            border: 1px solid #ced4da; /* Subtle border */
+            border-radius: 1px;
             color: black;
+            list-style-type: none; /* Remove bullet points */
+            padding-left: 10px
         }
 
         /* Adjust dropdown to ensure it appears below */
         .select2-dropdown {
             top: 100% !important;
+            max-height: 400px; /* Limit the height of the dropdown to 200px */
+            overflow-y: auto; /* Enable vertical scrolling */
         }
+
+        .select2-results__options {
+            max-height: 400px; /* Limit the height of the result list */
+            overflow-y: auto; /* Enable vertical scrolling */
+        }
+
+        /* Styling the Select2 input search box (the plain rectangle) */
+        .select2-container .select2-search--dropdown .select2-search__field {
+            border: 1px solid #ced4da; /* Subtle border color (similar to other form elements) */
+            border-radius: 4px; /* Rounded corners */
+            padding: 8px; /* Space between text and border */
+            outline: none; /* Remove blue outline on focus */
+            box-shadow: none; /* Remove shadow */
+            font-size: 14px; /* Adjust the font size */
+            color: #495057; /* Font color */
+            width: 100%; /* Ensure it takes full width */
+            box-sizing: border-box; /* Include padding and border in the element's total width */
+        }
+
+        /* Change border color on focus */
+        .select2-container .select2-search--dropdown .select2-search__field:focus {
+            border-color: #007bff; /* Border color on focus (e.g., Bootstrap primary) */
+        }
+
+        /* Adjust the background of the dropdown search */
+        .select2-container .select2-search--dropdown .select2-search__field {
+            background-color: #f8f9fa; /* Light background */
+        }
+
+
     </style>
 
 {% endblock %}
@@ -223,7 +266,10 @@
                         // Clear the existing options
                         $particularsSelect.empty();
 
-                        // Append new options
+                        // Append a blank placeholder option
+                        $particularsSelect.append(new Option('Select a particular', '', true, true));
+
+                        // Append new options dynamically from the backend
                         $.each(data.items, function (index, item) {
                             $particularsSelect.append(new Option(item.text, item.text));
                         });
@@ -238,6 +284,9 @@
                             dropdownParent: $('body'),
                             dropdownPosition: 'below' // Ensure the dropdown stays within the body
                         });
+
+                        // Reset the select field to blank
+                        $particularsSelect.val(null).trigger('change');  // Set the default value to be blank
                     },
                     error: function () {
                         console.error('Error fetching item particulars');
@@ -254,13 +303,14 @@
                 if (selectedParticular) {
                     $.ajax({
                         url: "{% url 'get_item_details' %}",
-                        data: { 'particulars': selectedParticular },
+                        data: {'particulars': selectedParticular},
                         dataType: 'json',
                         success: function (data) {
                             if (data.item_code && data.unit) {
                                 // Auto-fill item_code and unit fields
                                 $('#id_item_code').val(data.item_code);
                                 $('#id_unit').val(data.unit);
+                                $('#id_supplier').val(data.supplier);
                             } else {
                                 console.error('Item details not found');
                             }
@@ -272,7 +322,7 @@
                 }
             });
 
-            // Form submission with clearing the quantity_in field
+            // Form submission logic
             $('#stockInForm').on('submit', function (event) {
                 event.preventDefault();
                 var form = $(this);
@@ -318,6 +368,7 @@
             });
         });
     </script>
+
 {% endblock %}
 
 
