@@ -1859,6 +1859,22 @@ def bulk_edit_inventory(request):
     if request.method == 'POST':
         if 'add_to_cart' in request.POST:
             item_ids = request.POST.getlist('item_ids')
+
+            # Ensure there are selected items
+            success = False
+            for item_id in item_ids:
+                quantity_out = request.POST.get(f'quantity_out_{item_id}', '0')
+                quantity_out = Decimal(quantity_out) if quantity_out.strip() != '' else 0
+
+                if quantity_out > 0:
+                    success = True  # At least one valid item has been edited
+                    break
+
+            if not success:
+                messages.error(request,
+                               'No valid quantity out entered for any item. Please enter a quantity to add to the cart.')
+                return redirect('bulk_edit_inventory')
+
             success = True
             errors = []
 
@@ -1891,6 +1907,12 @@ def bulk_edit_inventory(request):
             return redirect('bulk_edit_inventory')
 
         elif 'finalize_changes' in request.POST:
+            # Check if the cart is empty before processing
+            cart_items = Cart.objects.all()
+            if not cart_items.exists():
+                messages.error(request, 'No items in the cart to finalize.')
+                return redirect('bulk_edit_inventory')
+
             form = ItemInventoryBulkForm(request.POST)
             if form.is_valid():
                 date = form.cleaned_data['date']
@@ -1903,8 +1925,6 @@ def bulk_edit_inventory(request):
 
                 success = True
                 errors = []
-
-                cart_items = Cart.objects.all()
 
                 for cart_item in cart_items:
                     try:
@@ -1986,11 +2006,11 @@ def bulk_edit_inventory(request):
         else:
             items = ItemInventory.objects.all()
 
-        cart_items = Cart.objects.all()
-        for cart_item in cart_items:
-            cart_item.total_amount = cart_item.quantity * cart_item.item.price
+            cart_items = Cart.objects.all()
+            for cart_item in cart_items:
+                cart_item.total_amount = cart_item.quantity * cart_item.item.price
 
-        form = ItemInventoryBulkForm()
+            form = ItemInventoryBulkForm()
 
         return render(request, 'Inventory/bulk_edit_inventory.html', {
             'form': form,
