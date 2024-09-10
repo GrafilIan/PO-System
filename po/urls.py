@@ -79,4 +79,9 @@ urlpatterns = [
          name='export_stock_in_transaction_history_to_excel'),
     path('stock_in_transaction_history/', views.stock_in_transaction_history, name='stock_in_transaction_history'),
     path('stock-in/upload/', views.upload_stock_in_file, name='upload_stock_in_file'),
+
+    path('edit-remarks/<int:transaction_id>/', views.edit_remarks, name='edit_remarks'),
+    path('folder/<int:folder_id>/edit-record/<int:record_id>/', views.edit_inventory_history_remarks,
+         name='edit_inventory_history_remarks'),
+    path('edit-site-remarks/<int:transaction_id>/', views.edit_site_remarks, name='edit_site_remarks'),
 ]

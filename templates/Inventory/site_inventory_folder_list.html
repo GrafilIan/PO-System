@@ -22,29 +22,34 @@
                 <section class="section container-fluid">
                     <div class="section-body">
                         <div class="card card-desk">
-                           <div class="card-header d-flex justify-content-between align-items-center" style="margin-top: 10px">
-    <h3 class="mb-0">SITE INVENTORY FOLDER LIST</h3>
-    <div class="d-flex align-items-center ml-auto">
-        <form id="createFolderForm" method="POST" action="{% url 'create_site_inventory_folder' %}" class="d-flex align-items-center mr-2">
-            {% csrf_token %}
-            <div class="input-group">
-                <input type="text" name="folder_name" class="form-control" placeholder="New folder name" required>
-                <div class="input-group-append">
-                    <button type="submit" class="btn btn-primary ml-2">
-                        Create Folder
-                        <i class="fas fa-folder"></i>
-                    </button>
-                </div>
-            </div>
-        </form>
-        <form action="{% url 'export_all_site_inventory_folders' %}" method="get" class="ml-2">
-            <button type="submit" class="btn btn-primary">
-                <i class="fas fa-file-export mr-2"></i>
-                Export All Site Folders
-            </button>
-        </form>
-    </div>
-</div>
+                            <div class="card-header d-flex justify-content-between align-items-center"
+                                 style="background-color: #17bfff">
+                                <h3 class="mb-0"><strong>SITE INVENTORY FOLDER LIST</strong></h3>
+                                <div class="d-flex align-items-center ml-auto">
+                                    <form id="createFolderForm" method="POST"
+                                          action="{% url 'create_site_inventory_folder' %}"
+                                          class="d-flex align-items-center mr-2">
+                                        {% csrf_token %}
+                                        <div class="input-group">
+                                            <input type="text" name="folder_name" class="form-control"
+                                                   placeholder="New folder name" required>
+                                            <div class="input-group-append">
+                                                <button type="submit" class="btn btn-primary ml-2">
+                                                    Create Folder
+                                                    <i class="fas fa-folder"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                    <form action="{% url 'export_all_site_inventory_folders' %}" method="get"
+                                          class="ml-2">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-file-export mr-2"></i>
+                                            Export All Site Folders
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
 
 
                             <div class="card-body">

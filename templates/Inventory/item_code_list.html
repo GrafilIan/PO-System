@@ -43,12 +43,27 @@
                                 <div class="col-12">
                                     <div class="card card-primary">
 
-                                        <div class="card-header d-flex justify-content-between align-items-center"
+                                        <div class="card-header d-flex justify-content-center align-items-center"
                                              style="background-color: #000072; color: white;">
-                                            <h4 class="mb-0">Item Code Data Table</h4>
-                                            <div class="card-header-action d-flex align-items-center">
-                                            </div>
+                                            <!-- Centered Title and Form in One Line -->
+                                            <h2 class="mb-0 mr-4">ITEM CODE TABLE</h2>
+
+                                            <!-- Search Form Centered and in One Line -->
+                                            <form method="GET" action="{% url 'item_code_list' %}"
+                                                  class="form-inline d-flex align-items-center">
+                                                <input type="text" name="q" class="form-control mr-2"
+                                                       placeholder="Search..." value="{{ query|default_if_none:'' }}"
+                                                       aria-label="Search" style="width: 200px;">
+                                                <button type="submit" class="btn btn-primary mr-2">Search</button>
+
+                                                <!-- Clear Filter Button -->
+                                                {% if query %}
+                                                    <a href="{% url 'item_code_list' %}"
+                                                       class="btn btn-outline-primary mr-2">Clear Filter</a>
+                                                {% endif %}
+                                            </form>
                                         </div>
+
 
                                         <div class="card-body p-0">
                                             <div class="table-responsive">
@@ -81,7 +96,10 @@
                                         <ul class="pagination justify-content-center">
                                             {% if page_obj.has_previous %}
                                                 <li class="page-item">
-                                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}"
+                                                    <a class="page-link" href="?page=
+
+
+                                                            {{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}"
                                                        aria-label="Previous">
                                                         <span aria-hidden="true">&laquo;</span>
                                                     </a>
@@ -97,7 +115,10 @@
                                             {% endfor %}
                                             {% if page_obj.has_next %}
                                                 <li class="page-item">
-                                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}"
+                                                    <a class="page-link" href="?page=
+
+
+                                                            {{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}"
                                                        aria-label="Next">
                                                         <span aria-hidden="true">&raquo;</span>
                                                     </a>
@@ -105,7 +126,10 @@
                                             {% endif %}
                                             <!-- Link to Last Page -->
                                             <li class="page-item {% if page_obj.number == page_obj.paginator.num_pages %}active{% endif %}">
-                                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}">
+                                                <a class="page-link" href="?page=
+
+
+                                                        {{ page_obj.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}">
                                                     Last
                                                 </a>
                                             </li>

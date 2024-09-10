@@ -81,6 +81,7 @@
                                         <th class="no-wrap" style="color: white;">DELIVERY NO.</th>
                                         <th style="color: white;">INVOICE TYPE</th>
                                         <th style="color: white;">INVOICE#</th>
+                                        <th class="no-wrap" style="color: white;">Actions</th>
                                     </tr>
                                     </thead>
                                     <tbody>
@@ -98,6 +99,7 @@
                                             <td class="no-wrap">{{ transaction.delivery_no }}</td>
                                             <td class="no-wrap">{{ transaction.invoice_type }}</td>
                                             <td class="no-wrap">{{ transaction.invoice_no }}</td>
+                                            <td class="no-wrao">{{ transaction.remarks }}</td>
                                         </tr>
                                     {% endfor %}
                                     </tbody>

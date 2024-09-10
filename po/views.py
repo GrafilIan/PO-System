@@ -1,3 +1,4 @@
+import json
 import zipfile
 from decimal import Decimal
 
@@ -11,9 +12,10 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 from openpyxl.workbook import Workbook
 from .forms import PurchaseOrderForm, UploadFileForm, ItemInventoryBulkForm, PurchaseOrderBulkForm, \
-    ItemInventoryListForm, ItemInventoryQuantityForm, StockInHistoryForm
+    ItemInventoryListForm, ItemInventoryQuantityForm, StockInHistoryForm, EditRemarksForm
 from .models import PurchaseOrder, ArchiveFolder, ItemInventory, SupplierFolder, InventoryHistory, SiteInventoryFolder, \
     ClientInventoryFolder, Cart, poCart, ItemCodeList, InventorySupplierFolder, StockInHistory
 from datetime import datetime
@@ -1005,8 +1007,19 @@ def inventory_edit(request, id):
 
 
 def item_code_list(request):
-    saved_items = ItemCodeList.objects.all()  # Querying all saved items
-    return render(request, 'inventory/item_code_list.html', {'saved_items': saved_items})
+    query = request.GET.get('q')  # Get the search query from the URL
+    if query:
+        # Filter results based on the search query
+        saved_items = ItemCodeList.objects.filter(
+            Q(item_code__icontains=query) |
+            Q(po_product_name__icontains=query) |
+            Q(unit__icontains=query)
+        )
+    else:
+        saved_items = ItemCodeList.objects.all()  # If no search, return all items
+
+    return render(request, 'inventory/item_code_list.html', {'saved_items': saved_items, 'query': query})
+
 
 
 def export_inventory_to_excel(request):
@@ -1041,7 +1054,7 @@ def export_inventory_to_excel(request):
 
     # Define the headers
     headers = [
-        'Item Code', 'Supplier', 'PO Product Name', 'New Product Name', 'Unit',
+        'Item Code', 'Supplier', 'Particular', 'New Product Name', 'Unit',
         'Quantity In', 'Quantity Out', 'Stock', 'Price', 'Total Amount'
     ]
     sheet.append(headers)
@@ -1676,6 +1689,60 @@ def view_client_inventory_folder_contents(request, folder_id):
     return render(request, 'Inventory/client_folder_contents.html', context)
 
 
+def edit_inventory_history_remarks(request, folder_id, record_id):
+    # Get the folder and record
+    folder = get_object_or_404(ClientInventoryFolder, id=folder_id)
+    record = get_object_or_404(InventoryHistory, client_inventory_folder=folder, id=record_id)
+
+    if request.method == 'POST':
+        form = EditRemarksForm(request.POST, instance=record)
+        if form.is_valid():
+            form.save()
+            return redirect('view_client_inventory_folder_contents', folder_id=folder_id)  # Redirect to folder view after edit
+    else:
+        form = EditRemarksForm(instance=record)
+
+    context = {
+        'form': form,
+        'folder': folder,
+        'record': record
+    }
+    return render(request, 'Inventory/client_folder_contents.html', context)
+
+@csrf_exempt
+def edit_remarks(request, transaction_id):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        remarks = data.get('remarks', '')
+
+        try:
+            transaction = InventoryHistory.objects.get(id=transaction_id)
+            transaction.remarks = remarks
+            transaction.save()
+            return JsonResponse({'success': True})
+        except InventoryHistory.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Transaction not found'}, status=404)
+
+    return JsonResponse({'success': False}, status=400)
+
+
+@csrf_exempt
+def edit_site_remarks(request, transaction_id):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        remarks = data.get('remarks', '')
+
+        try:
+            transaction = InventoryHistory.objects.get(id=transaction_id)
+            transaction.remarks = remarks
+            transaction.save()
+            return JsonResponse({'success': True})
+        except InventoryHistory.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Transaction not found'}, status=404)
+
+    return JsonResponse({'success': False}, status=400)
+
+
 # ----------------------------SUPPLIER----------------------------------------------
 
 def delete_supplier_folder(request, folder_id):
@@ -1877,6 +1944,7 @@ def bulk_edit_inventory(request):
                             item_code=item.item_code,
                             supplier=item.supplier,
                             po_product_name=item.po_product_name,
+                            unit=item.unit,
                             quantity_in=item.quantity_in,
                             quantity_out=quantity_out,
                             stock=item.stock,

@@ -1,7 +1,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
 
-from .models import PurchaseOrder, ItemInventory, StockInHistory
+from .models import PurchaseOrder, ItemInventory, StockInHistory, InventoryHistory
 
 
 class PurchaseOrderForm(forms.ModelForm):
@@ -207,6 +207,12 @@ class ItemInventoryListForm(forms.ModelForm):
                 raise ValidationError('PO Product Name already exists. Please use a different name.')
 
             return po_product_name
+
+
+class EditRemarksForm(forms.ModelForm):
+    class Meta:
+        model = InventoryHistory
+        fields = ['remarks']  # Only include the remarks field
 
 
 class ItemInventoryQuantityForm(forms.ModelForm):

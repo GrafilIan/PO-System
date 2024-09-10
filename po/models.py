@@ -176,6 +176,7 @@ class InventoryHistory(models.Model):
     invoice_type = models.CharField(max_length=10, choices=INVOICE_CHOICES, verbose_name='Invoice#', null=True, blank=True)
     invoice_no = models.CharField(max_length=255, verbose_name='Invoice No.', null=True, blank=True)
     site_or_client_choice = models.CharField(max_length=10, choices=SITE_OR_CLIENT_CHOICES, blank=True, null=True)
+    remarks = models.TextField(blank=True, null=True, verbose_name='Remarks')
 
 
 

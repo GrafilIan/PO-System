@@ -28,9 +28,9 @@
         <div class="main-content">
             <section class="section container-fluid">
                 <div class="section-body">
-                    <div class="card card-primary">
+                    <div class="card card-primary" style="background-color: #000171">
 
-                        <h2 style="text-align: center; margin-top: 10px;"><strong>BTCS SHOP</strong></h2>
+                        <h2 style="text-align: center; margin-top: 10px; color: whitesmoke"><strong>BTCS SHOP</strong></h2>
 
                         <div class="card-body">
                             {% if messages %}
@@ -136,7 +136,8 @@
                                                         <div style="border-top: 1px solid #0026e5; margin: 4px 0; text-align: center;"></div>
                                                     </div>
                                                     <p class="card-text">
-                                                        Quantity: <strong>{{ cart_item.quantity|floatformat:2 }}</strong><br>
+                                                        Quantity:
+                                                        <strong>{{ cart_item.quantity|floatformat:2 }}</strong><br>
                                                     </p>
                                                     <input type="hidden" name="cart_item_ids"
                                                            value="{{ cart_item.id }}">
