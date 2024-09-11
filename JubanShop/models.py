@@ -11,11 +11,13 @@ class JubanItemCodeList(models.Model):
     def __str__(self):
         return f"{self.item_code} - {self.po_product_name} - {self.unit}"
 
+
 class JubanSiteInventoryFolder(models.Model):
     name = models.CharField(max_length=255, unique=True)
 
     def __str__(self):
         return self.name
+
 
 class JubanClientInventoryFolder(models.Model):
     name = models.CharField(max_length=255, unique=True)
@@ -29,6 +31,7 @@ class JubanInventorySupplierFolder(models.Model):
 
     def __str__(self):
         return self.name
+
 
 class JubanSupplierFolder(models.Model):
     name = models.CharField(max_length=255, unique=True)
@@ -180,10 +183,10 @@ class JubanInventoryHistory(models.Model):
     remarks = models.TextField(blank=True, null=True, verbose_name='Remarks')
 
 
-
 class JubanCart(models.Model):
     item = models.ForeignKey(JubanItemInventory, on_delete=models.CASCADE)
     quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     def __str__(self):
         return f"{self.item} - {self.quantity}"
+

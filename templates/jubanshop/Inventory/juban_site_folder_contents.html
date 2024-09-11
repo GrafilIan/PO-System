@@ -1,0 +1,250 @@
+{% extends 'inventorybase.html' %}
+{% load humanize %}
+
+{% block title %}{{ folder.name }} - Contents{% endblock %}
+
+{% load static %}
+
+{% block head %}
+    <link rel="stylesheet" href="{% static 'assets/modules/bootstrap-social/bootstrap-social.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/modules/datatables/datatables.min.css' %}">
+    <link rel="stylesheet"
+          href="{% static 'assets/modules/datatables/DataTables-1.10.16/css/dataTables.bootstrap4.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/modules/datatables/Select-1.2.4/css/select.bootstrap4.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/custom.css' %}">
+    <style>
+        /* Make table header sticky */
+        #sortable-table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background-color: #000270; /* Background color of the sticky header */
+            color: white; /* Text color for the header */
+            white-space: nowrap; /* Prevent text wrapping */
+        }
+
+        /* Ensure the table is scrollable */
+        .table-responsive {
+            overflow-y: auto;
+            max-height: 800px; /* Adjust this height as needed */
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div id="app">
+        <div class="main-wrapper container-fluid">
+            <div class="main-content">
+                <section class="section container-fluid">
+                    <div class="section-body">
+                        <div class="card card-primary">
+                            <div class="card-header"
+                                 style="display: flex; justify-content: space-between; align-items: center;">
+                                <h2>INVENTORY RECORDS OF {{ folder.name }}</h2>
+                                <!--<h3><strong>Total Amount:</strong> {{ total_amount|floatformat:2|intcomma }}</h3>-->
+                            </div>
+                            <div class="card-body">
+                                <div class="col-12">
+                                    <div class="card">
+                                        <div class="card-header"
+                                             style="background-color: #4682b4; color: white; display: flex; justify-content: space-between; align-items: center;">
+                                            <h4>Site Records Table</h4>
+                                            <a href="{% url 'export_site_folder_contents' folder.id %}"
+                                               class="btn btn-primary">
+                                                Export to Excel
+                                            </a>
+                                        </div>
+
+                                        <div class="card-body p-0">
+                                            <div class="table-responsive">
+                                                <table class="table table-hover table-striped table-sm" id="sortable-table">
+                                                    <thead>
+                                                    <tr class="blue-background">
+                                                        <!--<th style="white-space: nowrap; color: white;">T. ID</th>-->
+                                                        <th style="white-space: nowrap; color: white;">Site Delivered</th>
+                                                        <th style="white-space: nowrap; color: white;">Date</th>
+                                                        <th style="white-space: nowrap; color: white;">Item</th>
+                                                        <th style="white-space: nowrap; color: white;">Quantity In</th>
+                                                        <th style="white-space: nowrap; color: white;">Quantity Out</th>
+                                                        <th style="white-space: nowrap; color: white;">Delivery Ref</th>
+                                                        <th style="white-space: nowrap; color: white;">Delivery No.</th>
+                                                        <th style="white-space: nowrap; color: white;">Remarks</th>
+                                                        <th style="white-space: nowrap; color: white;">Edit</th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    {% for transaction in transactions %}
+                                                        <tr>
+                                                            <!--<td>{{ transaction.id }}</td>-->
+                                                            <td>{{ transaction.site_delivered }}</td>
+                                                            <td class="no-wrap">{{ transaction.date }}</td>
+                                                            <td class="no-wrap">{{ transaction.po_product_name }}</td>
+                                                            <td>{{ transaction.quantity_in }}</td>
+                                                            <td>{{ transaction.quantity_out }}</td>
+                                                            <td>{{ transaction.delivery_ref }}</td>
+                                                            <td>{{ transaction.delivery_no }}</td>
+                                                            <td>{{ transaction.remarks }}</td>
+                                                            <td>
+                                                                <button type="button" class="btn btn-sm btn-warning edit-remarks-btn"
+                                                                        data-id="{{ transaction.id }}"
+                                                                        data-remarks="{{ transaction.remarks }}"
+                                                                        data-toggle="modal"
+                                                                        data-target="#editRemarksModal">
+                                                                    Edit
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    {% empty %}
+                                                        <tr>
+                                                            <td colspan="9">No transactions found.</td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Pagination Controls -->
+                                <div class="pagination-wrapper">
+                                    <nav aria-label="Page navigation">
+                                        <ul class="pagination justify-content-center">
+                                            {% if transactions.has_previous %}
+                                                <li class="page-item">
+                                                    <a class="page-link"
+                                                       href="?page={{ transactions.previous_page_number }}"
+                                                       aria-label="Previous">
+                                                        <span aria-hidden="true">&laquo;</span>
+                                                    </a>
+                                                </li>
+                                            {% endif %}
+                                            {% for num in transactions.paginator.page_range %}
+                                                <li class="page-item {% if transactions.number == num %}active{% endif %}">
+                                                    <a class="page-link" href="?page={{ num }}">
+                                                        {{ num }}
+                                                    </a>
+                                                </li>
+                                            {% endfor %}
+                                            {% if transactions.has_next %}
+                                                <li class="page-item">
+                                                    <a class="page-link"
+                                                       href="?page={{ transactions.next_page_number }}"
+                                                       aria-label="Next">
+                                                        <span aria-hidden="true">&raquo;</span>
+                                                    </a>
+                                                </li>
+                                            {% endif %}
+                                            <!-- Link to Last Page -->
+                                            <li class="page-item {% if transactions.number == transactions.paginator.num_pages %}active{% endif %}">
+                                                <a class="page-link"
+                                                   href="?page={{ transactions.paginator.num_pages }}">
+                                                    Last
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </nav>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Remarks Modal -->
+    <div class="modal fade" id="editRemarksModal" tabindex="-1" role="dialog" aria-labelledby="editRemarksModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editRemarksModalLabel">Edit Remarks</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="editRemarksForm">
+                    <div class="modal-body">
+                        <input type="hidden" id="transactionId" name="transaction_id">
+                        <div class="form-group">
+                            <label for="remarks">Remarks</label>
+                            <textarea class="form-control" id="remarks" name="remarks" rows="4"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal fade" id="success-modal" tabindex="-1" role="dialog" aria-labelledby="success-modal-label" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="success-modal-label">Success</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    Your remarks were successfully updated!
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        // Open modal with pre-filled data
+        document.querySelectorAll('.edit-remarks-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const transactionId = this.dataset.id;
+                const remarks = this.dataset.remarks;
+
+                // Populate the modal form with transaction data
+                document.getElementById('transactionId').value = transactionId;
+                document.getElementById('remarks').value = remarks;
+            });
+        });
+
+        // Handle form submission with AJAX
+        document.getElementById('editRemarksForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const transactionId = document.getElementById('transactionId').value;
+            const remarks = document.getElementById('remarks').value;
+
+            // Make AJAX request to update remarks
+            fetch(`/edit-site-remarks/${transactionId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}',
+                },
+                body: JSON.stringify({ 'remarks': remarks })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Close the modal
+                    $('#editRemarksModal').modal('hide');
+                    // Show success message and reload page
+                    $('#success-modal').modal('show');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    alert('Something went wrong!');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    </script>
+{% endblock %}

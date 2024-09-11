@@ -1,0 +1,214 @@
+{% extends 'inventorybase.html' %}
+
+{% block title %}{{ folder.name }} - Stock In Contents{% endblock %}
+
+{% load static %}
+
+{% block head %}
+    <link rel="stylesheet" href="{% static 'assets/modules/bootstrap-social/bootstrap-social.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/modules/datatables/datatables.min.css' %}">
+    <link rel="stylesheet"
+          href="{% static 'assets/modules/datatables/DataTables-1.10.16/css/dataTables.bootstrap4.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/modules/datatables/Select-1.2.4/css/select.bootstrap4.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/custom.css' %}">
+    <style>
+        /* Make table header sticky */
+        #sortable-table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background-color: #1e84b4;
+            color: white;
+            white-space: nowrap;
+        }
+
+        /* Ensure the table is scrollable */
+        .table-responsive {
+            overflow-y: auto;
+            max-height: 800px;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div id="app">
+        <div class="main-wrapper container-fluid">
+            <div class="main-content">
+                <section class="section container-fluid">
+                    <div class="section-body">
+                        <div class="card card-desk">
+                            <div class="card-header">
+                                <h4>Contents of Folder: {{ folder.name }}</h4>
+                            </div>
+                            <div class="card-body">
+                                <div class="col-12">
+                                    <div class="card">
+                                        <div class="card-header" style="background-color: #4682b4; color: white;">
+                                            <h4>Stock In Data Table</h4>
+                                            <div class="card-header-action">
+                                                <form method="get" action="" class="form-inline justify-content-center col-12">
+                                                    <div class="input-group">
+                                                        <input type="text" name="q" class="form-control" placeholder="Search" value="{{ request.GET.q }}">
+                                                        <div class="input-group-btn">
+                                                            <button class="btn btn-primary" type="submit">
+                                                                <i class="fas fa-search"></i>
+                                                            </button>
+                                                        </div>
+                                                        {% if request.GET.q %}
+                                                            <a href="{% url 'inventory_supplier_contents' folder_id=folder.id %}" class="btn btn-secondary">Clear Filter</a>
+                                                        {% endif %}
+                                                    </div>
+                                                </form>
+                                            </div>
+
+                                            <div class="row">
+                                                <div class="col-auto">
+                                                    <a href="{% url 'export_inventory_supplier_contents' folder.id %}" class="btn btn-primary">Export Content</a>
+                                                </div>
+                                                <div class="col-auto">
+                                                    <button class="btn btn-secondary" onclick="sortByDate('desc')">
+                                                        <i class="fas fa-arrow-down"></i>
+                                                    </button>
+                                                    <button class="btn btn-secondary" onclick="sortByDate('asc')">
+                                                        <i class="fas fa-arrow-up"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="card-body p-0">
+                                            <div class="table-responsive">
+                                                <table class="table table-hover table-striped table-sm" id="sortable-table">
+                                                    <thead>
+                                                        <tr class="archive-background">
+                                                            <th style="color: white;">DATE</th>
+                                                            <th style="color: white;">PO#</th>
+                                                            <th style="color: white;">PURCHASER</th>
+                                                            <th style="color: white;">ITEM CODE</th>
+                                                            <th style="color: white;">PARTICULAR</th>
+                                                            <th style="color: white;">QTY</th>
+                                                            <th style="color: white;">UNIT</th>
+                                                            <th style="color: white;">FBBD REF#</th>
+                                                            <th style="color: white;">SUPPLIER</th>
+                                                            <th style="color: white;">DELIVERY REF#</th>
+                                                            <th style="color: white;">DELIVERY NO.</th>
+                                                            <th style="color: white;">INVOICE TYPE</th>
+                                                            <th style="color: white;">INVOICE#</th>
+                                                            <th style="color: white;">PAYMENT DETAILS</th>
+                                                            <th style="color: white;">PAYMENT REQ.#</th>
+                                                            <th style="color: white;">REMARKS</th>
+                                                            <th style="color: white;">REMARKS 2</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for record in stock_in_records %}
+                                                            <tr>
+                                                                <td class="no-wrap">{{ record.date }}</td>
+                                                                <td>{{ record.po_number }}</td>
+                                                                <td>{{ record.purchaser }}</td>
+                                                                <td class="no-wrap">{{ record.item_code }}</td>
+                                                                <td class="no-wrap">{{ record.particulars }}</td>
+                                                                <td>{{ record.quantity_in }}</td>
+                                                                <td>{{ record.unit }}</td>
+                                                                <td>{{ record.fbbd_ref_number }}</td>
+                                                                <td class="no-wrap">{{ record.supplier }}</td>
+                                                                <td>{{ record.delivery_ref }}</td>
+                                                                <td>{{ record.delivery_no }}</td>
+                                                                <td>{{ record.invoice_type }}</td>
+                                                                <td>{{ record.invoice_no }}</td>
+                                                                <td>{{ record.payment_details }}</td>
+                                                                <td>{{ record.payment_req_ref }}</td>
+                                                                <td>{{ record.remarks }}</td>
+                                                                <td>
+                                                                    <span style="background-color: {{ record.remarks2_badge }}; color: white; padding: 5px 10px; border-radius: 20px;">
+                                                                        {{ record.remarks2 }}
+                                                                    </span>
+                                                                </td>
+                                                            </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+                                            <!-- Pagination Controls -->
+                                            <div class="pagination-wrapper">
+                                                <nav aria-label="Page navigation">
+                                                    <ul class="pagination justify-content-center">
+                                                        {% if stock_in_records.has_previous %}
+                                                            <li class="page-item">
+                                                                <a class="page-link" href="?page={{ stock_in_records.previous_page_number }}{% if query %}&q={{ query }}{% endif %}" aria-label="Previous">
+                                                                    <span aria-hidden="true">&laquo;</span>
+                                                                </a>
+                                                            </li>
+                                                        {% endif %}
+                                                        {% for num in stock_in_records.paginator.page_range %}
+                                                            <li class="page-item {% if stock_in_records.number == num %}active{% endif %}">
+                                                                <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}">{{ num }}</a>
+                                                            </li>
+                                                        {% endfor %}
+                                                        {% if stock_in_records.has_next %}
+                                                            <li class="page-item">
+                                                                <a class="page-link" href="?page={{ stock_in_records.next_page_number }}{% if query %}&q={{ query }}{% endif %}" aria-label="Next">
+                                                                    <span aria-hidden="true">&raquo;</span>
+                                                                </a>
+                                                            </li>
+                                                        {% endif %}
+                                                    </ul>
+                                                </nav>
+                                            </div>
+
+                                            <form method="get" action="" class="form-inline justify-content-center">
+                                                <input type="hidden" name="q" value="{{ query }}">
+                                                <div class="form-group mb-2">
+                                                    <label for="page-number" class="sr-only">Page</label>
+                                                    <input type="number" class="form-control" id="page-number" name="page" min="1" max="{{ stock_in_records.paginator.num_pages }}" placeholder="Page No." required style="width: 120px;">
+                                                </div>
+                                                <button type="submit" class="btn btn-primary mb-2" style="width: 70px;">Go</button>
+                                            </form>
+                                            <p>Page {{ stock_in_records.number }} of {{ stock_in_records.paginator.num_pages }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'assets/modules/datatables/datatables.min.js' %}"></script>
+    <script src="{% static 'assets/modules/datatables/DataTables-1.10.16/js/dataTables.bootstrap4.min.js' %}"></script>
+    <script src="{% static 'assets/modules/datatables/Select-1.2.4/js/select.bootstrap4.min.js' %}"></script>
+    <script src="{% static 'assets/js/page/modules-datatables.js' %}"></script>
+
+    <script>
+        function sortByDate(order) {
+            let table = document.getElementById('sortable-table');
+            let rows = Array.from(table.querySelectorAll('tbody tr'));
+            let sortedRows;
+
+            if (order === 'asc') {
+                sortedRows = rows.sort((a, b) => new Date(a.cells[0].textContent) - new Date(b.cells[0].textContent));
+            } else {
+                sortedRows = rows.sort((a, b) => new Date(b.cells[0].textContent) - new Date(a.cells[0].textContent));
+            }
+
+            let tbody = table.querySelector('tbody');
+            tbody.innerHTML = '';
+            sortedRows.forEach(row => tbody.appendChild(row));
+        }
+    </script>
+    <script>
+        const table = document.getElementById('sortable-table');
+        if (table) {
+            const cells = table.querySelectorAll('tbody td');
+            cells.forEach(cell => {
+                if (cell.textContent.trim() === 'None') {
+                    cell.style.color = 'transparent';  // Hide the text without removing it
+                }
+            });
+        }
+    </script>
+{% endblock %}

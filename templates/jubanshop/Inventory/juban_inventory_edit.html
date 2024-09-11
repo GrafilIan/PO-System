@@ -1,0 +1,165 @@
+{% extends 'inventorybase.html' %}
+
+{% block title %}Edit Item Inventory{% endblock %}
+
+{% load static %}
+
+{% block head %}
+    <link rel="stylesheet" href="{% static 'assets/modules/bootstrap-social/bootstrap-social.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/modules/datatables/datatables.min.css' %}">
+    <link rel="stylesheet"
+          href="{% static 'assets/modules/datatables/DataTables-1.10.16/css/dataTables.bootstrap4.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/modules/datatables/Select-1.2.4/css/select.bootstrap4.min.css' %}">
+    <script src="{% static 'assets/js/cleave.min.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'assets/css/custom.css' %}">
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-12 col-sm-10 offset-sm-1 col-md-8 offset-md-2 col-lg-8 offset-lg-2 col-xl-8 offset-xl-2">
+            <div class="card card-primary" style="background-color: rgba(255, 255, 255, 0.9); margin-top: 180px">
+                {% if messages %}
+                    <ul class="messages">
+                        {% for message in messages %}
+                            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+
+                <div class="card">
+                    <div class="card-header d-flex justify-content-center" style="margin-top: 10px;">
+                        <h2>Edit Item Inventory</h2>
+                    </div>
+                    <div class="card-body">
+                        <form id="itemInventoryForm" method="post" action="{% url 'inventory_edit' item.id %}"
+                              enctype="multipart/form-data">
+                            {% csrf_token %}
+
+                            <div class="row">
+
+                                <!-- Supplier Field -->
+                                <div class="form-group col-12 col-sm-4">
+                                    <label for="supplier">Supplier</label>
+                                    <input type="text" name="supplier" value="{{ form.supplier.value }}"
+                                           class="form-control">
+                                </div>
+
+                                <!-- PO Product Name Field -->
+                                <div class="form-group col-12 col-sm-5">
+                                    <label for="po_product_name">Particular</label>
+                                    <input type="text" name="po_product_name" value="{{ form.po_product_name.value }}"
+                                           class="form-control" disabled>
+                                    <input type="hidden" name="po_product_name"
+                                           value="{{ form.po_product_name.value }}">
+                                </div>
+
+                                <!-- Unit Field -->
+                                <div class="form-group col-12 col-sm-3">
+                                    <label for="unit">Unit</label>
+                                    <input type="text" name="unit_display" value="{{ form.instance.unit }}"
+                                           class="form-control" disabled>
+                                    <input type="hidden" name="unit" value="{{ form.instance.unit }}">
+                                </div>
+
+
+                                <!-- Quantity In Field -->
+                                <div class="form-group col-12 col-sm-4">
+                                    <label for="quantity_in">Quantity In</label>
+                                    {{ form.quantity_in }}
+                                </div>
+
+                                <!-- Quantity Out Field -->
+                                <div class="form-group col-12 col-sm-4">
+                                    <label for="quantity_out">Quantity Out</label>
+                                    {{ form.quantity_out }}
+                                </div>
+
+                                <!-- Stock Field -->
+                                <div class="form-group col-12 col-sm-4">
+                                    <label for="stock">Stock</label>
+                                    <input type="text" name="stock" value="{{ form.stock.value }}" class="form-control"
+                                           disabled>
+                                    <input type="hidden" name="stock" value="{{ form.stock.value }}">
+                                </div>
+
+
+                            </div>
+
+                            <div class="form-divider align-center">
+                                <div class="form-group">
+                                    <button type="submit" class="btn btn-primary btn-block">SUBMIT</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var form = document.getElementById('itemInventoryForm');
+
+            form.addEventListener('submit', function (event) {
+                event.preventDefault(); // Prevent the default form submission
+
+                // Copy disabled fields to hidden fields
+                var disabledFields = form.querySelectorAll('[disabled]');
+                disabledFields.forEach(function (field) {
+                    var name = field.getAttribute('name');
+                    var value = field.value;
+                    var hiddenField = form.querySelector('input[name="' + name + '"][type="hidden"]');
+                    if (hiddenField) {
+                        hiddenField.value = value;
+                    }
+                });
+
+                var formData = new FormData(form);
+
+                fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            Swal.fire({
+                                title: 'Success!',
+                                text: 'Your record has been saved successfully.',
+                                icon: 'success',
+                                confirmButtonText: 'OK'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    window.location.href = "{% url 'inventory_table' %}";
+                                }
+                            });
+                        } else {
+                            Swal.fire({
+                                title: 'Error!',
+                                text: 'There was an error saving the record.',
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        Swal.fire({
+                            title: 'Error!',
+                            text: 'There was an error saving the record.',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    });
+            });
+        });
+    </script>
+
+{% endblock %}

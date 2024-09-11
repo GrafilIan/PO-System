@@ -1,0 +1,168 @@
+{% extends 'inventorybase.html' %}
+
+{% block title %}Edit Item Inventory{% endblock %}
+
+{% load static %}
+
+{% block head %}
+    <link rel="stylesheet" href="{% static 'assets/modules/bootstrap-social/bootstrap-social.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/modules/datatables/datatables.min.css' %}">
+    <link rel="stylesheet"
+          href="{% static 'assets/modules/datatables/DataTables-1.10.16/css/dataTables.bootstrap4.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/modules/datatables/Select-1.2.4/css/select.bootstrap4.min.css' %}">
+    <script src="{% static 'assets/js/cleave.min.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'assets/css/custom.css' %}">
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-12 col-sm-10 offset-sm-1 col-md-8 offset-md-2 col-lg-8 offset-lg-2 col-xl-8 offset-xl-2">
+            <div class="card card-primary" style="background-color: rgba(255, 255, 255, 0.9); margin-top: 180px">
+
+                <div class="card">
+                    <div class="card-header d-flex justify-content-center" style="margin-top: 10px;">
+                        <h2>Add Item Inventory</h2>
+                    </div>
+                    <div class="card-body">
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-dismissible fade show text-center
+                {% if message.tags == 'success' %}alert-success
+                {% elif message.tags == 'error' %}alert-danger
+                {% elif message.tags == 'info' %}alert-info
+                {% elif message.tags == 'warning' %}alert-warning
+                {% endif %}"
+                                     style="color: #0E1112;"
+                                     role="alert"><strong>{{ message }}</strong>
+                            {% endfor %}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"
+                                style="color: #004085;">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                        </div>
+                        {% endif %}
+
+                        <form method="post" action="{% url 'inventory_form' %}">
+                            {% csrf_token %}
+                            {{ form.non_field_errors }}
+                            <div class="row">
+
+                                <div class="form-group col-12 col-sm-6">
+                                    <label for="po_product_name">Particulars:</label>
+                                    {{ form.po_product_name }}
+                                </div>
+                                <div class="form-group col-12 col-sm-6">
+                                    <label for="item_code">Item Code:</label>
+                                    {{ form.item_code }}
+                                </div>
+
+                            </div>
+                            <div class="row">
+                                <div class="form-group col-12 col-sm-6">
+                                    <label for="supplier">Supplier:</label>
+                                    {{ form.supplier }}
+
+                                </div>
+
+                                <div class="form-group col-12 col-sm-6">
+                                    <label for="unit">Unit:</label>
+                                    {{ form.unit }}
+                                </div>
+                            </div>
+
+                            <div class="row">
+
+                                <div class="form-group col-12 col-sm-4">
+                                    <label for="quantity_in">Quantity In:</label>
+                                    {{ form.quantity_in }}
+
+                                </div>
+                                <div class="form-group col-12 col-sm-4">
+                                    <label for="quantity_out">Quantity Out:</label>
+                                    {{ form.quantity_out }}
+
+                                </div>
+                                <div class="form-group col-12 col-sm-4">
+                                    <label for="stock">Stock:</label>
+                                    {{ form.stock }}
+                                </div>
+                            </div>
+
+                            <div class="text-center mt-3">
+                                <button type="submit" class="btn btn-primary col-3">Save</button>
+                            </div>
+                        </form>
+
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var form = document.getElementById('itemInventoryForm');
+
+            form.addEventListener('submit', function (event) {
+                event.preventDefault(); // Prevent the default form submission
+
+                // Copy disabled fields to hidden fields
+                var disabledFields = form.querySelectorAll('[disabled]');
+                disabledFields.forEach(function (field) {
+                    var name = field.getAttribute('name');
+                    var value = field.value;
+                    var hiddenField = form.querySelector('input[name="' + name + '"][type="hidden"]');
+                    if (hiddenField) {
+                        hiddenField.value = value;
+                    }
+                });
+
+                var formData = new FormData(form);
+
+                fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            Swal.fire({
+                                title: 'Success!',
+                                text: 'Your record has been saved successfully.',
+                                icon: 'success',
+                                confirmButtonText: 'OK'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    window.location.href = "{% url 'inventory_table' %}";
+                                }
+                            });
+                        } else {
+                            Swal.fire({
+                                title: 'Error!',
+                                text: 'There was an error saving the record.',
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        Swal.fire({
+                            title: 'Error!',
+                            text: 'There was an error saving the record.',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    });
+            });
+        });
+    </script>
+
+{% endblock %}
