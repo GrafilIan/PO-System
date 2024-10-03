@@ -1,4 +1,4 @@
-{% extends 'inventorybase.html' %}
+{% extends 'jubaninventorybase.html' %}
 
 {% block title %}Edit Item Inventory{% endblock %}
 
@@ -103,7 +103,7 @@
                                 confirmButtonText: 'OK'
                             }).then((result) => {
                                 if (result.isConfirmed) {
-                                    window.location.href = "{% url 'item_code_form' %}";
+                                    window.location.href = "{% url 'juban_item_code_form' %}";
                                 }
                             });
                         } else {

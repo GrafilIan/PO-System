@@ -1,4 +1,4 @@
-{% extends 'inventorybase.html' %}
+{% extends 'jubaninventorybase.html' %}
 
 {% block title %}Bulk Edit Inventory{% endblock %}
 
@@ -30,7 +30,7 @@
                 <div class="section-body">
                     <div class="card card-primary" style="background-color: #000171">
 
-                        <h2 style="text-align: center; margin-top: 10px; color: whitesmoke"><strong>BTCS SHOP</strong></h2>
+                        <h2 style="text-align: center; margin-top: 10px; color: whitesmoke"><strong>JUBAN SHOP</strong></h2>
 
                         <div class="card-body">
                             {% if messages %}
@@ -53,7 +53,7 @@
 
                             <!-- Finalize Changes Form -->
                             <div class="row justify-content-center col-12 mb-4">
-                                <form method="post" action="{% url 'bulk_edit_inventory' %}">
+                                <form method="post" action="{% url 'juban_bulk_edit_inventory' %}">
                                     {% csrf_token %}
                                     <div class="row">
                                         <div class="col-md-3">
@@ -142,7 +142,7 @@
                                                     <input type="hidden" name="cart_item_ids"
                                                            value="{{ cart_item.id }}">
                                                     <form method="POST"
-                                                          action="{% url 'remove_cart_item' cart_item.id %}">
+                                                          action="{% url 'juban_remove_cart_item' cart_item.id %}">
                                                         {% csrf_token %}
                                                         <button type="submit" class="btn btn-danger">Remove</button>
                                                     </form>
@@ -177,13 +177,13 @@
                                 </div>
                                 <div class="col-auto">
                                     {% if request.GET.q %}
-                                        <a href="{% url 'bulk_edit_inventory' %}" class="btn btn-outline-primary">Clear
+                                        <a href="{% url 'juban_bulk_edit_inventory' %}" class="btn btn-outline-primary">Clear
                                             Filter</a>
                                     {% endif %}
                                 </div>
                             </form>
                             <!-- Add to Cart Form -->
-                            <form method="post" action="{% url 'bulk_edit_inventory' %}">
+                            <form method="post" action="{% url 'juban_bulk_edit_inventory' %}">
                                 {% csrf_token %}
 
                                 <!-- Items Section -->

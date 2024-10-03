@@ -1,4 +1,4 @@
-{% extends 'inventorybase.html' %}
+{% extends 'jubaninventorybase.html' %}
 
 {% block title %}Site Inventory Folder List{% endblock %}
 
@@ -27,7 +27,7 @@
                                 <h3 class="mb-0"><strong>SITE INVENTORY FOLDER LIST</strong></h3>
                                 <div class="d-flex align-items-center ml-auto">
                                     <form id="createFolderForm" method="POST"
-                                          action="{% url 'create_site_inventory_folder' %}"
+                                          action="{% url 'juban_create_site_inventory_folder' %}"
                                           class="d-flex align-items-center mr-2">
                                         {% csrf_token %}
                                         <div class="input-group">
@@ -41,7 +41,7 @@
                                             </div>
                                         </div>
                                     </form>
-                                    <form action="{% url 'export_all_site_inventory_folders' %}" method="get"
+                                    <form action="{% url 'juban_export_all_site_inventory_folders' %}" method="get"
                                           class="ml-2">
                                         <button type="submit" class="btn btn-primary">
                                             <i class="fas fa-file-export mr-2"></i>
@@ -60,12 +60,12 @@
                                                 <div class="fcard w-100">
                                                     <div class="fcard-details" style="text-align: center;">
                                                         <h4>
-                                                            <a href="{% url 'view_site_inventory_folder_contents' folder.id %}"
+                                                            <a href="{% url 'juban_view_site_inventory_folder_contents' folder.id %}"
                                                                class="text-dark font-weight-bold">{{ folder.name }}</a>
                                                         </h4>
                                                     </div>
                                                     <form class="delete-folder-form"
-                                                          action="{% url 'delete_site_inventory_folder' folder.id %}"
+                                                          action="{% url 'juban_delete_site_inventory_folder' folder.id %}"
                                                           method="post" style="display: inline;">
                                                         {% csrf_token %}
                                                         <button type="submit" class="fcard-button">Delete</button>

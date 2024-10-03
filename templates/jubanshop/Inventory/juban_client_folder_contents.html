@@ -1,4 +1,4 @@
-{% extends 'inventorybase.html' %}
+{% extends 'jubaninventorybase.html' %}
 {% load humanize %}
 
 {% block title %}{{ folder.name }} - Contents{% endblock %}
@@ -49,7 +49,7 @@
                                         <div class="card-header"
                                              style="background-color: #e59e00; color: #090909; display: flex; justify-content: space-between; align-items: center;">
                                             <h4>Client Records Table</h4>
-                                            <a href="{% url 'export_client_folder_contents' folder.id %}"
+                                            <a href="{% url 'juban_export_client_folder_contents' folder.id %}"
                                                class="btn btn-primary" style="float: right;">
                                                 Export to Excel
                                             </a>

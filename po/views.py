@@ -14,6 +14,8 @@ from django.contrib import messages
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from openpyxl.workbook import Workbook
+
+from JubanShop.views import juban_inventory_table
 from .forms import PurchaseOrderForm, UploadFileForm, ItemInventoryBulkForm, PurchaseOrderBulkForm, \
     ItemInventoryListForm, ItemInventoryQuantityForm, StockInHistoryForm, EditRemarksForm
 from .models import PurchaseOrder, ArchiveFolder, ItemInventory, SupplierFolder, InventoryHistory, SiteInventoryFolder, \
@@ -49,6 +51,8 @@ def dashboard_view(request):
         return purchase_order_list(request)
     elif request.user.groups.filter(name='Inventory Manager').exists():
         return inventory_table(request)
+    elif request.user.groups.filter(name='Juban Inventory Manager').exists():
+        return juban_inventory_table(request)  # Route to the Juban-specific inventory view
     elif request.user.is_superuser:
         return render(request, 'dashboards/front_desk_dashboard.html')
     else:
@@ -906,6 +910,9 @@ def inventory_form(request):
         elif form.is_valid():
             # Save the form to create the item
             item = form.save(commit=False)  # Get the instance but don't save it to the database yet
+
+            item.quantity_in = item.quantity_in or 0
+            item.quantity_out = item.quantity_out or 0
 
             # Manually calculate the stock
             item.stock = item.quantity_in - item.quantity_out  # Calculate stock based on quantity_in and quantity_out
@@ -2006,18 +2013,20 @@ def bulk_edit_inventory(request):
         else:
             items = ItemInventory.objects.all()
 
-            cart_items = Cart.objects.all()
-            for cart_item in cart_items:
-                cart_item.total_amount = cart_item.quantity * cart_item.item.price
+        cart_items = Cart.objects.all()
+        for cart_item in cart_items:
+            cart_item.total_amount = cart_item.quantity * cart_item.item.price
 
-            form = ItemInventoryBulkForm()
+        # Ensure the form is initialized regardless of the query
+        form = ItemInventoryBulkForm()
 
-        return render(request, 'Inventory/bulk_edit_inventory.html', {
-            'form': form,
-            'items': items,
-            'cart_items': cart_items,
-            'query': query,
-        })
+    return render(request, 'Inventory/bulk_edit_inventory.html', {
+        'form': form,
+        'items': items,
+        'cart_items': cart_items,
+        'query': query,
+    })
+
 
 
 def remove_cart_item(request, cart_item_id):
@@ -2586,6 +2595,7 @@ def stock_in_transaction_history(request):
         'query': query,
         'page_number': page_number
     })
+
 
 
 def handle_uploaded_stock_in_file(f):

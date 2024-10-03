@@ -3,12 +3,13 @@ from django.utils import timezone
 
 
 class ItemCodeList(models.Model):
-    item_code = models.CharField(max_length=100)
+    item_code = models.CharField(max_length=100, null=True, blank=True)  # Allow null and blank
     po_product_name = models.CharField(max_length=100)
-    unit = models.CharField(max_length=50)
+    unit = models.CharField(max_length=50, null=True, blank=True)  # Allow null and blank
 
     def __str__(self):
         return f"{self.item_code} - {self.po_product_name} - {self.unit}"
+
 
 class SiteInventoryFolder(models.Model):
     name = models.CharField(max_length=255, unique=True)

@@ -1,4 +1,4 @@
-{% extends 'inventorybase.html' %}
+{% extends 'jubaninventorybase.html' %}
 
 {% block title %}Inventory Supplier Folder List{% endblock %}
 
@@ -27,7 +27,7 @@
 
                                 <div class="d-flex align-items-center">
                                     <!-- Form to create a new folder -->
-                                    <form id="createFolderForm" method="POST" action="{% url 'inventory_supplier_list_folders' %}"
+                                    <form id="createFolderForm" method="POST" action="{% url 'juban_inventory_supplier_list_folders' %}"
                                           class="d-flex align-items-center mr-2">
                                         {% csrf_token %}
                                         <div class="input-group">
@@ -52,12 +52,12 @@
                                                 <div class="fcard w-100">
                                                     <div class="fcard-details" style="text-align: center;">
                                                         <h4>
-                                                            <a href="{% url 'inventory_supplier_folder_contents' folder.id %}"
+                                                            <a href="{% url 'juban_inventory_supplier_folder_contents' folder.id %}"
                                                                class="text-dark font-weight-bold">{{ folder.name }}</a>
                                                         </h4>
                                                     </div>
                                                     <form class="delete-folder-form"
-                                                          action="{% url 'delete_inventory_supplier_folder' folder.id %}"
+                                                          action="{% url 'juban_delete_inventory_supplier_folder' folder.id %}"
                                                           method="post"
                                                           style="display: inline;">
                                                         {% csrf_token %}

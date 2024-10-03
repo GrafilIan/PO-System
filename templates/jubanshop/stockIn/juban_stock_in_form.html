@@ -1,4 +1,4 @@
-{% extends 'inventorybase.html' %}
+{% extends 'jubaninventorybase.html' %}
 
 {% block title %}Stock In Record{% endblock %}
 
@@ -93,7 +93,7 @@
                     </div>
                     <div class="card-body">
 
-                        <form id="stockInForm" method="post" action="{% url 'stock_in_create' %}"
+                        <form id="stockInForm" method="post" action="{% url 'juban_stock_in_create' %}"
                               enctype="multipart/form-data">
                             {% csrf_token %}
                             <div class="row">
@@ -258,7 +258,7 @@
             // Initialize Select2 for the particulars field
             function refreshParticularsDropdown() {
                 $.ajax({
-                    url: "{% url 'get_item_inventory' %}",
+                    url: "{% url 'juban_get_item_inventory' %}",
                     dataType: 'json',
                     success: function (data) {
                         var $particularsSelect = $('#id_particulars');
@@ -302,7 +302,7 @@
 
                 if (selectedParticular) {
                     $.ajax({
-                        url: "{% url 'get_item_details' %}",
+                        url: "{% url 'juban_get_item_details' %}",
                         data: {'particulars': selectedParticular},
                         dataType: 'json',
                         success: function (data) {

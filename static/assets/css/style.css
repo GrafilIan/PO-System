@@ -1542,6 +1542,16 @@ h6 .badge {
   background-color: darkgreen;
   z-index: -1; }
 
+.navbar-juban {
+  content: ' ';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 75px;
+  background-color: #8c0000;
+  z-index: -1; }
+
 .navbar {
   align-items: center; }
   .navbar .navbar-brand {

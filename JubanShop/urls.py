@@ -2,48 +2,57 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    # View to handle transaction history
     path('juban/transaction-history/', views.juban_transaction_history, name='juban_transaction_history'),
-
-    # View to delete a site inventory folder
-    path('juban/site-inventory-folder/delete/<int:folder_id>/', views.juban_delete_site_inventory_folder, name='juban_delete_site_inventory_folder'),
-
-    # View to list site inventory folders
-    path('juban/site-inventory-folder/list/', views.juban_site_inventory_folder_list, name='juban_site_inventory_folder_list'),
-
-    # View to create a site inventory folder
-    path('juban/site-inventory-folder/create/', views.juban_create_site_inventory_folder, name='juban_create_site_inventory_folder'),
-
-    # View to display the contents of a site inventory folder
-    path('juban/site-inventory-folder/view/<int:folder_id>/', views.juban_view_site_inventory_folder_contents, name='juban_view_site_inventory_folder_contents'),
-
-    # View to export all site inventory folders to a zip file
-    path('juban/site-inventory-folder/export/all/', views.juban_export_all_site_inventory_folders, name='juban_export_all_site_inventory_folders'),
-
-    # View to export a single site inventory folder's contents to Excel
-    path('juban/site-inventory-folder/export/<int:folder_id>/', views.juban_export_site_folder_contents, name='juban_export_site_folder_contents'),
-
-    # View to export all client folders to a zip file
-    path('juban/client-folder/export/all/', views.juban_export_all_client_folders, name='juban_export_all_client_folders'),
-
-    # View to export a single client folder's contents to Excel
-    path('juban/client-folder/export/<int:folder_id>/', views.juban_export_client_folder_contents, name='juban_export_client_folder_contents'),
-
-    # View to export inventory data to Excel
+    path('juban/site-inventory-folder/delete/<int:folder_id>/', views.juban_delete_site_inventory_folder,
+         name='juban_delete_site_inventory_folder'),
+    path('juban/site-inventory-folder/list/', views.juban_site_inventory_folder_list,
+         name='juban_site_inventory_folder_list'),
+    path('juban/site-inventory-folder/create/', views.juban_create_site_inventory_folder,
+         name='juban_create_site_inventory_folder'),
+    path('juban/site-inventory-folder/view/<int:folder_id>/', views.juban_view_site_inventory_folder_contents,
+         name='juban_view_site_inventory_folder_contents'),
+    path('juban/site-inventory-folder/export/all/', views.juban_export_all_site_inventory_folders,
+         name='juban_export_all_site_inventory_folders'),
+    path('juban/site-inventory-folder/export/<int:folder_id>/', views.juban_export_site_folder_contents,
+         name='juban_export_site_folder_contents'),
+    path('juban/client-folder/export/all/', views.juban_export_all_client_folders,
+         name='juban_export_all_client_folders'),
+    path('juban/client-folder/export/<int:folder_id>/', views.juban_export_client_folder_contents,
+         name='juban_export_client_folder_contents'),
     path('juban/inventory/export/', views.juban_export_inventory_to_excel, name='juban_export_inventory_to_excel'),
-
-    # View to list the item codes
     path('juban/item-code-list/', views.juban_item_code_list, name='juban_item_code_list'),
-
-    # View for the inventory form (create)
     path('juban/inventory-form/', views.juban_inventory_form, name='juban_inventory_form'),
-
-    # View to display the inventory table
     path('juban/inventory-table/', views.juban_inventory_table, name='juban_inventory_table'),
-
-    # View to edit an inventory item
     path('juban/inventory/edit/<int:id>/', views.juban_inventory_edit, name='juban_inventory_edit'),
-
-    # View to display new records
     path('juban/new-records/', views.juban_new_records_view, name='juban_new_records_view'),
+    path('juban/transaction-history/', views.juban_transaction_history, name='juban_transaction_history'),
+    path('juban/client-inventory-folder/delete/<int:folder_id>/', views.juban_delete_client_inventory_folder,
+         name='juban_delete_client_inventory_folder'),
+    path('juban/client-inventory-folder/list/', views.juban_client_inventory_folder_list,
+         name='juban_client_inventory_folder_list'),
+    path('juban/client-inventory-folder/create/', views.juban_create_client_inventory_folder,
+         name='juban_create_client_inventory_folder'),
+    path('juban/client-inventory-folder/view/<int:folder_id>/', views.juban_view_client_inventory_folder_contents,
+         name='juban_view_client_inventory_folder_contents'),
+    path('juban/client-inventory-folder/<int:folder_id>/edit-remarks/<int:record_id>/',
+         views.juban_edit_inventory_history_remarks, name='juban_edit_inventory_history_remarks'),
+    path('juban/bulk-edit-inventory/', views.juban_bulk_edit_inventory, name='juban_bulk_edit_inventory'),
+    path('juban/remove-cart-item/<int:cart_item_id>/', views.juban_remove_cart_item, name='juban_remove_cart_item'),
+    path('juban/stock-in/create/', views.juban_stock_in_create, name='juban_stock_in_create'),
+    path('juban/inventory-supplier-folder/list/', views.juban_inventory_supplier_list_folders,
+         name='juban_inventory_supplier_list_folders'),
+    path('juban/inventory-supplier-folder/view/<int:folder_id>/', views.juban_inventory_supplier_contents,
+         name='juban_inventory_supplier_contents'),
+    path('juban/inventory-supplier-folder/export/<int:folder_id>/', views.juban_export_inventory_supplier_contents,
+         name='juban_export_inventory_supplier_contents'),
+    path('juban/get-item-details/', views.juban_get_item_details, name='juban_get_item_details'),
+    path('juban/get-item-inventory/', views.juban_get_item_inventory, name='juban_get_item_inventory'),
+    path('juban/stock-in-transaction-history/', views.juban_stock_in_transaction_history,
+         name='juban_stock_in_transaction_history'),
+    path('juban/stock-in/upload/', views.juban_upload_stock_in_file, name='juban_upload_stock_in_file'),
+    path('export-inventory/', views.juban_export_inventory_to_excel, name='juban_export_inventory_to_excel'),
+    path('export-transaction-history/', views.juban_export_transaction_history_to_excel,
+         name='juban_export_transaction_history_to_excel'),
+    path('export-stock-in-transaction-history/', views.juban_export_stock_in_transaction_history_to_excel,
+         name='juban_export_stock_in_transaction_history_to_excel'),
 ]

@@ -1,4 +1,4 @@
-{% extends 'inventorybase.html' %}
+{% extends 'jubaninventorybase.html' %}
 {% load static %}
 
 {% block head %}
@@ -25,7 +25,7 @@
                                 </div>
                                 <div class="card-body text-center">
                                     <img src="{% static 'assets/img/upload.jpg' %}" alt="logo" class="img-fluid" style="max-width: 150px; height: auto; margin-bottom: 20px;">
-                                    <form method="post" enctype="multipart/form-data" id="uploadForm" action="{% url 'upload_stock_in_file' %}">
+                                    <form method="post" enctype="multipart/form-data" id="uploadForm" action="{% url 'juban_upload_stock_in_file' %}">
                                         {% csrf_token %}
                                         <div class="d-flex flex-column flex-sm-row justify-content-center align-items-center mb-3">
                                             <label class="input-group-prepend" for="id_file" style="cursor: pointer;">
@@ -71,7 +71,7 @@
                         text: data.message,
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            window.location.href = "{% url 'stock_in_transaction_history' %}"; // Redirect to the Purchase Order List page
+                            window.location.href = "{% url 'juban_stock_in_transaction_history' %}"; // Redirect to the Purchase Order List page
                         }
                     });
                     fileNameDiv.textContent = ''; // Clear the filename display if needed

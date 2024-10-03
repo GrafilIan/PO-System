@@ -1,4 +1,4 @@
-{% extends 'inventorybase.html' %}
+{% extends 'jubaninventorybase.html' %}
 
 {% block title %}Stock In Transaction History{% endblock %}
 
@@ -38,7 +38,7 @@
                         <div class="card-header" style="background-color: #0a0a0a; color: white;">
                             <h4>Stock In Transaction History</h4>
                             <div class="card-header-action">
-                                <form method="get" action="{% url 'stock_in_transaction_history' %}"
+                                <form method="get" action="{% url 'juban_stock_in_transaction_history' %}"
                                       class="form-inline justify-content-center col-12">
                                     <div class="input-group">
                                         <!-- Single Search Input -->
@@ -52,15 +52,15 @@
                                     </div>
                                     <div class="col-auto">
                                         {% if request.GET.q %}
-                                            <a href="{% url 'stock_in_transaction_history' %}"
+                                            <a href="{% url 'juban_stock_in_transaction_history' %}"
                                                class="btn btn-outline-primary">Clear Filter</a>
                                         {% endif %}
                                     </div>
-                                    <a href="{% url 'export_stock_in_transaction_history_to_excel' %}"
+                                    <a href="{% url 'juban_export_stock_in_transaction_history_to_excel' %}"
                                        class="btn btn-primary ml-2">
                                         Export Stock In Transaction History
                                     </a>
-                                    <a href="{% url 'upload_stock_in_file' %}" class="btn btn-primary ml-2">
+                                    <a href="{% url 'juban_upload_stock_in_file' %}" class="btn btn-primary ml-2">
                                         Upload Stock In File
                                     </a>
                                 </form>

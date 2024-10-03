@@ -1,4 +1,4 @@
-{% extends 'inventorybase.html' %}
+{% extends 'jubaninventorybase.html' %}
 
 {% block title %}Edit Item Inventory{% endblock %}
 
@@ -31,7 +31,7 @@
                         <h2>Edit Item Inventory</h2>
                     </div>
                     <div class="card-body">
-                        <form id="itemInventoryForm" method="post" action="{% url 'inventory_edit' item.id %}"
+                        <form id="itemInventoryForm" method="post" action="{% url 'juban_inventory_edit' item.id %}"
                               enctype="multipart/form-data">
                             {% csrf_token %}
 
@@ -137,7 +137,7 @@
                                 confirmButtonText: 'OK'
                             }).then((result) => {
                                 if (result.isConfirmed) {
-                                    window.location.href = "{% url 'inventory_table' %}";
+                                    window.location.href = "{% url 'juban_inventory_table' %}";
                                 }
                             });
                         } else {

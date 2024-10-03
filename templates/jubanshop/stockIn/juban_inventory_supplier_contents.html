@@ -1,4 +1,4 @@
-{% extends 'inventorybase.html' %}
+{% extends 'jubaninventorybase.html' %}
 
 {% block title %}{{ folder.name }} - Stock In Contents{% endblock %}
 
@@ -55,7 +55,7 @@
                                                             </button>
                                                         </div>
                                                         {% if request.GET.q %}
-                                                            <a href="{% url 'inventory_supplier_contents' folder_id=folder.id %}" class="btn btn-secondary">Clear Filter</a>
+                                                            <a href="{% url 'juban_inventory_supplier_contents' folder_id=folder.id %}" class="btn btn-secondary">Clear Filter</a>
                                                         {% endif %}
                                                     </div>
                                                 </form>
@@ -63,7 +63,7 @@
 
                                             <div class="row">
                                                 <div class="col-auto">
-                                                    <a href="{% url 'export_inventory_supplier_contents' folder.id %}" class="btn btn-primary">Export Content</a>
+                                                    <a href="{% url 'juban_export_inventory_supplier_contents' folder.id %}" class="btn btn-primary">Export Content</a>
                                                 </div>
                                                 <div class="col-auto">
                                                     <button class="btn btn-secondary" onclick="sortByDate('desc')">

@@ -18,7 +18,7 @@
             position: sticky;
             top: 0;
             z-index: 2;
-            background-color: #000171; /* Background color of the sticky header */
+            background-color: #8c0000; /* Background color of the sticky header */
             color: white; /* Text color for the header */
             white-space: nowrap; /* Prevent text wrapping */
         }
@@ -27,6 +27,7 @@
         .table-responsive {
             overflow-y: auto;
             max-height: 800px; /* Adjust this height as needed */
+
         }
     </style>
 {% endblock %}
@@ -43,25 +44,35 @@
                                 <div class="col-12">
                                     <div class="card card-primary">
 
-                                        <div class="card-header d-flex justify-content-center align-items-center"
+                                        <div class="card-header d-flex justify-content-between align-items-center"
                                              style="background-color: #000072; color: white;">
-                                            <!-- Centered Title and Form in One Line -->
-                                            <h2 class="mb-0 mr-4">ITEM CODE TABLE</h2>
+                                            <h3 class="mb-0">INVENTORY DATA TABLE</h3>
+                                            <div class="card-header-action d-flex align-items-center">
+                                                <form method="get" action=""
+                                                      class="form-inline d-flex justify-content-center align-items-center">
+                                                    <input type="text" name="q" class="form-control mr-2"
+                                                           placeholder="Search..."
+                                                           value="{{ query|default_if_none:'' }}" aria-label="Search"
+                                                           style="width: 200px;">
 
-                                            <!-- Search Form Centered and in One Line -->
-                                            <form method="GET" action="{% url 'juban_item_code_list' %}"
-                                                  class="form-inline d-flex align-items-center">
-                                                <input type="text" name="q" class="form-control mr-2"
-                                                       placeholder="Search..." value="{{ query|default_if_none:'' }}"
-                                                       aria-label="Search" style="width: 200px;">
-                                                <button type="submit" class="btn btn-primary mr-2">Search</button>
+                                                    <button type="submit" class="btn btn-primary mr-2">Search</button>
 
-                                                <!-- Clear Filter Button -->
-                                                {% if query %}
-                                                    <a href="{% url 'juban_item_code_list' %}"
-                                                       class="btn btn-outline-primary mr-2">Clear Filter</a>
-                                                {% endif %}
-                                            </form>
+                                                    {% if request.GET.q %}
+                                                        <a href="{% url 'juban_inventory_table' %}"
+                                                           class="btn btn-outline-primary mr-2">Clear Filter</a>
+                                                    {% endif %}
+
+                                                    <button type="submit" class="btn btn-primary mr-2"
+                                                            formaction="{% url 'juban_export_inventory_to_excel' %}">
+                                                        Export to Excel
+                                                    </button>
+
+                                                    <button type="submit" class="btn btn-primary"
+                                                            formaction="{% url 'juban_inventory_form' %}">
+                                                        Add New Item
+                                                    </button>
+                                                </form>
+                                            </div>
                                         </div>
 
 
@@ -72,16 +83,34 @@
                                                     <thead>
                                                     <tr class="blue-background">
                                                         <th style="color: white;">Item Code</th>
-                                                        <th class="no-wrap" style="color: white;">P.O Product Name</th>
+                                                        <th class="no-wrap" style="color: white;">Supplier</th>
+                                                        <th class="no-wrap" style="color: white;">Particular</th>
+                                                        <!--<th class="no-wrap" style="color: white;">BTCS Product Name</th>-->
                                                         <th style="color: white;">Unit</th>
+                                                        <th class="no-wrap" style="color: white;">QTY IN</th>
+                                                        <th class="no-wrap" style="color: white;">QTY OUT</th>
+                                                        <th style="color: white;">Stock</th>
+                                                        <th style="color: white;">Actions</th>
                                                     </tr>
                                                     </thead>
                                                     <tbody>
-                                                    {% for item in saved_items %}
+                                                    {% for item in page_obj %}
                                                         <tr>
                                                             <td>{{ item.item_code }}</td>
+                                                            <td class="no-wrap">{{ item.supplier }}</td>
                                                             <td class="no-wrap po-product-name">{{ item.po_product_name }}</td>
+                                                            <!--<td class="no-wrap">{{ item.new_product_name }}</td>-->
                                                             <td>{{ item.unit }}</td>
+                                                            <td class="quantity">{{ item.quantity_in }}</td>
+                                                            <td class="quantity">{{ item.quantity_out }}</td>
+                                                            <td class="stock">{{ item.stock }}</td>
+                                                            <td>
+                                                                <!-- Edit button -->
+                                                                <a href="{% url 'juban_inventory_edit' item.id %}"
+                                                                   class="btn btn-dark btn-sm" style="width: 75px;">
+                                                                    Edit
+                                                                </a>
+                                                            </td>
                                                         </tr>
                                                     {% endfor %}
                                                     </tbody>
@@ -96,10 +125,7 @@
                                         <ul class="pagination justify-content-center">
                                             {% if page_obj.has_previous %}
                                                 <li class="page-item">
-                                                    <a class="page-link" href="?page=
-
-
-                                                            {{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}"
+                                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}"
                                                        aria-label="Previous">
                                                         <span aria-hidden="true">&laquo;</span>
                                                     </a>
@@ -107,18 +133,14 @@
                                             {% endif %}
                                             {% for num in page_obj.paginator.page_range %}
                                                 <li class="page-item {% if page_obj.number == num %}active{% endif %}">
-                                                    <a class="page-link"
-                                                       href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}">
+                                                    <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}">
                                                         {{ num }}
                                                     </a>
                                                 </li>
                                             {% endfor %}
                                             {% if page_obj.has_next %}
                                                 <li class="page-item">
-                                                    <a class="page-link" href="?page=
-
-
-                                                            {{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}"
+                                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}"
                                                        aria-label="Next">
                                                         <span aria-hidden="true">&raquo;</span>
                                                     </a>
@@ -126,10 +148,7 @@
                                             {% endif %}
                                             <!-- Link to Last Page -->
                                             <li class="page-item {% if page_obj.number == page_obj.paginator.num_pages %}active{% endif %}">
-                                                <a class="page-link" href="?page=
-
-
-                                                        {{ page_obj.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}">
+                                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}">
                                                     Last
                                                 </a>
                                             </li>
@@ -145,11 +164,25 @@
     </div>
 
 
+
     <script>
         document.querySelectorAll('td').forEach(td => {
             if (td.textContent.trim() === 'None') {
                 td.innerHTML = '<span style="visibility: hidden;">None</span>';
             }
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.quantity, .stock').forEach(td => {
+                let value = parseFloat(td.textContent.trim());
+                if (Number.isInteger(value)) {
+                    td.textContent = value.toFixed(0);  // Display as an integer if whole number
+                } else {
+                    td.textContent = value.toFixed(2);  // Otherwise, display up to 2 decimal places
+                }
+            });
         });
     </script>
 
