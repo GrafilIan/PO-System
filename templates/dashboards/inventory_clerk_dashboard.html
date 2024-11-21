@@ -110,6 +110,12 @@
                                                                    class="btn btn-dark btn-sm" style="width: 75px;">
                                                                     Edit
                                                                 </a>
+                                                                <!-- Return button -->
+                                                                <a href="{% url 'return_item' item.id %}"
+                                                                   class="btn btn-secondary btn-sm"
+                                                                   style="width: 75px;">
+                                                                    Return
+                                                                </a>
                                                             </td>
                                                         </tr>
                                                     {% endfor %}
@@ -125,7 +131,8 @@
                                         <ul class="pagination justify-content-center">
                                             {% if page_obj.has_previous %}
                                                 <li class="page-item">
-                                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}"
+                                                    <a class="page-link" href="?page=
+                                                            {{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}"
                                                        aria-label="Previous">
                                                         <span aria-hidden="true">&laquo;</span>
                                                     </a>
@@ -133,14 +140,16 @@
                                             {% endif %}
                                             {% for num in page_obj.paginator.page_range %}
                                                 <li class="page-item {% if page_obj.number == num %}active{% endif %}">
-                                                    <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}">
+                                                    <a class="page-link"
+                                                       href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}">
                                                         {{ num }}
                                                     </a>
                                                 </li>
                                             {% endfor %}
                                             {% if page_obj.has_next %}
                                                 <li class="page-item">
-                                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}"
+                                                    <a class="page-link" href="?page=
+                                                            {{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}"
                                                        aria-label="Next">
                                                         <span aria-hidden="true">&raquo;</span>
                                                     </a>
@@ -148,7 +157,8 @@
                                             {% endif %}
                                             <!-- Link to Last Page -->
                                             <li class="page-item {% if page_obj.number == page_obj.paginator.num_pages %}active{% endif %}">
-                                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}">
+                                                <a class="page-link" href="?page=
+                                                        {{ page_obj.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}">
                                                     Last
                                                 </a>
                                             </li>

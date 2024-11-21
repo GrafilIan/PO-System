@@ -110,6 +110,14 @@
                                                                    class="btn btn-dark btn-sm" style="width: 75px;">
                                                                     Edit
                                                                 </a>
+
+                                                                <!-- Return button -->
+                                                                <a href="{% url 'juban_return_item' item.id %}"
+                                                                   class="btn btn-secondary btn-sm"
+                                                                   style="width: 75px;">
+                                                                    Return
+                                                                </a>
+
                                                             </td>
                                                         </tr>
                                                     {% endfor %}

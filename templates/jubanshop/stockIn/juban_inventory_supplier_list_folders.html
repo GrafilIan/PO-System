@@ -52,12 +52,12 @@
                                                 <div class="fcard w-100">
                                                     <div class="fcard-details" style="text-align: center;">
                                                         <h4>
-                                                            <a href="{% url 'juban_inventory_supplier_folder_contents' folder.id %}"
+                                                            <a href="{% url 'juban_inventory_supplier_contents' folder.id %}"
                                                                class="text-dark font-weight-bold">{{ folder.name }}</a>
                                                         </h4>
                                                     </div>
                                                     <form class="delete-folder-form"
-                                                          action="{% url 'juban_delete_inventory_supplier_folder' folder.id %}"
+                                                          action="{% url 'juban_delete_supplier_folder' folder.id %}"
                                                           method="post"
                                                           style="display: inline;">
                                                         {% csrf_token %}

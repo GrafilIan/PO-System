@@ -1,7 +1,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
 
-from .models import PurchaseOrder, ItemInventory, StockInHistory, InventoryHistory
+from .models import PurchaseOrder, ItemInventory, StockInHistory, InventoryHistory, ReturnedItem
 
 
 class PurchaseOrderForm(forms.ModelForm):
@@ -219,7 +219,7 @@ class ItemInventoryQuantityForm(forms.ModelForm):
     class Meta:
         model = ItemInventory
         fields = ['po_product_name', 'quantity_in', 'quantity_out', 'stock',
-                  'supplier']  # Only include the quantity fields
+                  'supplier', 'item_code']  # Only include the quantity fields
         widgets = {
             'po_product_name': forms.TextInput(attrs={'class': 'form-control'}),
             'quantity_in': forms.NumberInput(
@@ -229,6 +229,7 @@ class ItemInventoryQuantityForm(forms.ModelForm):
             'stock': forms.NumberInput(
                 attrs={'readonly': True, 'class': 'form-control', 'placeholder': 'Stock', 'step': '0.0001'}),
             'supplier': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Supplier'}),
+            'item_code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Item Code'}),
         }
 
     def clean(self):
@@ -242,6 +243,25 @@ class ItemInventoryQuantityForm(forms.ModelForm):
         cleaned_data['stock'] = quantity_in - quantity_out
 
         return cleaned_data
+
+
+class ReturnedItemForm(forms.ModelForm):
+
+    class Meta:
+        model = ReturnedItem
+        fields = ['po_product_name', 'quantity_returned', 'condition']
+        widgets = {
+            'po_product_name': forms.TextInput(attrs={'class': 'form-control'}),  # Use TextInput for editable text
+            'quantity_returned': forms.NumberInput(attrs={'class': 'form-control'}),  # Add Bootstrap class here
+            'condition': forms.Select(attrs={'class': 'form-control'}),  # Add Bootstrap class here
+        }
+
+    def __init__(self, *args, **kwargs):
+        item_inventory = kwargs.pop('item_inventory', None)  # Rename to match the model reference
+        super().__init__(*args, **kwargs)
+        if item_inventory:
+            self.fields['po_product_name'].initial = item_inventory.po_product_name  # Set the initial value for po_product_name
+
 
 
 class ItemInventoryBulkForm(forms.ModelForm):
@@ -377,7 +397,9 @@ class StockInHistoryForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(StockInHistoryForm, self).__init__(*args, **kwargs)
-        # Dynamically update the queryset for 'particulars'
-        self.fields['particulars'].queryset = ItemInventory.objects.values_list('po_product_name', flat=True).distinct()
+        # Dynamically update the choices for 'particulars' to include all distinct items
+        self.fields['particulars'].choices = [(p, p) for p in ItemInventory.objects.values_list('po_product_name',
+                                                                                                flat=True).distinct()]
+
 
 

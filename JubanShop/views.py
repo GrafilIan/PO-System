@@ -16,7 +16,7 @@ from openpyxl.styles import PatternFill, Font
 from openpyxl.workbook import Workbook
 
 from .forms import JubanItemInventoryListForm, JubanItemInventoryQuantityForm, JubanEditRemarksForm, \
-    JubanItemInventoryBulkForm, JubanStockInHistoryForm, JubanUploadFileForm
+    JubanItemInventoryBulkForm, JubanStockInHistoryForm, JubanUploadFileForm, JubanReturnedItemForm
 from .models import JubanItemInventory, JubanItemCodeList, JubanSiteInventoryFolder, JubanInventoryHistory, \
     JubanClientInventoryFolder, JubanCart, JubanStockInHistory, JubanInventorySupplierFolder
 
@@ -32,6 +32,8 @@ def juban_inventory_form(request):
         elif form.is_valid():
             # Save the form to create the item
             item = form.save(commit=False)  # Get the instance but don't save it to the database yet
+
+            item.supplier = item.supplier or 'NA'  # Set default value for supplier if not provided
 
             item.quantity_in = item.quantity_in or 0
             item.quantity_out = item.quantity_out or 0
@@ -1289,6 +1291,14 @@ def juban_stock_in_create(request):
 
     return render(request, 'Jubanshop/stockIn/juban_stock_in_form.html', {'form': form})
 
+def juban_delete_supplier_folder(request, folder_id):
+    if request.method == 'POST':
+        folder = get_object_or_404(JubanInventorySupplierFolder, id=folder_id)
+        folder.delete()  # This will set the supplier_folder field in PurchaseOrder to NULL
+        return JsonResponse({'success': True})
+
+    return JsonResponse({'success': False, 'error': 'Invalid request method.'})
+
 
 def juban_inventory_supplier_list_folders(request):
     if request.method == 'POST':
@@ -1641,3 +1651,22 @@ def juban_upload_stock_in_file(request):
         form = JubanUploadFileForm()
 
     return render(request, 'Jubanshop/stockIn/juban_stock_in_upload.html', {'form': form})
+
+def juban_return_item(request, item_inventory_id):
+    item_inventory = get_object_or_404(JubanItemInventory, id=item_inventory_id)
+
+    if request.method == 'POST':
+        form = JubanReturnedItemForm(request.POST, item_inventory=item_inventory)  # Ensure item_inventory is passed
+        if form.is_valid():
+            returned_item = form.save(commit=False)
+            returned_item.item_inventory = item_inventory  # Set the foreign key relationship
+            returned_item.save()
+            messages.success(request, 'Item returned successfully.')
+            return redirect('inventory_table')
+        else:
+            messages.error(request, 'There was an error saving the form.')
+            print(form.errors)
+    else:
+        form = JubanReturnedItemForm(initial={'po_product_name': item_inventory.po_product_name})
+
+    return render(request, 'Jubanshop/stockIn/juban_return_item.html', {'form': form, 'item_inventory': item_inventory})

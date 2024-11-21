@@ -55,4 +55,6 @@ urlpatterns = [
          name='juban_export_transaction_history_to_excel'),
     path('export-stock-in-transaction-history/', views.juban_export_stock_in_transaction_history_to_excel,
          name='juban_export_stock_in_transaction_history_to_excel'),
+    path('juban-return-item/<int:item_inventory_id>/', views.juban_return_item, name='juban_return_item'),
+    path('supfolders/<int:folder_id>/delete/', views.juban_delete_supplier_folder, name='juban_delete_supplier_folder'),
 ]

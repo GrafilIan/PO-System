@@ -17,9 +17,9 @@ from openpyxl.workbook import Workbook
 
 from JubanShop.views import juban_inventory_table
 from .forms import PurchaseOrderForm, UploadFileForm, ItemInventoryBulkForm, PurchaseOrderBulkForm, \
-    ItemInventoryListForm, ItemInventoryQuantityForm, StockInHistoryForm, EditRemarksForm
+    ItemInventoryListForm, ItemInventoryQuantityForm, StockInHistoryForm, EditRemarksForm, ReturnedItemForm
 from .models import PurchaseOrder, ArchiveFolder, ItemInventory, SupplierFolder, InventoryHistory, SiteInventoryFolder, \
-    ClientInventoryFolder, Cart, poCart, ItemCodeList, InventorySupplierFolder, StockInHistory
+    ClientInventoryFolder, Cart, poCart, ItemCodeList, InventorySupplierFolder, StockInHistory, ReturnedItem
 from datetime import datetime
 from openpyxl.styles import Font, PatternFill
 from io import BytesIO
@@ -911,6 +911,8 @@ def inventory_form(request):
             # Save the form to create the item
             item = form.save(commit=False)  # Get the instance but don't save it to the database yet
 
+            item.supplier = item.supplier or 'NA'
+
             item.quantity_in = item.quantity_in or 0
             item.quantity_out = item.quantity_out or 0
 
@@ -1006,6 +1008,12 @@ def inventory_edit(request, id):
             return JsonResponse({'status': 'success'})
         else:
             return JsonResponse({'status': 'error', 'errors': form.errors})
+
+    elif request.method == 'DELETE':
+        # Handle the DELETE request to remove the item
+        inventory_item.delete()
+        return JsonResponse({'status': 'deleted'})
+
     else:
         form = ItemInventoryQuantityForm(instance=inventory_item)
 
@@ -1588,11 +1596,59 @@ def view_site_inventory_folder_contents(request, folder_id):
     folder = get_object_or_404(SiteInventoryFolder, id=folder_id)
     transactions_list = InventoryHistory.objects.filter(site_inventory_folder=folder)
 
-    # Calculate total_amount
+    # Get the search query from the request
+    query = request.GET.get('q')
+
+    # Dictionary to map full and abbreviated month names to month numbers
+    month_mapping = {
+        "January": "1", "February": "2", "March": "3", "April": "4",
+        "May": "5", "June": "6", "July": "7", "August": "8",
+        "September": "9", "October": "10", "November": "11", "December": "12",
+        "Jan": "1", "Feb": "2", "Mar": "3", "Apr": "4",
+        "Jun": "6", "Jul": "7", "Aug": "8", "Sep": "9", "Oct": "10", "Nov": "11", "Dec": "12"
+    }
+
+    # Apply search filter if a query is present
+    if query:
+        try:
+            # Try to interpret the query as a full date (e.g., 'Aug 20, 2024')
+            date_obj = datetime.strptime(query, '%b %d, %Y').date()
+            transactions_list = transactions_list.filter(date=date_obj)
+        except ValueError:
+            # If it's not a full date, check if the query is a month name (full or abbreviated)
+            for month_name, month_number in month_mapping.items():
+                if month_name.lower() in query.lower():
+                    # Check if the query contains a year
+                    year = None
+                    try:
+                        year = int(query.split()[-1])  # Try to extract the year
+                    except (ValueError, IndexError):
+                        pass
+
+                    # Filter based on month and possibly year
+                    if year:
+                        transactions_list = transactions_list.filter(date__month=month_number, date__year=year)
+                    else:
+                        transactions_list = transactions_list.filter(date__month=month_number)
+                    break
+            else:
+                # If not a date or month, treat as a general text search
+                transactions_list = transactions_list.filter(
+                    Q(site_delivered__icontains=query) |
+                    Q(date__icontains=query) |
+                    Q(po_product_name__icontains=query) |
+                    Q(unit__icontains=query) |
+                    Q(quantity_out__icontains=query) |
+                    Q(delivery_ref__icontains=query) |
+                    Q(delivery_no__icontains=query) |
+                    Q(remarks__icontains=query)
+                )
+
+    # Calculate total_amount for the filtered transactions
     total_amount = transactions_list.aggregate(total_amount_sum=Sum('total_amount'))['total_amount_sum'] or 0
 
     # Pagination
-    paginator = Paginator(transactions_list, 100)  # Show 20 transactions per page
+    paginator = Paginator(transactions_list, 100)  # Show 100 transactions per page
     page_number = request.GET.get('page')
     try:
         transactions = paginator.page(page_number)
@@ -1605,6 +1661,7 @@ def view_site_inventory_folder_contents(request, folder_id):
         'folder': folder,
         'transactions': transactions,
         'total_amount': total_amount,
+        'query': query,  # Include the query in the context to display in the template
     }
 
     return render(request, 'Inventory/site_folder_contents.html', context)
@@ -2679,3 +2736,26 @@ def upload_stock_in_file(request):
     return render(request, 'Inventory/stockIn/stock_in_upload.html', {'form': form})
 
 
+def return_item(request, item_inventory_id):
+    item_inventory = get_object_or_404(ItemInventory, id=item_inventory_id)
+
+    if request.method == 'POST':
+        form = ReturnedItemForm(request.POST, item_inventory=item_inventory)  # Ensure item_inventory is passed
+        if form.is_valid():
+            returned_item = form.save(commit=False)
+            returned_item.item_inventory = item_inventory  # Set the foreign key relationship
+            returned_item.save()
+            messages.success(request, 'Item returned successfully.')
+            return redirect('inventory_table')
+        else:
+            messages.error(request, 'There was an error saving the form.')
+            print(form.errors)
+    else:
+        form = ReturnedItemForm(initial={'po_product_name': item_inventory.po_product_name})
+
+    return render(request, 'Inventory/stockIn/return_item.html', {'form': form, 'item_inventory': item_inventory})
+
+def returned_items_history(request):
+    # Query all returned items, ordered by the most recent return date
+    returned_items = ReturnedItem.objects.select_related('item_inventory').order_by('-return_date')
+    return render(request, 'Inventory/stockIn/returned_items_history.html', {'returned_items': returned_items})

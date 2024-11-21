@@ -27,16 +27,29 @@
                 {% endif %}
 
                 <div class="card">
-                    <div class="card-header d-flex justify-content-center" style="margin-top: 10px;">
+                    <div class="card-header d-flex justify-content-between align-items-center"
+                         style="margin-top: 10px;">
                         <h2>Edit Item Inventory</h2>
+
+                        <!-- Delete Button -->
+                        <div class="form-group mb-0">
+                            <button id="deleteButton" class="btn btn-danger btn-sm ml-auto" title="Delete">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
                     </div>
+
                     <div class="card-body">
                         <form id="itemInventoryForm" method="post" action="{% url 'inventory_edit' item.id %}"
                               enctype="multipart/form-data">
                             {% csrf_token %}
 
                             <div class="row">
-
+                                <div class="form-group col-12 col-sm-4">
+                                    <label for="item_code">Item Code</label>
+                                    <input type="text" name="item_code" value="{{ form.item_code.value }}"
+                                           class="form-control">
+                                </div>
                                 <!-- Supplier Field -->
                                 <div class="form-group col-12 col-sm-4">
                                     <label for="supplier">Supplier</label>
@@ -61,7 +74,6 @@
                                     <input type="hidden" name="unit" value="{{ form.instance.unit }}">
                                 </div>
 
-
                                 <!-- Quantity In Field -->
                                 <div class="form-group col-12 col-sm-4">
                                     <label for="quantity_in">Quantity In</label>
@@ -81,8 +93,6 @@
                                            disabled>
                                     <input type="hidden" name="stock" value="{{ form.stock.value }}">
                                 </div>
-
-
                             </div>
 
                             <div class="form-divider align-center">
@@ -159,7 +169,57 @@
                         });
                     });
             });
+
+            // Delete button functionality
+            document.getElementById('deleteButton').addEventListener('click', function () {
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "This action cannot be undone!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        fetch(form.action, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value
+                            }
+                        })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.status === 'deleted') {
+                                    Swal.fire(
+                                        'Deleted!',
+                                        'The item has been deleted.',
+                                        'success'
+                                    ).then(() => {
+                                        window.location.href = "{% url 'inventory_table' %}";
+                                    });
+                                } else {
+                                    Swal.fire({
+                                        title: 'Error!',
+                                        text: 'There was an error deleting the item.',
+                                        icon: 'error',
+                                        confirmButtonText: 'OK'
+                                    });
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                                Swal.fire({
+                                    title: 'Error!',
+                                    text: 'There was an error deleting the item.',
+                                    icon: 'error',
+                                    confirmButtonText: 'OK'
+                                });
+                            });
+                    }
+                });
+            });
         });
     </script>
-
 {% endblock %}

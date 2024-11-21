@@ -1,7 +1,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
 
-from JubanShop.models import JubanItemInventory, JubanInventoryHistory, JubanStockInHistory
+from JubanShop.models import JubanItemInventory, JubanInventoryHistory, JubanStockInHistory, JubanReturnedItem
 
 
 class JubanUploadFileForm(forms.Form):
@@ -240,4 +240,23 @@ class JubanStockInHistoryForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(JubanStockInHistoryForm, self).__init__(*args, **kwargs)
         # Dynamically update the queryset for 'particulars'
-        self.fields['particulars'].queryset = JubanItemInventory.objects.values_list('po_product_name', flat=True).distinct()
+        self.fields['particulars'].choices = [(p, p) for p in JubanItemInventory.objects.values_list('po_product_name',
+                                                                                                flat=True).distinct()]
+
+class JubanReturnedItemForm(forms.ModelForm):
+
+    class Meta:
+        model = JubanReturnedItem
+        fields = ['po_product_name', 'quantity_returned', 'condition']
+        widgets = {
+            'po_product_name': forms.TextInput(attrs={'class': 'form-control'}),  # Use TextInput for editable text
+            'quantity_returned': forms.NumberInput(attrs={'class': 'form-control'}),  # Add Bootstrap class here
+            'condition': forms.Select(attrs={'class': 'form-control'}),  # Add Bootstrap class here
+        }
+
+    def __init__(self, *args, **kwargs):
+        item_inventory = kwargs.pop('item_inventory', None)  # Rename to match the model reference
+        super().__init__(*args, **kwargs)
+        if item_inventory:
+            self.fields['po_product_name'].initial = item_inventory.po_product_name  # Set the initial value for po_product_name
+

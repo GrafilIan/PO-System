@@ -49,19 +49,40 @@
                                         <div class="card-header"
                                              style="background-color: #4682b4; color: white; display: flex; justify-content: space-between; align-items: center;">
                                             <h4>Site Records Table</h4>
-                                            <a href="{% url 'export_site_folder_contents' folder.id %}"
-                                               class="btn btn-primary">
-                                                Export to Excel
-                                            </a>
+                                            <div class="card-header-action d-flex align-items-center">
+                                                <form method="get"
+                                                      action="{% url 'view_site_inventory_folder_contents' folder.id %}"
+                                                      class="form-inline">
+                                                    <div class="input-group">
+                                                        <input type="text" name="q" class="form-control"
+                                                               placeholder="Search by text or date"
+                                                               value="{{ request.GET.q }}">
+                                                        <div class="input-group-append">
+                                                            <button class="btn btn-primary" type="submit"><i
+                                                                    class="fas fa-search"></i></button>
+                                                        </div>
+                                                    </div>
+                                                    {% if request.GET.q %}
+                                                        <a href="{% url 'view_site_inventory_folder_contents' folder.id %}"
+                                                           class="btn btn-outline-primary ml-2">Clear Filter</a>
+                                                    {% endif %}
+                                                </form>
+                                                <a href="{% url 'export_transaction_history_to_excel' %}"
+                                                   class="btn btn-primary ml-2">Export Transaction History</a>
+                                                <a href="{% url 'export_site_folder_contents' folder.id %}"
+                                                   class="btn btn-primary ml-2">Export to Excel</a>
+                                            </div>
                                         </div>
 
                                         <div class="card-body p-0">
                                             <div class="table-responsive">
-                                                <table class="table table-hover table-striped table-sm" id="sortable-table">
+                                                <table class="table table-hover table-striped table-sm"
+                                                       id="sortable-table">
                                                     <thead>
                                                     <tr class="blue-background">
                                                         <!--<th style="white-space: nowrap; color: white;">T. ID</th>-->
-                                                        <th style="white-space: nowrap; color: white;">Site Delivered</th>
+                                                        <th style="white-space: nowrap; color: white;">Site Delivered
+                                                        </th>
                                                         <th style="white-space: nowrap; color: white;">Date</th>
                                                         <th style="white-space: nowrap; color: white;">Item</th>
                                                         <th style="white-space: nowrap; color: white;">Unit</th>
@@ -85,7 +106,8 @@
                                                             <td>{{ transaction.delivery_no }}</td>
                                                             <td>{{ transaction.remarks }}</td>
                                                             <td>
-                                                                <button type="button" class="btn btn-sm btn-warning edit-remarks-btn"
+                                                                <button type="button"
+                                                                        class="btn btn-sm btn-warning edit-remarks-btn"
                                                                         data-id="{{ transaction.id }}"
                                                                         data-remarks="{{ transaction.remarks }}"
                                                                         data-toggle="modal"
@@ -154,7 +176,8 @@
     </div>
 
     <!-- Edit Remarks Modal -->
-    <div class="modal fade" id="editRemarksModal" tabindex="-1" role="dialog" aria-labelledby="editRemarksModalLabel" aria-hidden="true">
+    <div class="modal fade" id="editRemarksModal" tabindex="-1" role="dialog" aria-labelledby="editRemarksModalLabel"
+         aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -181,7 +204,8 @@
     </div>
 
     <!-- Success Modal -->
-    <div class="modal fade" id="success-modal" tabindex="-1" role="dialog" aria-labelledby="success-modal-label" aria-hidden="true">
+    <div class="modal fade" id="success-modal" tabindex="-1" role="dialog" aria-labelledby="success-modal-label"
+         aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -206,7 +230,7 @@
     <script>
         // Open modal with pre-filled data
         document.querySelectorAll('.edit-remarks-btn').forEach(button => {
-            button.addEventListener('click', function() {
+            button.addEventListener('click', function () {
                 const transactionId = this.dataset.id;
                 const remarks = this.dataset.remarks;
 
@@ -217,7 +241,7 @@
         });
 
         // Handle form submission with AJAX
-        document.getElementById('editRemarksForm').addEventListener('submit', function(event) {
+        document.getElementById('editRemarksForm').addEventListener('submit', function (event) {
             event.preventDefault();
 
             const transactionId = document.getElementById('transactionId').value;
@@ -230,21 +254,21 @@
                     'Content-Type': 'application/json',
                     'X-CSRFToken': '{{ csrf_token }}',
                 },
-                body: JSON.stringify({ 'remarks': remarks })
+                body: JSON.stringify({'remarks': remarks})
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Close the modal
-                    $('#editRemarksModal').modal('hide');
-                    // Show success message and reload page
-                    $('#success-modal').modal('show');
-                    setTimeout(() => location.reload(), 1500);
-                } else {
-                    alert('Something went wrong!');
-                }
-            })
-            .catch(error => console.error('Error:', error));
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Close the modal
+                        $('#editRemarksModal').modal('hide');
+                        // Show success message and reload page
+                        $('#success-modal').modal('show');
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        alert('Something went wrong!');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
         });
     </script>
 {% endblock %}

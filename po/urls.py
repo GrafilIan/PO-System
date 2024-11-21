@@ -69,6 +69,8 @@ urlpatterns = [
     path('inventory-supplier-folders/', views.inventory_supplier_list_folders, name='inventory_supplier_list_folders'),
     path('inventory-supplier-folders/<int:folder_id>/', views.inventory_supplier_contents,
          name='inventory_supplier_folder_contents'),
+    path('inventory-supplier-contents/<int:folder_id>/', views.inventory_supplier_contents,
+         name='inventory_supplier_contents'),
     path('inventory-supplier-folders/delete/<int:folder_id>/', views.delete_inventory_supplier_folder,
          name='delete_inventory_supplier_folder'),
     path('inventory/stock-in/export/<int:folder_id>/', views.export_inventory_supplier_contents,
@@ -84,4 +86,6 @@ urlpatterns = [
     path('folder/<int:folder_id>/edit-record/<int:record_id>/', views.edit_inventory_history_remarks,
          name='edit_inventory_history_remarks'),
     path('edit-site-remarks/<int:transaction_id>/', views.edit_site_remarks, name='edit_site_remarks'),
+    path('return-item/<int:item_inventory_id>/', views.return_item, name='return_item'),
+    path('returned-items-history/', views.returned_items_history, name='returned_items_history'),
 ]

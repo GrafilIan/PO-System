@@ -190,3 +190,27 @@ class JubanCart(models.Model):
     def __str__(self):
         return f"{self.item} - {self.quantity}"
 
+class JubanReturnedItem(models.Model):
+    ITEM_CONDITION_CHOICES = (
+        ('usable', 'Usable'),
+        ('damaged', 'Damaged'),
+    )
+
+    item_inventory = models.ForeignKey(JubanItemInventory, on_delete=models.CASCADE, related_name='returned_items')
+    po_product_name = models.CharField(max_length=255, null=True, blank=True)  # Add this field to the model
+    quantity_returned = models.DecimalField(max_digits=10, decimal_places=2)
+    condition = models.CharField(max_length=10, choices=ITEM_CONDITION_CHOICES)
+    return_date = models.DateField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        # Adjust stock if the condition is 'usable'
+        if self.condition == 'usable':
+            self.item_inventory.quantity_out -= self.quantity_returned
+            self.item_inventory.stock += self.quantity_returned
+            self.item_inventory.save()
+        # Call the original save method
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f'Returned {self.quantity_returned} of {self.item_inventory.item_code} ({self.condition})'
+

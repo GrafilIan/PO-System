@@ -1,0 +1,74 @@
+{% extends 'jubaninventorybase.html' %}
+
+{% block title %}Edit Item Inventory{% endblock %}
+
+{% load static %}
+
+{% block head %}
+    <link rel="stylesheet" href="{% static 'assets/modules/bootstrap-social/bootstrap-social.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/modules/datatables/datatables.min.css' %}">
+    <link rel="stylesheet"
+          href="{% static 'assets/modules/datatables/DataTables-1.10.16/css/dataTables.bootstrap4.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/modules/datatables/Select-1.2.4/css/select.bootstrap4.min.css' %}">
+    <script src="{% static 'assets/js/cleave.min.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'assets/css/custom.css' %}">
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-12 col-sm-10 offset-sm-1 col-md-8 offset-md-2 col-lg-8 offset-lg-2 col-xl-8 offset-xl-2">
+            <div class="card card-primary shadow-lg p-4"
+                 style="background-color: rgba(255, 255, 255, 0.9); margin-top: 180px;">
+                <div class="card-header">
+                    <h4 class="text-center">Return Item</h4>
+                </div>
+                <div class="card-body">
+
+                    {% if messages %}
+                        <div class="alert alert-info">
+                            <ul class="mb-0">
+                                {% for message in messages %}
+                                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+
+                        <div class="form-group">
+                            <label for="id_po_product_name" class="form-label">Product Name</label>
+                            {{ form.po_product_name }}  <!-- Ensure this outputs the proper input -->
+                            {% if form.po_product_name.errors %}
+                                <div class="invalid-feedback">{{ form.po_product_name.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="id_quantity_returned" class="form-label">Quantity Returned</label>
+                            {{ form.quantity_returned }}
+                            {% if form.quantity_returned.errors %}
+                                <div class="invalid-feedback">{{ form.quantity_returned.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="id_condition" class="form-label">Condition</label>
+                            {{ form.condition }}
+                            {% if form.condition.errors %}
+                                <div class="invalid-feedback">{{ form.condition.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'dashboard' %}" class="btn btn-secondary">Back to Inventory</a>
+                            <button type="submit" class="btn btn-primary">Submit Return</button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
